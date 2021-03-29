@@ -45,7 +45,7 @@ end
 function nvim.execute_on_change(buffer, ns, fn)
   vim.api.nvim_buf_attach(buffer, false, { 
     on_lines = function (_, buf, _, firstline, lastline, _, _, _, _)
-      fn(buf, ns, firstline, lastline)
+      fn(buf, ns, firstline + 1, lastline + 1)
     end
   })
 end
