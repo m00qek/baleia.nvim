@@ -5,9 +5,9 @@ local highlight = {}
 
 local function single_line(name, location)
   return {
-    firstcolumn = location.start.column,
-    lastcolumn = location['end'].column,
-    line = location.start.line,
+    firstcolumn = location.from.column,
+    lastcolumn = location.to.column,
+    line = location.from.line,
     name = name
   }
 end
@@ -16,12 +16,12 @@ local function multi_line(line_starts_at, name, location)
   local highlights = {}
 
   table.insert(highlights, {
-    firstcolumn = location.start.column,
-    line = location.start.line,
+    firstcolumn = location.from.column,
+    line = location.from.line,
     name = name
   })
 
-  for line = location.start.line + 1, location['end'].line - 1 do
+  for line = location.from.line + 1, location.to.line - 1 do
     table.insert(highlights, {
       firstcolumn = line_starts_at,
       name = name,
@@ -31,8 +31,8 @@ local function multi_line(line_starts_at, name, location)
 
   table.insert(highlights, {
     firstcolumn = line_starts_at,
-    lastcolumn = location['end'].column,
-    line = location['end'].line,
+    lastcolumn = location.to.column,
+    line = location.to.line,
     name = name
   })
 
@@ -49,7 +49,7 @@ function highlight.all(options, offset, lines)
     local location = locations.with_offset(offset, loc)
     local name = styles.name(options.name, location.style)
 
-    if location.start.line == location['end'].line then
+    if location.from.line == location.to.line then
       table.insert(all_highlights, single_line(name, location))
     else
       local highlights = multi_line(options.line_starts_at, name, location)

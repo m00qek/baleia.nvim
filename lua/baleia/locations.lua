@@ -12,8 +12,8 @@ function locations.extract(lines, to_style)
       local column = text:find('\x1b[[:;0-9]*m', position) 
 
       table.insert(extracted, {
-        start = { column = column, line = line},
-        style = to_style(ansi_sequence) 
+        style = to_style(ansi_sequence) ,
+        from = { column = column, line = line }
       })
 
       position = column + 1
@@ -27,12 +27,12 @@ function locations.extract(lines, to_style)
     end
 
     local next_location = extracted[index + 1]
-    if next_location and next_location.start.column > 1  then 
-      location['end'] = next_location.start
+    if next_location and next_location.from.column > 1  then 
+      location.to = next_location.from
     elseif next_location then 
-      location['end'] = { line = location.start.line - 1 }
+      location.to = { line = location.from.line - 1 }
     else
-      location['end'] = { line = location.start.line }
+      location.to = { line = location.from.line }
     end
   end
 
@@ -40,19 +40,19 @@ function locations.extract(lines, to_style)
 end
 
 function locations.with_offset(offset, location)
-  local endcolumn = location['end'].column
+  local endcolumn = location.to.column
   if endcolumn then
     endcolumn = endcolumn + offset.column
   end
 
   return {
     style = location.style,
-    start = { 
-      line = location.start.line + offset.line,
-      column = location.start.column + offset.column,
+    from = { 
+      line = location.from.line + offset.line,
+      column = location.from.column + offset.column,
     },
-    ['end'] = { 
-      line = location['end'].line + offset.line,
+    to = { 
+      line = location.to.line + offset.line,
       column = endcolumn
     }
   }
