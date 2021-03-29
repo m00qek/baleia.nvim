@@ -36,6 +36,39 @@ local function highlight(buffer, ns, name, location)
   end
 end
 
+local function reverse(list)
+  local reversed = {}
+  for i = #list, 1, -1 do
+    reversed[#reversed + 1] = list[i]
+  end
+
+  return reversed
+end
+
+local function all_lines()
+  return function(buffer) 
+    return {
+      lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, true),
+      first = 1
+    }
+  end
+end
+
+local function take_while(predicate)
+  return function(buffer, _, lastline)
+    local lines = {}
+    for line = lastline, 1, -1 do
+      local text = vim.api.nvim_buf_get_lines(buffer, line, line + 1, true)[1]
+      if not predicate(text) then
+        break
+      end 
+      table.insert(lines, text)
+    end
+    
+    return { lines = reverse(lines), first = lastline - #lines + 1 }
+  end
+end
+
 local function highlight_all(options, buffer, ns, offset, lines) 
   local extracted_locations = locations.extract(lines, styles.to_style)
   for _, location in pairs(extracted_locations) do
@@ -46,17 +79,18 @@ end
 
 function baleia.setup(options) 
   local ns = nvim.create_namespace(options.name)
+  local last_lines = take_while(function(line) return line:sub(1, 1) == ';' end)
 
   return { 
     once = function(buffer)
-      local lines = nvim.get_lines(buffer, 1)
-      highlight_all(options, buffer, ns, { column = 0, line = 0 }, lines)   
+      local range = all_lines()(buffer)
+      highlight_all(options, buffer, ns, { column = 0, line = range.first }, range.lines)   
     end,
     automatically = function(buffer) 
       nvim.execute_on_change(buffer, ns, 
-      function()
-        local lines = nvim.get_lines(buffer, 1)
-        highlight_all(options, buffer, ns, { column = 0, line = 0 }, lines)   
+      function(_, _, firstline, lastline)
+        local range = last_lines(buffer, firstline + 1, lastline + 1)
+        highlight_all(options, buffer, ns, { column = 0, line = range.first }, range.lines)   
       end)
     end
   }
