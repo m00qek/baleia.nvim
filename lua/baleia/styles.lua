@@ -2,6 +2,25 @@ local ansi = require('baleia.ansi')
 
 local styles = {}
 
+local function merge_value(from, to)
+  if to.set then
+    return to
+  end
+  return from
+end
+
+function styles.merge(from, to)
+  return {
+    foreground = merge_value(from.foreground, to.foreground),
+    background = merge_value(from.background, to.background),
+    modes = {
+      bold =      merge_value(from.modes.bold, to.modes.bold), 
+      italic =    merge_value(from.modes.italic, to.modes.italic),
+      underline = merge_value(from.modes.underline, to.modes.underline)
+    },
+  }
+end
+
 function styles.none() 
   return {
     foreground = { set = false, value = ansi.foreground[0]},

@@ -1,3 +1,5 @@
+local styles = require('baleia.styles')
+
 local locations = {}
 
 function locations.extract(lines, to_style) 
@@ -19,8 +21,12 @@ function locations.extract(lines, to_style)
   end
 
   for index, location in ipairs(extracted) do 
-    local next_location = extracted[index + 1]
+    local previous_location = extracted[index - 1]
+    if previous_location then 
+      location.style = styles.merge(previous_location.style, location.style)
+    end
 
+    local next_location = extracted[index + 1]
     if next_location and next_location.start.column > 1  then 
       location['end'] = next_location.start
     elseif next_location then 
