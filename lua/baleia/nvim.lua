@@ -1,6 +1,9 @@
 local END_OF_LINE = -1
 local END_OF_FILE = -1
 
+local ANSI_COLORS = { 'black', 'red', 'green', 'yellow', 'blue', 'magenta',
+                      'cyan', 'white' }  
+
 local nvim = {}
 
 function nvim.create_highlight(name, attributes)
@@ -49,13 +52,10 @@ function nvim.execute_on_change(buffer, ns, fn)
   })
 end
 
-local ansi_colors = { 'black', 'red', 'green', 'yellow', 'blue', 'magenta',
-                      'cyan', 'white' }  
-
 function nvim.theme_colors()
   local nvim_colors = {}
 
-  for index, color in pairs(ansi_colors) do
+  for index, color in pairs(ANSI_COLORS) do
     nvim_colors[color] = vim.g['terminal_color_' .. index - 1] or color
   end
 
