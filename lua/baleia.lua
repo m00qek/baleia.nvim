@@ -1,66 +1,47 @@
-local nvim = require('baleia.nvim')
-local styles = require('baleia.styles')
-local locations = require('baleia.locations')
+local highlights = require('baleia.highlight')
 local lines = require('baleia.lines')
-
-local START_OF_LINE = 3
+local nvim = require('baleia.nvim')
 
 local baleia = {}
 
-local function highlight(buffer, ns, name, location)
-  nvim.create_highlight(name, styles.attributes(location.style))
-
-  if location.start.line == location['end'].line then
-    nvim.highlight(buffer, ns, name, {
-      firstcolumn = location.start.column,
-      lastcolumn = location['end'].column,
-      line = location.start.line
-    })
-  else
-    nvim.highlight(buffer, ns, name, {
-      firstcolumn = location.start.column,
-      line = location.start.line
-    })
-
-    for line = location.start.line + 1, location['end'].line - 1 do
-      nvim.highlight(buffer, ns, name, {
-        firstcolumn = START_OF_LINE,
-        line = line
-      })
-    end
-
-    nvim.highlight(buffer, ns, name, {
-      firstcolumn = START_OF_LINE,
-      lastcolumn = location['end'].column,
-      line = location['end'].line
-    })
-  end
-end
-
-
 local function highlight_all(options, buffer, ns, offset, buffer_lines) 
-  local extracted_locations = locations.extract(buffer_lines, styles.to_style)
-  for _, location in pairs(extracted_locations) do
-    local name = styles.name(options.name, location.style)
-    highlight(buffer, ns, name, locations.with_offset(offset, location))
+  local actions = highlights.all(options, offset, buffer_lines)
+
+  for _, definition in ipairs(actions.definitions) do
+    nvim.create_highlight(definition.name, definition.attributes)
+  end
+
+  for _, highlight in ipairs(actions.highlights) do
+    nvim.highlight(buffer, ns, highlight)
   end
 end
 
---        vim.api.nvim_command('echom "' .. range.first .. "')
+local function with_default_options(options) 
+  local predicate = function(line) return line:sub(1, 1) == ';' end
+  return {
+    line_starts_at = options.line_starts_at or 3,
+    get_lines = options.get_lines or lines.take_while(predicate),
+    name = options.name or 'ConjureLogColors'
+  }
+end
+
 function baleia.setup(options) 
-  local ns = nvim.create_namespace(options.name)
-  local last_lines = lines.take_while(function(line) return line:sub(1, 1) == ';' end)
+  local opts = with_default_options(options)
+  local ns = nvim.create_namespace(opts.name)
 
   return { 
     once = function(buffer)
       local range = lines.all()(nvim.get_lines, buffer)
-      highlight_all(options, buffer, ns, { column = 0, line = range.first - 1}, range.lines)   
+      local offset = { column = 0, line = range.first - 1}
+
+      highlight_all(opts, buffer, ns, offset, range.lines)   
     end,
     automatically = function(buffer) 
-      nvim.execute_on_change(buffer, ns, 
-      function(_, _, firstline, lastline)
-        local range = last_lines(nvim.get_lines, buffer, firstline, lastline)
-        highlight_all(options, buffer, ns, { column = 0, line = range.first - 1 }, range.lines)   
+      nvim.execute_on_change(buffer, ns, function(_, _, firstline, lastline)
+        local range = opts.get_lines(nvim.get_lines, buffer, firstline, lastline)
+        local offset = { column = 0, line = range.first - 1}
+
+        highlight_all(opts, buffer, ns, offset, range.lines)   
       end)
     end
   }

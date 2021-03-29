@@ -32,14 +32,13 @@ function nvim.create_namespace(name)
   return vim.api.nvim_create_namespace(name)
 end 
 
-function nvim.highlight(buffer, ns, name, position)
+function nvim.highlight(buffer, ns, highlight)
   local lastcolumn = END_OF_LINE
-  if position.lastcolumn then
-    lastcolumn = position.lastcolumn - 1
+  if highlight.lastcolumn then
+    lastcolumn = highlight.lastcolumn - 1
   end
 
-  return vim.api.nvim_buf_add_highlight(
-    buffer, ns, name, position.line - 1, position.firstcolumn - 1, lastcolumn)
+  return vim.api.nvim_buf_add_highlight(buffer, ns, highlight.name, highlight.line - 1, highlight.firstcolumn - 1, lastcolumn)
 end
 
 function nvim.execute_on_change(buffer, ns, fn)
