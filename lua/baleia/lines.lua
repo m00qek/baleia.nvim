@@ -18,6 +18,20 @@ function lines.all()
   end
 end
 
+function lines.moving_window(number)
+  return function(line_getter, buffer, firstline) 
+    local line = firstline - number
+    if line < 1 then
+      line = 1
+    end
+
+    return {
+      lines = line_getter(buffer, line),
+      first = line
+    }
+  end
+end
+
 function lines.take_while(predicate)
   return function(line_getter, buffer, _, lastline)
     local buffer_lines = {}
