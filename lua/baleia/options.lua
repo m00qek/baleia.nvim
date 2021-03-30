@@ -4,6 +4,7 @@ local options = {}
 
 function options.with_default(opts) 
   return {
+    strip_sequences = opts.strip_sequences or false,
     line_starts_at = opts.line_starts_at or 1,
     get_lines = opts.get_lines or lines.all(),
     name = opts.name or 'BaleiaColors'

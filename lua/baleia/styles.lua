@@ -18,6 +18,7 @@ function styles.merge(from, to)
       italic =    merge_value(from.modes.italic, to.modes.italic),
       underline = merge_value(from.modes.underline, to.modes.underline)
     },
+    offset = to.offset,
   }
 end
 
@@ -30,10 +31,11 @@ function styles.none()
       italic =    { set = false, value = false },
       underline = { set = false, value = false }
     },
+    offset = 0,
   }
 end
 
-function styles.reset() 
+function styles.reset(offset) 
   return {
     foreground = { set = true, value = ansi.foreground[0]},
     background = { set = true, value = ansi.background[0]},
@@ -42,6 +44,7 @@ function styles.reset()
       italic =    { set = true, value = false },
       underline = { set = true, value = false }
     },
+    offset = offset,
   }
 end
 
@@ -52,7 +55,7 @@ function styles.to_style(ansi_sequence)
   end
 
   if #codes == 1 and codes[1] == 0 then
-    return styles.reset();
+    return styles.reset(#ansi_sequence);
   end
 
   local style = styles.none()
@@ -66,6 +69,7 @@ function styles.to_style(ansi_sequence)
     end
   end
 
+  style.offset = #ansi_sequence
   return style
 end
 

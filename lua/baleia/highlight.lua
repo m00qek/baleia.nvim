@@ -1,5 +1,6 @@
 local locations = require('baleia.locations') 
 local styles = require('baleia.styles') 
+local ansi = require('baleia.ansi') 
 
 local highlight = {}
 
@@ -46,7 +47,7 @@ function highlight.all(options, offset, lines)
   local all_highlights = {}
 
   for _, loc in pairs(locs) do
-    local location = locations.with_offset(offset, loc)
+    local location = locations.with_offset(options.strip_sequences, offset, loc)
     local name = styles.name(options.name, location.style)
 
     if location.from.line == location.to.line then
@@ -62,7 +63,17 @@ function highlight.all(options, offset, lines)
     }) 
   end
 
-  return { definitions = definitions, highlights = all_highlights }
+  if options.strip_sequences then
+    for index = 0, #lines do 
+      lines[index] = lines[index]:gsub(ansi.PATTERN, '')
+    end
+  end
+
+  return {
+    definitions = definitions,
+    highlights = all_highlights,
+    lines = lines
+  }
 end
 
 return highlight

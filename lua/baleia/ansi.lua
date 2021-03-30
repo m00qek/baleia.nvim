@@ -4,6 +4,8 @@ local theme = nvim.theme_colors()
 
 local ansi = {}
 
+ansi.PATTERN = '\x1b[[:;0-9]*m' 
+
 ansi.foreground = {
   [30] = { cterm = 'black',   gui = theme['black']   },
   [31] = { cterm = 'red',     gui = theme['red']     },

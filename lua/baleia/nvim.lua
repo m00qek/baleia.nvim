@@ -1,27 +1,9 @@
-local END_OF_LINE = -1
 local END_OF_FILE = -1
 
 local ANSI_COLORS = { 'black', 'red', 'green', 'yellow', 'blue', 'magenta',
                       'cyan', 'white' }  
 
 local nvim = {}
-
-function nvim.create_highlight(name, attributes)
-  local command = 'highlight ' .. name
-
-  if attributes.cterm then
-      command = command .. ' cterm=' .. table.concat(attributes.cterm, ',')
-  end
-
-  attributes.cterm = nil
-  for attr, value in pairs(attributes) do
-    if value then
-      command = command .. ' ' .. attr .. '=' .. value
-    end
-  end
-
-  return vim.api.nvim_command(command)
-end
 
 function nvim.get_lines(buffer, startline, endline)
   if endline then
@@ -34,15 +16,6 @@ end
 function nvim.create_namespace(name)
   return vim.api.nvim_create_namespace(name)
 end 
-
-function nvim.highlight(buffer, ns, highlight)
-  local lastcolumn = END_OF_LINE
-  if highlight.lastcolumn then
-    lastcolumn = highlight.lastcolumn - 1
-  end
-
-  return vim.api.nvim_buf_add_highlight(buffer, ns, highlight.name, highlight.line - 1, highlight.firstcolumn - 1, lastcolumn)
-end
 
 function nvim.execute_on_change(buffer, ns, fn)
   vim.api.nvim_buf_attach(buffer, false, { 

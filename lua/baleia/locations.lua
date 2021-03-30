@@ -1,4 +1,5 @@
 local styles = require('baleia.styles')
+local ansi = require('baleia.ansi') 
 
 local locations = {}
 
@@ -8,8 +9,8 @@ function locations.extract(lines, to_style)
   for line, text in pairs(lines) do
     local position = 1
 
-    for ansi_sequence in  text:gmatch('\x1b[[:;0-9]*m') do
-      local column = text:find('\x1b[[:;0-9]*m', position) 
+    for ansi_sequence in  text:gmatch(ansi.PATTERN) do
+      local column = text:find(ansi.PATTERN, position) 
 
       table.insert(extracted, {
         style = to_style(ansi_sequence) ,
@@ -39,17 +40,26 @@ function locations.extract(lines, to_style)
   return extracted
 end
 
-function locations.with_offset(offset, location)
+function locations.with_offset(strip_sequences, offset, location)
+  local style_offset = 0
+  if strip_sequences then
+    style_offset = location.style.offset
+  end
+
   local endcolumn = location.to.column
   if endcolumn then
-    endcolumn = endcolumn + offset.column
+    if location.from.line == location.to.line then
+      endcolumn = endcolumn + offset.column + style_offset
+    else
+      endcolumn = endcolumn + offset.column 
+    end
   end
 
   return {
     style = location.style,
     from = { 
       line = location.from.line + offset.line,
-      column = location.from.column + offset.column,
+      column = location.from.column + offset.column + style_offset,
     },
     to = { 
       line = location.to.line + offset.line,
