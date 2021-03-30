@@ -7,7 +7,7 @@ Display text with ANSI escape sequences (8 or 16 colors)
 Using [vim-plug](https://github.com/junegunn/vim-plug):
 
 ```vim
-Plug 'm00qek/baleia.nvim'
+Plug 'm00qek/baleia.nvim, { 'tag': 'v0.0.2' }'
 ```
 
 ## Setup
