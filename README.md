@@ -1,4 +1,6 @@
-# baleia.nvim
+baleia.nvim
+===
+[![Integration][integration-badge]][integration-runs]
 
 Display text with ANSI escape sequences (8 or 16 colors)
 
@@ -135,3 +137,6 @@ to automatically enable `baleia` for all Conjure log buffers use
 ```vim
 autocmd BufEnter conjure-log-* call s:enable_colors()
 ```
+
+[integration-badge]: https://github.com/m00qek/baleia.nvim/actions/workflows/integration.yml/badge.svg
+[integration-runs]:  https://github.com/m00qek/baleia.nvim/actions/workflows/integration.yml
