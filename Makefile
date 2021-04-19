@@ -1,7 +1,7 @@
 SPEC="spec/baleia_spec.lua"
 
 prepare:
-	@git submodule update --depth 1
+	@git submodule update --depth 1 --init
 
 test: prepare
 	@nvim \
