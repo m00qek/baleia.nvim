@@ -1,6 +1,6 @@
-local locations = require('baleia.locations') 
-local styles = require('baleia.styles') 
-local ansi = require('baleia.ansi') 
+local locations = require('baleia.locations')
+local styles = require('baleia.styles')
+local ansi = require('baleia.ansi')
 
 local highlight = {}
 
@@ -57,14 +57,14 @@ function highlight.all(options, offset, lines)
       for _, h in ipairs(highlights) do table.insert(all_highlights, h) end
     end
 
-    table.insert(definitions, { 
+    table.insert(definitions, {
       attributes = styles.attributes(location.style),
       name = name
-    }) 
+    })
   end
 
   if options.strip_sequences then
-    for index = 0, #lines do 
+    for index = 0, #lines do
       lines[index] = lines[index]:gsub(ansi.PATTERN, '')
     end
   end

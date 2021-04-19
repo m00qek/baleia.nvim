@@ -10,7 +10,7 @@ local function reverse(list)
 end
 
 function lines.all()
-  return function(line_getter, buffer) 
+  return function(line_getter, buffer)
     return {
       lines = line_getter(buffer, 1),
       first = 1
@@ -19,7 +19,7 @@ function lines.all()
 end
 
 function lines.moving_window(number)
-  return function(line_getter, buffer, firstline) 
+  return function(line_getter, buffer, firstline)
     local line = firstline - number
     if line < 1 then
       line = 1
@@ -40,13 +40,13 @@ function lines.take_while(predicate)
       local text = line_getter(buffer, line, line + 1)[1]
       if not predicate(text) then
         break
-      end 
+      end
       table.insert(buffer_lines, text)
     end
-    
+
     return {
       lines = reverse(buffer_lines),
-      first = lastline - #buffer_lines + 1 
+      first = lastline - #buffer_lines + 1
     }
   end
 end

@@ -25,10 +25,11 @@ function module.one(buffer, ns, highlight)
     lastcolumn = highlight.lastcolumn - 1
   end
 
-  return vim.api.nvim_buf_add_highlight(buffer, ns, highlight.name, highlight.line - 1, highlight.firstcolumn - 1, lastcolumn)
+  return vim.api.nvim_buf_add_highlight(buffer, ns, highlight.name,
+    highlight.line - 1, highlight.firstcolumn - 1, lastcolumn)
 end
 
-function module.all(buffer, ns, definitions, highlights) 
+function module.all(buffer, ns, definitions, highlights)
   for _, definition in ipairs(definitions) do
     module.create(definition.name, definition.attributes)
   end

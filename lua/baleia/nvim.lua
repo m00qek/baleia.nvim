@@ -1,7 +1,7 @@
 local END_OF_FILE = -1
 
 local ANSI_COLORS = { 'black', 'red', 'green', 'yellow', 'blue', 'magenta',
-                      'cyan', 'white' }  
+                      'cyan', 'white' }
 
 local nvim = {}
 
@@ -15,10 +15,10 @@ end
 
 function nvim.create_namespace(name)
   return vim.api.nvim_create_namespace(name)
-end 
+end
 
 function nvim.execute_on_change(buffer, ns, fn)
-  vim.api.nvim_buf_attach(buffer, false, { 
+  vim.api.nvim_buf_attach(buffer, false, {
     on_lines = function (_, buf, _, firstline, lastline, _, _, _, _)
       fn(buf, ns, firstline + 1, lastline + 1)
     end

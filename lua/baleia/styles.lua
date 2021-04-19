@@ -14,7 +14,7 @@ function styles.merge(from, to)
     foreground = merge_value(from.foreground, to.foreground),
     background = merge_value(from.background, to.background),
     modes = {
-      bold =      merge_value(from.modes.bold, to.modes.bold), 
+      bold =      merge_value(from.modes.bold, to.modes.bold),
       italic =    merge_value(from.modes.italic, to.modes.italic),
       underline = merge_value(from.modes.underline, to.modes.underline)
     },
@@ -22,12 +22,12 @@ function styles.merge(from, to)
   }
 end
 
-function styles.none() 
+function styles.none()
   return {
     foreground = { set = false, value = ansi.foreground[0]},
     background = { set = false, value = ansi.background[0]},
     modes = {
-      bold =      { set = false, value = false }, 
+      bold =      { set = false, value = false },
       italic =    { set = false, value = false },
       underline = { set = false, value = false }
     },
@@ -35,12 +35,12 @@ function styles.none()
   }
 end
 
-function styles.reset(offset) 
+function styles.reset(offset)
   return {
     foreground = { set = true, value = ansi.foreground[0]},
     background = { set = true, value = ansi.background[0]},
     modes = {
-      bold =      { set = true, value = false }, 
+      bold =      { set = true, value = false },
       italic =    { set = true, value = false },
       underline = { set = true, value = false }
     },
@@ -81,14 +81,14 @@ function styles.name(prefix, style)
     end
   end
 
- return style_name .. '_' 
+ return style_name .. '_'
    .. style.foreground.value.cterm
-   .. '_' 
+   .. '_'
    .. style.background.value.cterm
 end
 
-function styles.attributes(style) 
-  local attributes = {} 
+function styles.attributes(style)
+  local attributes = {}
 
   local modes = {}
   for mode, value in pairs(style.modes) do
@@ -101,12 +101,12 @@ function styles.attributes(style)
     attributes.cterm = modes
   end
 
-  if style.foreground.set then 
+  if style.foreground.set then
     attributes.ctermfg = style.foreground.value.cterm
     attributes.guifg = style.foreground.value.gui
   end
 
-  if style.background.set then 
+  if style.background.set then
     attributes.ctermbg = style.background.value.cterm
     attributes.guibg = style.background.value.gui
   end

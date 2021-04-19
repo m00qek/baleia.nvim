@@ -30,7 +30,7 @@ jobs:
         make prepare
 
     - name: Run linter
-      run: luacheck src/ spec/
+      run: luacheck lua/ spec/
 
     - name: Run tests
       run: make test
