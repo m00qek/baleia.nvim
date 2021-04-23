@@ -1,7 +1,3 @@
-local nvim = require('baleia.nvim')
-
-local theme = nvim.theme_colors()
-
 local ansi = {}
 
 ansi.PATTERN = '\x1b[[:;0-9]*m'

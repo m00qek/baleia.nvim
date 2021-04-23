@@ -1,69 +1,62 @@
-local styles = require('baleia.styles')
-local ansi = require('baleia.ansi')
+local styles = require("baleia.styles")
+local ansi = require("baleia.ansi")
 
 local locations = {}
 
-function locations.extract(lines, to_style)
-  local extracted = {}
+local function linelocs(line, text)
+   local extracted = { }
 
-  for line, text in pairs(lines) do
-    local position = 1
-
-    for ansi_sequence in  text:gmatch(ansi.PATTERN) do
+   local position = 1
+   for ansi_sequence in text:gmatch(ansi.PATTERN) do
       local column = text:find(ansi.PATTERN, position)
-
       table.insert(extracted, {
-        style = to_style(ansi_sequence) ,
-        from = { column = column, line = line }
+         style = styles.to_style(ansi_sequence),
+         from  = { line = line, column = column }
       })
-
       position = column + 1
-    end
-  end
+   end
 
-  for index, location in ipairs(extracted) do
-    local previous_location = extracted[index - 1]
-    if previous_location then
-      location.style = styles.merge(previous_location.style, location.style)
-    end
-
-    local next_location = extracted[index + 1]
-    if next_location and next_location.from.column > 1  then
-      location.to = next_location.from
-    elseif next_location then
-      location.to = { line = location.from.line - 1 }
-    else
-      location.to = { line = location.from.line }
-    end
-  end
-
-  return extracted
+   return extracted
 end
 
-function locations.with_offset(strip_sequences, offset, location)
-  local style_offset = 0
-  if strip_sequences then
-    style_offset = location.style.offset
-  end
+function locations.extract(lines)
+   local lastcolumn = nil
+   local lastline = #lines
 
-  local endcolumn = location.to.column
-  if endcolumn then
-    if location.from.line == location.to.line then
-      endcolumn = endcolumn + offset.column + style_offset
-    else
-      endcolumn = endcolumn + offset.column
-    end
-  end
+   local extracted = { }
 
+   for index = #lines, 1, -1 do
+      local locs = linelocs(index, lines[index])
+
+      for loc = #locs, 1, -1 do
+         local location = locs[loc]
+
+         location.to = { line = lastline, column = lastcolumn }
+         table.insert(extracted, location)
+
+         lastline = index
+         lastcolumn = location.from.column - 1
+         if lastcolumn < 1 then
+            lastline = lastline - 1
+            lastcolumn = nil
+         end
+
+      end
+   end
+
+   return extracted
+end
+
+function locations.with_offset(offset, location)
   return {
     style = location.style,
     from = {
       line = location.from.line + offset.line,
-      column = location.from.column + offset.column + style_offset,
+      column = location.from.column + location.style.offset + offset.column,
     },
     to = {
       line = location.to.line + offset.line,
-      column = endcolumn
+      column = location.to.column and location.to.column + offset.column
     }
   }
 end

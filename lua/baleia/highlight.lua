@@ -48,7 +48,7 @@ function highlight.all(options, offset, lines)
   local all_highlights = {}
 
   for _, loc in pairs(locs) do
-    local location = locations.with_offset(options.strip_sequences, offset, loc)
+    local location = locations.with_offset(offset, loc)
     local name = styles.name(options.name, location.style)
 
     if location.from.line == location.to.line then
