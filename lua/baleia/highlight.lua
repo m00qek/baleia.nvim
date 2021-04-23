@@ -40,6 +40,7 @@ local function multi_line(line_starts_at, name, location)
   return highlights
 end
 
+local colors = { cterm = { }, gui = { } }
 function highlight.all(options, offset, lines)
   local locs = locations.extract(lines, styles.to_style)
 
@@ -58,7 +59,7 @@ function highlight.all(options, offset, lines)
     end
 
     table.insert(definitions, {
-      attributes = styles.attributes(location.style),
+      attributes = styles.attributes(location.style, colors),
       name = name
     })
   end
