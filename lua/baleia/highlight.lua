@@ -1,6 +1,5 @@
-local locations = require('baleia.locations')
-local styles = require('baleia.styles')
-local ansi = require('baleia.ansi')
+local locations = require("baleia.locations")
+local styles = require("baleia.styles")
 
 local highlight = {}
 
@@ -25,8 +24,8 @@ local function multi_line(line_starts_at, name, location)
   for line = location.from.line + 1, location.to.line - 1 do
     table.insert(highlights, {
       firstcolumn = line_starts_at,
-      name = name,
-      line = line
+      line = line,
+      name = name
     })
   end
 
@@ -40,34 +39,26 @@ local function multi_line(line_starts_at, name, location)
   return highlights
 end
 
-local colors = { cterm = { }, gui = { } }
 function highlight.all(options, offset, lines)
   local locs = locations.extract(lines, styles.to_style)
 
   local definitions = {}
   local all_highlights = {}
 
-  for _, loc in pairs(locs) do
-    local location = locations.with_offset(offset, loc)
+  for index = #locs, 1, -1 do
+    local location = locations.with_offset(offset, locs[index])
     local name = styles.name(options.name, location.style)
 
     if location.from.line == location.to.line then
       table.insert(all_highlights, single_line(name, location))
     else
       local highlights = multi_line(options.line_starts_at, name, location)
-      for _, h in ipairs(highlights) do table.insert(all_highlights, h) end
+      for _, h in ipairs(highlights) do
+        table.insert(all_highlights, h)
+      end
     end
 
-    table.insert(definitions, {
-      attributes = styles.attributes(location.style, colors),
-      name = name
-    })
-  end
-
-  if options.strip_sequences then
-    for index = 0, #lines do
-      lines[index] = lines[index]:gsub(ansi.PATTERN, '')
-    end
+    definitions[name] = styles.attributes(location.style, options.colors)
   end
 
   return {

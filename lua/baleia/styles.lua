@@ -1,4 +1,4 @@
-local ansi = require('baleia.ansi')
+local ansi = require("baleia.ansi")
 
 local styles = {}
 
@@ -56,7 +56,7 @@ end
 
 function styles.to_style(ansi_sequence)
    local codes = {}
-   for code in ansi_sequence:gmatch('[0-9]+') do
+   for code in ansi_sequence:gmatch("[0-9]+") do
       table.insert(codes, tonumber(code))
    end
 
@@ -93,9 +93,9 @@ function styles.name(prefix, style)
       name = name .. "_" .. table.concat(modes)
    end
 
-   return name .. '_'
+   return name .. "_"
      .. style.foreground.value
-     .. '_'
+     .. "_"
      .. style.background.value
 end
 

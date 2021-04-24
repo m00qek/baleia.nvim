@@ -30,8 +30,8 @@ function module.one(buffer, ns, highlight)
 end
 
 function module.all(buffer, ns, definitions, highlights)
-   for _, definition in ipairs(definitions) do
-      module.create(definition.name, definition.attributes)
+   for name, attributes in pairs(definitions) do
+      module.create(name, attributes)
    end
 
    for _, highlight in ipairs(highlights) do
