@@ -182,6 +182,15 @@ describe("[to_style]", function()
 end)
 
 describe("[merge]", function()
+   it("merging with none always returns the original style", function()
+      assert.combinators.match(
+         styles.reset(4),
+         styles.merge( styles.reset(4), styles.none()))
+
+      assert.combinators.match(
+         styles.to_style("\x1b[31m"),
+         styles.merge(styles.to_style("\x1b[31m"), styles.none()))
+   end)
    it("merging with reset always returns reset", function()
       assert.combinators.match(
          styles.reset(4),

@@ -29,18 +29,20 @@ local function multi_line(line_starts_at, name, location)
     })
   end
 
-  table.insert(highlights, {
-    firstcolumn = line_starts_at,
-    lastcolumn = location.to.column,
-    line = location.to.line,
-    name = name
-  })
+  if not location.to.column or line_starts_at < location.to.column then
+    table.insert(highlights, {
+      firstcolumn = line_starts_at,
+      lastcolumn = location.to.column,
+      line = location.to.line,
+      name = name
+    })
+  end
 
   return highlights
 end
 
 function highlight.all(options, offset, lines)
-  local locs = locations.extract(lines, styles.to_style)
+  local locs = locations.extract(lines)
 
   local definitions = {}
   local all_highlights = {}

@@ -24,8 +24,8 @@ function baleia.setup(opts)
          nvim.execute_on_change(buffer, ns, function(_, _, firstline, lastline)
             local range = opts.get_lines(nvim.get_lines, buffer, firstline, lastline)
             local offset = { column = 0, line = range.first - 1 }
-
             local actions = highlights.all(opts, offset, range.lines)
+
             nvim_highlight.all(buffer, ns, actions.definitions, actions.highlights)
          end)
       end

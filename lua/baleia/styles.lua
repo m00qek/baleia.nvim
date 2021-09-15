@@ -13,7 +13,7 @@ function styles.merge(from, to)
    local style = {
       foreground = merge_value(from.foreground, to.foreground),
       background = merge_value(from.background, to.background),
-      offset = to.offset,
+      offset = to.offset or from.offset,
       modes = { },
    }
 
@@ -29,7 +29,6 @@ function styles.none()
       foreground = { set = false, value = ansi.foreground[0]},
       background = { set = false, value = ansi.background[0]},
       modes = { },
-      offset = 0,
    }
 
    for _, mode in pairs(ansi.modes) do
@@ -93,10 +92,7 @@ function styles.name(prefix, style)
       name = name .. "_" .. table.concat(modes)
    end
 
-   return name .. "_"
-     .. style.foreground.value
-     .. "_"
-     .. style.background.value
+   return name .. "_" .. style.foreground.value .. "_" .. style.background.value
 end
 
 function styles.attributes(style, colors)

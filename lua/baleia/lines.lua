@@ -19,8 +19,8 @@ function lines.all()
 end
 
 function lines.moving_window(number)
-  return function(line_getter, buffer, firstline)
-    local line = firstline - number
+  return function(line_getter, buffer, _, lastline)
+    local line = lastline - number + 1
     if line < 1 then
       line = 1
     end
@@ -35,18 +35,28 @@ end
 function lines.take_while(predicate)
   return function(line_getter, buffer, _, lastline)
     local buffer_lines = {}
+    local started = false
+    local firstline = lastline
 
     for line = lastline, 1, -1 do
       local text = line_getter(buffer, line, line + 1)[1]
-      if not predicate(text) then
+      local valid = predicate(text)
+
+      if started and not valid then
         break
       end
-      table.insert(buffer_lines, text)
+
+      if valid then
+        table.insert(buffer_lines, text)
+      end
+
+      firstline = line
+      started = valid
     end
 
     return {
       lines = reverse(buffer_lines),
-      first = lastline - #buffer_lines + 1
+      first = firstline
     }
   end
 end

@@ -1,5 +1,4 @@
 local locations = require("baleia.locations")
-local styles = require("baleia.styles")
 
 describe("[extract]", function()
    it("with no sequences", function()
@@ -23,7 +22,7 @@ describe("[extract]", function()
    it("with sequence at the beggining and end of the line", function()
       local lines = { "first line\x1b[0m", "\x1b[0msecond line" }
       assert.combinators.match({
-         { from = { line = 2, column = 1 }, to = { line = 2 } },
+         { from = { line = 2, column = 1  }, to = { line = 2 } },
          { from = { line = 1, column = 11 }, to = { line = 1 } },
       }, locations.extract(lines))
    end)
@@ -31,7 +30,7 @@ describe("[extract]", function()
    it("with blank line between", function()
       local lines = { "first line\x1b[0m", "second line", "third \x1b[0mline" }
       assert.combinators.match({
-         { from = { line = 3, column = 7 }, to = { line = 3 } },
+         { from = { line = 3, column = 7  }, to = { line = 3 } },
          { from = { line = 1, column = 11 }, to = { line = 3 } },
       }, locations.extract(lines))
    end)
@@ -43,7 +42,7 @@ describe("[extract]", function()
          { from = { line = 2, column = 17 }, to = { line = 3 } },
          { from = { line = 2, column = 8  }, to = { line = 2, column = 16 } },
          { from = { line = 1, column = 7  }, to = { line = 2, column =  7 } },
-      }, locations.extract(lines, styles.to_style))
+      }, locations.extract(lines))
    end)
 end)
 
