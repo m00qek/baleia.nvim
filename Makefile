@@ -5,17 +5,17 @@ prepare:
 
 test: prepare
 	@nvim \
-			--headless \
-			--noplugin \
-			-u spec/spec.vim \
-			-c "PlenaryBustedDirectory spec/ { minimal_init = 'spec/spec.vim' }"
+		--headless \
+		--noplugin \
+		-u spec/spec.vim \
+		-c "PlenaryBustedDirectory spec/ { minimal_init = 'spec/spec.vim' }"
 
 test-file: prepare
 	@nvim \
-			--headless \
-			--noplugin \
-			-u spec/spec.vim \
-			-c "PlenaryBustedFile $(SPEC)"
+		--headless \
+		--noplugin \
+		-u spec/spec.vim \
+		-c "PlenaryBustedFile $(SPEC)"
 
 watch: prepare
 	@echo -e '\nRunning tests on "spec/**/*_spec.lua" when any Lua file on "lua/" and "spec/" changes\n'
