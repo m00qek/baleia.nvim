@@ -97,7 +97,7 @@ describe("[attributes]", function()
 
    it("with background and foreground", function()
       local style = styles.none()
-      local colors = {
+      local custom_colors = {
          cterm = { blue = "#123ABC" },
          gui =   { green = "#008000" }
       }
@@ -110,7 +110,7 @@ describe("[attributes]", function()
          ctermfg = "#123ABC",
          guibg = "#008000",
          guifg = "blue",
-      }, styles.attributes(style, colors))
+      }, styles.attributes(style, custom_colors))
    end)
 end)
 

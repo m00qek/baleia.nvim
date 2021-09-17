@@ -47,18 +47,18 @@ describe("[extract]", function()
 end)
 
 describe("[with_offset]", function()
-   it("considers ansi sequence lenght", function()
-      local location = {
-         style = { offset = 4 },
-         from = { line = 1, column = 1 },
-         to   = { line = 2, column = 1 },
-      }
+   --it("considers ansi sequence lenght", function()
+   --   local location = {
+   --      style = { offset = 4 },
+   --      from = { line = 1, column = 1 },
+   --      to   = { line = 2, column = 1 },
+   --   }
 
-      assert.combinators.match({
-         from = { line = 1, column = 5 },
-         to   = { line = 2, column = 1 },
-      }, locations.with_offset({ line = 0, column = 0 }, location))
-   end)
+   --   assert.combinators.match({
+   --      from = { line = 1, column = 5 },
+   --      to   = { line = 2, column = 1 },
+   --   }, locations.with_offset({ line = 0, column = 0 }, location))
+   --end)
 
    it("considers offset parameter", function()
       local location = {
@@ -73,16 +73,32 @@ describe("[with_offset]", function()
       }, locations.with_offset({ line = 100, column = 10 }, location))
    end)
 
-   it("considers both ansi_sequence length and offset parameter", function()
-      local location = {
-         style = { offset = 4 },
-         from = { line = 1, column = 1 },
-         to   = { line = 2, column = 1 },
-      }
+   --it("considers both ansi_sequence length and offset parameter", function()
+   --   local location = {
+   --      style = { offset = 4 },
+   --      from = { line = 1, column = 1 },
+   --      to   = { line = 2, column = 1 },
+   --   }
 
+   --   assert.combinators.match({
+   --      from = { line = 101, column = 15 },
+   --      to   = { line = 102, column = 11 },
+   --   }, locations.with_offset({ line = 100, column = 10 }, location))
+   --end)
+end)
+
+
+describe("[strip]", function()
+   it("", function()
+      local locs = {
+         { style = { offset = 4 }, from = { line = 2, column = 17 }, to = { line = 3 } },
+         { style = { offset = 5 }, from = { line = 2, column =  8 }, to = { line = 2, column = 16 } },
+         { style = { offset = 5 }, from = { line = 1, column =  7 }, to = { line = 2, column =  7 } },
+      }
       assert.combinators.match({
-         from = { line = 101, column = 15 },
-         to   = { line = 102, column = 11 },
-      }, locations.with_offset({ line = 100, column = 10 }, location))
+         { from = { line = 2, column = 12 }, to = { line = 3 } },
+         { from = { line = 2, column =  8 }, to = { line = 2, column = 11 } },
+         { from = { line = 1, column =  7 }, to = { line = 2, column =  7 } },
+      }, locations.strip(locs))
    end)
 end)

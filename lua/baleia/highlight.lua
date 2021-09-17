@@ -47,6 +47,19 @@ function highlight.all(options, offset, lines)
   local definitions = {}
   local all_highlights = {}
 
+  local new_lines = { }
+  if options.strip_ansi_codes then
+     locs = locations.strip(locs)
+
+     for _, line in ipairs(lines) do
+        local a = line:gsub(require("baleia.ansi").PATTERN, '')
+        table.insert(new_lines, a)
+     end
+  else
+     locs = locations.ignore(locs)
+     new_lines = lines
+  end
+
   for index = #locs, 1, -1 do
     local location = locations.with_offset(offset, locs[index])
     local name = styles.name(options.name, location.style)
@@ -66,7 +79,7 @@ function highlight.all(options, offset, lines)
   return {
     definitions = definitions,
     highlights = all_highlights,
-    lines = lines
+    lines = new_lines
   }
 end
 

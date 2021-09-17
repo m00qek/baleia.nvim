@@ -9,6 +9,13 @@ local function reverse(list)
   return reversed
 end
 
+function lines.list(firstline, list)
+   return {
+      lines = list,
+      first = firstline
+   }
+end
+
 function lines.all()
   return function(line_getter, buffer)
     return {
