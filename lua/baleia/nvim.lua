@@ -5,7 +5,7 @@ local nvim = {}
 function nvim.get_lines(buffer, startline, endline)
   return vim.api.nvim_buf_get_lines(
     buffer,
-    startline - 1,
+    startline and startline - 1 or 0,
     endline or END_OF_FILE,
     true)
 end
