@@ -49,13 +49,12 @@ end
 
 function locations.with_offset(offset, locs)
    offset.line = offset.line or { }
-   for index = 1, #locs do
-      local loc = locs[index]
-      local line_offset = offset.line[ #locs - index + 1] or { column = 0 }
-
+   for _, loc in ipairs(locs) do
+      local line_offset = offset.line[loc.from.line] or { column = 0 }
       loc.from.line = loc.from.line + offset.global.line
       loc.from.column = loc.from.column + offset.global.column + line_offset.column
 
+      line_offset = offset.line[loc.to.line] or { column = 0 }
       loc.to.line = loc.to.line + offset.global.line
       loc.to.column = loc.to.column and loc.to.column + offset.global.column + line_offset.column
    end

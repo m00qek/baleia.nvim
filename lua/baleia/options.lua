@@ -19,7 +19,7 @@ end
 
 function options.with_default(opts)
   return {
-    strip_ansi_codes = opts.strip_sequences or false,
+    strip_ansi_codes = opts.strip_ansi_codes or false,
     line_starts_at = opts.line_starts_at or 1,
     get_lines = opts.get_lines or lines.all(),
     colors = merge_colors(colors.theme(), { }),

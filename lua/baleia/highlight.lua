@@ -49,8 +49,8 @@ local function apply_offset(offset, strip_ansi_codes, lines, locs)
      new_locs = locations.strip_ansi_codes(locs)
 
      for _, line in ipairs(lines) do
-        table.insert(offseted_lines,
-                     line:gsub(require("baleia.ansi").PATTERN, ''))
+        local stripped_line = line:gsub(require("baleia.ansi").PATTERN, '')
+        table.insert(offseted_lines, stripped_line)
      end
   else
      new_locs = locations.ignore_ansi_codes(locs)
