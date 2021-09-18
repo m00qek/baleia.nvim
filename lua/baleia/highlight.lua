@@ -43,7 +43,7 @@ end
 
 local function apply_offset(offset, strip_ansi_codes, lines, locs)
   local offseted_lines = { }
-  local new_locs = { }
+  local new_locs
 
   if strip_ansi_codes then
      new_locs = locations.strip_ansi_codes(locs)
