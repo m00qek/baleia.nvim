@@ -15,7 +15,7 @@ function baleia.setup(opts)
    return {
       once = function(buffer)
          local range = lines.all()(nvim.get_lines, buffer)
-         local offset = { column = 0, line = range.first - 1 }
+         local offset = { global = { column = 0, line = range.first - 1 } }
          local actions = highlights.all(opts, offset, range.lines)
 
          nvim_highlight.all(buffer, ns, actions.definitions, actions.highlights)
@@ -23,7 +23,7 @@ function baleia.setup(opts)
       automatically = function(buffer)
          nvim.execute_on_change(buffer, ns, function(_, _, firstline, lastline)
             local range = opts.get_lines(nvim.get_lines, buffer, firstline, lastline)
-            local offset = { column = 0, line = range.first - 1 }
+            local offset = { global = { column = 0, line = range.first - 1 } }
             local actions = highlights.all(opts, offset, range.lines)
 
             nvim_highlight.all(buffer, ns, actions.definitions, actions.highlights)
@@ -31,8 +31,8 @@ function baleia.setup(opts)
       end,
       buf_set_lines = function(buffer, start, end_, strict_indexing, replacement)
          local range = lines.list(start + 1, replacement)
-         local offset = { column = 2, line = range.first - 1 }
-         local actions = highlights.all(options.merge(opts, { strip_ansi_codes = true }), offset, range.lines)
+         local offset = { global = { column = 0, line = range.first - 1 } }
+         local actions = highlights.all(opts, offset, range.lines)
 
          vim.api.nvim_buf_set_lines(buffer, start, end_, strict_indexing, actions.lines)
 
@@ -40,10 +40,13 @@ function baleia.setup(opts)
       end,
       buf_set_text = function(buffer, start_row, start_col, end_row, end_col, replacement)
          local range = lines.list(start_row + 1, replacement)
-         local offset = { column = 0, line = range.first - 1 }
-         local actions = highlights.all(options.merge(opts, { strip_ansi_codes = true }), offset, range.lines)
+         local offset = {
+            global = { column = 0, line = range.first - 1 },
+            line = { [1] = { column = start_col } },
+         }
+         local actions = highlights.all(opts, offset, range.lines)
 
-         vim.api.nvim_buf_set_lines(buffer, start_row, start_col, end_row, end_col, replacement)
+         vim.api.nvim_buf_set_text(buffer, start_row, start_col, end_row, end_col, actions.lines)
 
          nvim_highlight.all(buffer, ns, actions.definitions, actions.highlights)
       end,

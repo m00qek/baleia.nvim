@@ -15,7 +15,7 @@ describe("[all]", function()
            },
          },
          highlight.all({ name = 'B', line_starts_at = 3, colors = { cterm = { }, gui = { } } },
-                       { column = 0, line = 0 },
+                       { global = { column = 0, line = 0 } },
                        lines))
    end)
 end)

@@ -47,19 +47,20 @@ function locations.extract(lines)
    return extracted
 end
 
-function locations.with_offset(offset, location)
-  return {
-    style = location.style,
-    from = {
-      line = location.from.line + offset.line,
-      column = location.from.column + offset.column,
-      --column = location.from.column + location.style.offset + offset.column,
-    },
-    to = {
-      line = location.to.line + offset.line,
-      column = location.to.column and location.to.column + offset.column
-    }
-  }
+function locations.with_offset(offset, locs)
+   offset.line = offset.line or { }
+   for index = 1, #locs do
+      local loc = locs[index]
+      local line_offset = offset.line[ #locs - index + 1] or { column = 0 }
+
+      loc.from.line = loc.from.line + offset.global.line
+      loc.from.column = loc.from.column + offset.global.column + line_offset.column
+
+      loc.to.line = loc.to.line + offset.global.line
+      loc.to.column = loc.to.column and loc.to.column + offset.global.column + line_offset.column
+   end
+
+   return locs
 end
 
 function locations.ignore(locs)

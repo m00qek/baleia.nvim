@@ -62,15 +62,19 @@ describe("[with_offset]", function()
 
    it("considers offset parameter", function()
       local location = {
-         style = { offset = 0 },
-         from = { line = 1, column = 1 },
-         to   = { line = 2, column = 1 },
+         {
+            style = { offset = 0 },
+            from = { line = 1, column = 1 },
+            to   = { line = 2, column = 1 },
+         },
       }
 
       assert.combinators.match({
-         from = { line = 101, column = 11 },
-         to   = { line = 102, column = 11 },
-      }, locations.with_offset({ line = 100, column = 10 }, location))
+         {
+            from = { line = 101, column = 11 },
+            to   = { line = 102, column = 11 },
+         },
+      }, locations.with_offset({ global = { line = 100, column = 10 } }, location))
    end)
 
    --it("considers both ansi_sequence length and offset parameter", function()

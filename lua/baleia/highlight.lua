@@ -60,8 +60,10 @@ function highlight.all(options, offset, lines)
      new_lines = lines
   end
 
+  locs = locations.with_offset(offset, locs)
+
   for index = #locs, 1, -1 do
-    local location = locations.with_offset(offset, locs[index])
+    local location = locs[index]
     local name = styles.name(options.name, location.style)
 
     if location.from.line == location.to.line then
