@@ -63,7 +63,7 @@ function locations.with_offset(offset, locs)
    return locs
 end
 
-function locations.ignore(locs)
+function locations.ignore_ansi_codes(locs)
    for _, loc in ipairs(locs) do
       loc.from.column = loc.from.column + loc.style.offset
    end
@@ -71,7 +71,7 @@ function locations.ignore(locs)
    return locs
 end
 
-function locations.strip(locs)
+function locations.strip_ansi_codes(locs)
    local line = locs[1].to.line
    local offset = 0
 

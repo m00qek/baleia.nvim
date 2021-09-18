@@ -92,7 +92,7 @@ describe("[with_offset]", function()
 end)
 
 
-describe("[strip]", function()
+describe("[strip_ansi_codes]", function()
    it("", function()
       local locs = {
          { style = { offset = 4 }, from = { line = 2, column = 17 }, to = { line = 3 } },
@@ -103,6 +103,6 @@ describe("[strip]", function()
          { from = { line = 2, column = 12 }, to = { line = 3 } },
          { from = { line = 2, column =  8 }, to = { line = 2, column = 11 } },
          { from = { line = 1, column =  7 }, to = { line = 2, column =  7 } },
-      }, locations.strip(locs))
+      }, locations.strip_ansi_codes(locs))
    end)
 end)
