@@ -36,7 +36,9 @@ function baleia.setup(opts)
 
          vim.api.nvim_buf_set_lines(buffer, start, end_, strict_indexing, actions.lines)
 
-         nvim_highlight.all(buffer, ns, actions.definitions, actions.highlights)
+         vim.schedule(function()
+            nvim_highlight.all(buffer, ns, actions.definitions, actions.highlights)
+         end)
       end,
       buf_set_text = function(buffer, start_row, start_col, end_row, end_col, replacement)
          local range = lines.list(start_row + 1, replacement)
@@ -48,7 +50,9 @@ function baleia.setup(opts)
 
          vim.api.nvim_buf_set_text(buffer, start_row, start_col, end_row, end_col, actions.lines)
 
-         nvim_highlight.all(buffer, ns, actions.definitions, actions.highlights)
+         vim.schedule(function()
+            nvim_highlight.all(buffer, ns, actions.definitions, actions.highlights)
+         end)
       end,
    }
 end
