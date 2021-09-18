@@ -64,13 +64,18 @@ function highlight.all(options, offset, lines)
   local definitions = {}
   local all_highlights = {}
 
-  local offseted_lines, locs = apply_offset(offset,
-                                            options.strip_ansi_codes,
-                                            lines,
-                                            locations.extract(lines))
+  local raw_locations = locations.extract(lines)
+  if not next(raw_locations) then
+     return nil
+  end
 
-  for index = #locs, 1, -1 do
-    local location = locs[index]
+  local offseted_lines, offseted_locations = apply_offset(offset,
+                                                          options.strip_ansi_codes,
+                                                          lines,
+                                                          raw_locations)
+
+  for index = #offseted_locations, 1, -1 do
+    local location = offseted_locations[index]
     local name = styles.name(options.name, location.style)
 
     if location.from.line == location.to.line then
