@@ -129,10 +129,10 @@ Example:
 local lastline = vim.api.nvim_buf_line_count(0)
 local new_lines = { '\x1b[32mHello \x1b[33mworld!' }
 
-" appending using Neovim standard API
+-- appending using Neovim standard API
 vim.api.nvim_buf_set_lines(0, lastline, lastline, true, new_lines)
 
-" appending using Baleia API
+-- appending using Baleia API
 local baleia = require('baleia').setup { }
 baleia.buf_set_lines(0, lastline + 1, lastline + 1, true, new_lines)
 ```
