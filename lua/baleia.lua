@@ -30,7 +30,7 @@ function baleia.setup(opts)
       automatically = function(buffer)
          nvim.execute_on_new_lines(buffer, ns, function(_, _, start_row, end_row)
             local raw_lines = nvim.get_lines(buffer, start_row, end_row)
-            local offset = { global = { column = 0, line = start_row - 1 } }
+            local offset = { global = { column = 0, line = start_row } }
 
             local actions = highlights.all(opts, offset, raw_lines)
             if not actions then
@@ -40,7 +40,7 @@ function baleia.setup(opts)
             vim.schedule(function()
                if opts.strip_ansi_codes then
                   local lastline = raw_lines[#raw_lines]
-                  vim.api.nvim_buf_set_text(buffer, start_row - 1, 0, end_row - 1, #lastline, actions.lines)
+                  vim.api.nvim_buf_set_text(buffer, start_row , 0, end_row - 1, #lastline, actions.lines)
                end
                nvim_highlight.all(buffer, ns, actions.definitions, actions.highlights)
             end)
