@@ -6,19 +6,30 @@ Display text with ANSI escape sequences (8 or 16 colors)
 
 ## Install
 
-Using [vim-plug](https://github.com/junegunn/vim-plug):
+Using [vim-plug][vim-plug]:
 
 ```vim
-Plug 'm00qek/baleia.nvim', { 'tag': 'v0.0.2' }
+Plug 'm00qek/baleia.nvim', { 'tag': 'v1.0.0' }
+```
+
+Using [packer.nvim][packer]:
+
+```lua
+use { 'm00qek/baleia.nvim', tag = 'v1.0.0' }
 ```
 
 ## Setup
 
-You need to configure it using 
+`baleia` can colorize an entire buffer or/and apply colors every time a new line
+is added to it. 
+
+### Colorizing the entire buffer
+
+The best approach is to create a command. In `vimscript`: 
 
 ```vim
-let s:highlighter = luaeval("require('baleia').setup()")
-command! BaleiaColorize call s:highlighter.once(bufnr('%'))
+let s:baleia = luaeval("require('baleia').setup { }")
+command! BaleiaColorize call s:baleia.once(bufnr('%'))
 ```
 
 To highlight the current buffer:
@@ -27,116 +38,107 @@ To highlight the current buffer:
 :BaleiaColorize
 ```
 
-## Automatically colorize on changes
+## Automatically colorize when lines are added to the buffer
 
-To automatically colorize when something changes use
+To automatically colorize when a new line is added use
 
 ```vim
-function! s:enable_colors() 
-  if exists('b:baleia') && b:baleia == v:true 
-    return
-  endif
-  let b:baleia = v:true
-
-  call s:highlighter.automatically(bufnr('%'))
-endfunction
-
-autocmd! BufEnter my_buffer call s:highlighter.automatically(bufnr('%')))
+let s:baleia = luaeval("require('baleia').setup { }")
+autocmd BufWinEnter my-buffer call s:baleia.automatically(bufnr('%'))
 ```
 
 where `my_buffer` is how you identify in which buffers it should run (please
 read `:h autocmd`)
 
-### Update strategies
+### Setup options
 
-A escape sequence is affected by previous sequences, in a stack model. Because
-of this the safest way to colorize a buffer is to colorize all lines on every
-change. That's what `baleia` does by default.
+When calling the `setup` function, the following options are available:
 
-If you don' think you need that for your use case you may use one of the
-following strategies:
+|      option      |      default value     |
+| -----------------| ---------------------- |
+| name             | 'BaleiaColors'         |
+| strip_ansi_codes | true                   |
+| line_starts_at   | 1 (one-indexed)        |
+| colors           | defined by colorscheme |
 
-|        strategy         |       description       |
-| ----------------------- | ----------------------- |
-| `all()`                 | all lines
-| `moving_window(n)`      | start `n` lines before the changed one |
-| `take_while(predicate)` | start in the last previous line where `predicate` is true |
+#### name
 
-you can configure it using
+By default `BaleiaColors`, this will be the name of the highlight namespace 
+defined by `baleia` as well as a prefix in the name of all highlight groups
+created by it.
 
-```vim
-let s:highlighter = luaeval("require('baleia').setup(require('baleia.lines').moving_window(10))")
-```
+#### strip_ansi_codes
 
-## Removing ANSI escape codes
+By default `true`, indicates whether `baleia` should or not remove the ANSI 
+escape sequence of the text after colorizing it.
 
-By default plugin only adds colors to text accordingly to the ANSI sequences. If
-you don't want to see those sequences you have two options
+#### line_starts_at
 
-### Concealing
+By default `1`, one-indexed, indicates in which column `baleia` should start 
+colorizing lines.
 
-This will not delete sequences from the text, only _hide_ them. One downside of
-this approach is that, because hidden sequences are still in the text, all
-motions (W, B, E, etc.) will consider them.
+#### colors
 
-Add to your config
-
-```vim
-syntax match BaleiaAnsiEscapeCodes /\%x1b\[[:;0-9]*m/ conceal
-
-set conceallevel=2
-set concealcursor=nvic
-```
-
-### Stripping 
-
-Because this plugin is executed _while_ new lines are added to the buffer, it
-cannot change its contents. You may schedule a find/replace to remove escape
-sequences sometime _after_ the buffer is loaded with
+By default it uses values in `g:terminal_color_*` variables, which should be 
+defined by your colorscheme. If you want to customize some colors, this option 
+accepts a table in the following format:
 
 ```vim
-function! s:remove_ansi(tid)
-  let l:save = winsaveview()
-  try | %s/\%x1b[[:;0-9]*m//g | catch 'E486' | endtry
-  call winrestview(l:save)
-endfunction
-
-function! s:enable_colors() 
-  "immediately hide all escape sequences
-  syntax match BaleiaAnsiEscapeCodes /\%x1b\[[:;0-9]*m/ conceal
-  setlocal conceallevel=2
-  setlocal concealcursor=nvic
-
-  " remove them after some time
-  call timer_start(300, funcref('s:remove_ansi'))
-
-  if exists('b:baleia') && b:baleia == v:true 
-    return
-  endif
-  let b:baleia = v:true
-
-  call s:highlighter.automatically(bufnr('%'))
-endfunction
-
-autocmd! BufEnter my_buffer call s:enable_colors()
+lua <<EOF
+baleia = require('baleia').setup {
+  colors = {
+    black = 'black',
+    red = 'red', 
+    green = 'green',
+    yellow = 'yellow',
+    blue = 'blue',
+    magenta = 'magenta',
+    cyan = 'cyan',
+    white = 'white'
+  } 
+}
+EOF
 ```
 
 ## With Conjure
 
-there is a config especially made to colorize Conjure buffers. To use it do
+This can be used to colorize [Conjure][conjure] log buffer. To do it you must 
+tell conjure to not strip ANSI escape codes:
 
 ```vim
 " tell Conjure to not strip ANSI sequences
 let g:conjure#log#strip_ansi_escape_sequences_line_limit = 0
-
-let s:highlighter = luaeval("require('baleia').setup(require('baleia.options').conjure())")
 ```
 
-to automatically enable `baleia` for all Conjure log buffers use 
+To automatically enable `baleia` for all Conjure log buffers use 
 
 ```vim
-autocmd BufEnter conjure-log-* call s:enable_colors()
+let s:baleia = luaeval("require('baleia').setup { line_starts_at = 3 }")
+autocmd BufWinEnter conjure-log-* call s:baleia.automatically(bufnr('%'))
+```
+
+## Developer API
+
+`baleia` provides two functions, `buf_set_lines` and `buf_set_text`, that have
+the same interface as the default `vim.api.nvim_buf_set_lines` and
+`vim.api.nvim_but_set_text`. Using those is very efficient because they do all 
+color detection and ANSI code stripping before writing anything to the buffer.
+Example:
+
+```lua
+local lastline = vim.api.nvim_buf_line_count(0)
+local new_lines = { '\x1b[32mHello \x1b[33mworld!' }
+
+" appending using Neovim standard API
+vim.api.nvim_buf_set_lines(0, lastline, lastline, true, new_lines)
+
+" appending using Baleia API
+local baleia = require('baleia').setup { }
+baleia.buf_set_lines(0, lastline + 1, lastline + 1, true, new_lines)
 ```
 
 [integration-badge]: https://github.com/m00qek/baleia.nvim/actions/workflows/integration.yml/badge.svg
-[integration-runs]:  https://github.com/m00qek/baleia.nvim/actions/workflows/integration.yml
+[integration-runs]: https://github.com/m00qek/baleia.nvim/actions/workflows/integration.yml
+[vim-plug]: https://github.com/junegunn/vim-plug
+[conjure]: https://github.com/Olical/conjure
+[packer]: https://github.com/wbthomason/packer.nvim
