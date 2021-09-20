@@ -107,7 +107,7 @@ function styles.attributes(style, colors)
 
   if #modes > 0 then
     table.sort(modes)
-    attributes.cterm = modes
+    attributes.modes = modes
   end
 
   if style.foreground.set then
