@@ -9,13 +9,13 @@ Display text with ANSI escape sequences (8 or 16 colors)
 Using [vim-plug][vim-plug]:
 
 ```vim
-Plug 'm00qek/baleia.nvim', { 'tag': 'v1.0.0' }
+Plug 'm00qek/baleia.nvim', { 'tag': 'v1.0.1' }
 ```
 
 Using [packer.nvim][packer]:
 
 ```lua
-use { 'm00qek/baleia.nvim', tag = 'v1.0.0' }
+use { 'm00qek/baleia.nvim', tag = 'v1.0.1' }
 ```
 
 ## Setup
