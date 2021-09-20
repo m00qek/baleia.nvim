@@ -61,7 +61,7 @@ describe("[attributes]", function()
       style.modes.bold = { set = true, value = true }
 
       assert.combinators.match({
-         cterm = { "bold", "italic" },
+         modes = { "bold", "italic" },
       }, styles.attributes(style, colors))
    end)
 
@@ -77,7 +77,7 @@ describe("[attributes]", function()
          ctermfg = "blue",
          guibg = "green",
          guifg = "blue",
-         cterm = { "bold" },
+         modes = { "bold" },
       }, styles.attributes(style, colors))
    end)
 
@@ -185,7 +185,7 @@ describe("[merge]", function()
    it("merging with none always returns the original style", function()
       assert.combinators.match(
          styles.reset(4),
-         styles.merge( styles.reset(4), styles.none()))
+         styles.merge(styles.reset(4), styles.none()))
 
       assert.combinators.match(
          styles.to_style("\x1b[31m"),

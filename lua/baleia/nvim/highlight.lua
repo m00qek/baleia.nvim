@@ -5,11 +5,12 @@ local module = {}
 function module.create(name, attributes)
    local command = 'highlight ' .. name
 
-   if attributes.cterm then
-      command = command .. ' cterm=' .. table.concat(attributes.cterm, ',')
+   if attributes.modes then
+      command = command .. ' cterm=' .. table.concat(attributes.modes, ',')
+      command = command .. ' gui=' .. table.concat(attributes.modes, ',')
    end
 
-   attributes.cterm = nil
+   attributes.modes = nil
    for attr, value in pairs(attributes) do
       if value then
          command = command .. ' ' .. attr .. '=' .. value
