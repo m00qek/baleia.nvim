@@ -26,7 +26,12 @@ function baleia.setup(opts)
          local raw_lines = nvim.get_lines(buffer)
 
          if opts.strip_ansi_codes then
-            vim.api.nvim_buf_set_text(buffer, 0, 0, #raw_lines - 1, text.lastcolumn(raw_lines), text.strip_color_codes(raw_lines))
+            vim.api.nvim_buf_set_text(buffer,
+                                      0,
+                                      0,
+                                      #raw_lines - 1,
+                                      text.lastcolumn(raw_lines),
+                                      text.strip_color_codes(raw_lines))
          end
 
          schedule_highlights(opts, ns, buffer, raw_lines, {
@@ -39,7 +44,12 @@ function baleia.setup(opts)
 
             if opts.strip_ansi_codes then
                vim.schedule(function()
-                  vim.api.nvim_buf_set_text(buffer, start_row , 0, end_row - 1, text.lastcolumn(raw_lines), text.strip_color_codes(raw_lines))
+                  vim.api.nvim_buf_set_text(buffer,
+                                            start_row,
+                                            0,
+                                            end_row - 1,
+                                            text.lastcolumn(raw_lines),
+                                            text.strip_color_codes(raw_lines))
                end)
             end
 
