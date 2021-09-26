@@ -5,8 +5,7 @@ describe("[all]", function()
       local lines = { "; first line\x1b[32m ", "; \x1b[31msecond line" }
 
       assert.combinators.match(
-         { lines = { "; first line\x1b[32m ", "; \x1b[31msecond line" },
-           highlights = {
+         { highlights = {
              { line = 1, firstcolumn = 18, name = "B_green_none" },
              { line = 2, firstcolumn = 8,  name = "B_red_none" } },
            definitions = {

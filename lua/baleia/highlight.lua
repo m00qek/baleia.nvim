@@ -41,38 +41,28 @@ local function multi_line(line_starts_at, name, location)
   return highlights
 end
 
-local function apply_offset(offset, strip_ansi_codes, lines, locs)
-  local offseted_lines = { }
+local function apply_offset(offset, strip_ansi_codes, locs)
   local new_locs
 
   if strip_ansi_codes then
      new_locs = locations.strip_ansi_codes(locs)
-
-     for _, line in ipairs(lines) do
-        local stripped_line = line:gsub(require("baleia.ansi").PATTERN, '')
-        table.insert(offseted_lines, stripped_line)
-     end
   else
      new_locs = locations.ignore_ansi_codes(locs)
-     offseted_lines = lines
   end
 
-  return offseted_lines, locations.with_offset(offset, new_locs)
+  return locations.with_offset(offset, new_locs)
 end
 
 function highlight.all(options, offset, lines)
-  local definitions = {}
-  local all_highlights = {}
-
   local raw_locations = locations.extract(lines)
   if not next(raw_locations) then
      return nil
   end
 
-  local offseted_lines, offseted_locations = apply_offset(offset,
-                                                          options.strip_ansi_codes,
-                                                          lines,
-                                                          raw_locations)
+  local offseted_locations = apply_offset(offset, options.strip_ansi_codes, raw_locations)
+
+  local definitions = {}
+  local all_highlights = {}
 
   for index = #offseted_locations, 1, -1 do
     local location = offseted_locations[index]
@@ -92,8 +82,7 @@ function highlight.all(options, offset, lines)
 
   return {
     definitions = definitions,
-    highlights = all_highlights,
-    lines = offseted_lines
+    highlights = all_highlights
   }
 end
 
