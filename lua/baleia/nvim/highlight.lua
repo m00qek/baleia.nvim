@@ -3,7 +3,7 @@ local END_OF_LINE = -1
 local module = {}
 
 function module.create(name, attributes)
-   local command = 'highlight ' .. name
+   local command = name
 
    if attributes.modes then
       command = command .. ' cterm=' .. table.concat(attributes.modes, ',')
@@ -17,7 +17,9 @@ function module.create(name, attributes)
       end
    end
 
-   return vim.api.nvim_command(command)
+   if command ~= name then
+      return vim.api.nvim_command('highlight ' .. command)
+   end
 end
 
 function module.one(buffer, ns, highlight)
