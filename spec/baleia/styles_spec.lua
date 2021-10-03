@@ -16,8 +16,8 @@ describe("[name]", function()
    it("with only foreground and background", function()
       local style = styles.none()
 
-      style.background = { set = true, value = 'green' }
-      style.foreground = { set = true, value = 'blue' }
+      style.background = { set = true, value = { name = 'green' } }
+      style.foreground = { set = true, value = { name = 'blue' } }
 
       assert.combinators.match("Baleia_blue_green",
          styles.name("Baleia", style))
@@ -26,8 +26,8 @@ describe("[name]", function()
    it("with background, foreground and modifiers", function()
       local style = styles.none()
 
-      style.background = { set = true, value = 'green' }
-      style.foreground = { set = true, value = 'blue' }
+      style.background = { set = true, value = { name = 'green' } }
+      style.foreground = { set = true, value = { name = 'blue' } }
       style.modes.italic = { set = true, value = true }
       style.modes.bold = { set = true, value = true }
 
@@ -67,16 +67,15 @@ describe("[attributes]", function()
 
    it("with modes, background and foreground", function()
       local style = styles.none()
-
-      style.background = { set = true, value = 'green' }
-      style.foreground = { set = true, value = 'blue' }
+      style.background = { set = true, value = { inferred = { gui = "#008000" }, name = 2, cterm = 2 } }
+      style.foreground = { set = true, value = { inferred = { gui = "#000080" }, name = 4, cterm = 4 } }
       style.modes.bold = { set = true, value = true }
 
       assert.combinators.match({
-         ctermbg = "green",
-         ctermfg = "blue",
-         guibg = "green",
-         guifg = "blue",
+         ctermbg = 2,
+         ctermfg = 4,
+         guibg = "#008000",
+         guifg = "#000080",
          modes = { "bold" },
       }, styles.attributes(style, colors))
    end)
@@ -84,32 +83,32 @@ describe("[attributes]", function()
    it("with background and foreground, overriding colors", function()
       local style = styles.none()
 
-      style.background = { set = true, value = 'green' }
-      style.foreground = { set = true, value = 'blue' }
+      style.background = { set = true, value = { inferred = { gui = "#008000" }, name = 2, cterm = 2 } }
+      style.foreground = { set = true, value = { inferred = { gui = "#000080" }, name = 4, cterm = 4 } }
 
       assert.combinators.match({
-         ctermbg = "green",
-         ctermfg = "blue",
-         guibg = "green",
-         guifg = "blue",
+         ctermbg = 2,
+         ctermfg = 4,
+         guibg = "#008000",
+         guifg = "#000080",
       }, styles.attributes(style, colors))
    end)
 
    it("with background and foreground", function()
       local style = styles.none()
       local custom_colors = {
-         cterm = { blue = "#123ABC" },
-         gui =   { green = "#008000" }
+         [2] = "#123ABC",
+         [4] = "#fa8bf9",
       }
 
-      style.background = { set = true, value = 'green' }
-      style.foreground = { set = true, value = 'blue' }
+      style.background = { set = true, value = { inferred = { gui = "#008000" }, name = 2, cterm = 2 } }
+      style.foreground = { set = true, value = { inferred = { gui = "#000080" }, name = 4, cterm = 4 } }
 
       assert.combinators.match({
-         ctermbg = "green",
-         ctermfg = "#123ABC",
-         guibg = "#008000",
-         guifg = "blue",
+         ctermbg = 2,
+         ctermfg = 4,
+         guibg = "#123ABC",
+         guifg = "#fa8bf9",
       }, styles.attributes(style, custom_colors))
    end)
 end)
@@ -119,8 +118,8 @@ describe("[reset]", function()
       local style = styles.reset(1)
 
       assert.combinators.match({
-         foreground = { set = true, value = "none" },
-         background = { set = true, value = "none" },
+         foreground = { set = true, value = { gui = "none", name = "none", cterm = "none" } },
+         background = { set = true, value = { gui = "none", name = "none", cterm = "none" } },
       }, style)
 
       for _, value in pairs(style.modes) do
@@ -152,13 +151,13 @@ describe("[to_style]", function()
 
    it("extract background", function()
       assert.combinators.match({
-         background = { set = true, value = "red" }
+         background = { set = true, value = { inferred = { gui = "#800000" }, name = 1, cterm = 1 } }
       }, styles.to_style("\x1b[41m"))
    end)
 
    it("extract foreground", function()
       assert.combinators.match({
-         foreground = { set = true, value = "red" }
+         foreground = { set = true, value = { inferred = { gui = "#800000" }, name = 1, cterm = 1 } }
       }, styles.to_style("\x1b[31m"))
    end)
 
@@ -174,8 +173,8 @@ describe("[to_style]", function()
 
    it("extract multiple attributes", function()
       assert.combinators.match({
-         background = { set = true, value = "red" },
-         foreground = { set = true, value = "red" },
+         background = { set = true, value = { inferred = { gui = "#800000" }, name = 1, cterm = 1 } },
+         foreground = { set = true, value = { inferred = { gui = "#800000" }, name = 1, cterm = 1 } },
          modes = { bold  = { set = true, value = true } }
       }, styles.to_style("\x1b[1;31;41m"))
    end)

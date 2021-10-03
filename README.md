@@ -59,7 +59,6 @@ When calling the `setup` function, the following options are available:
 | name             | 'BaleiaColors'         |
 | strip_ansi_codes | true                   |
 | line_starts_at   | 1 (one-indexed)        |
-| colors           | defined by colorscheme |
 
 #### name
 
@@ -76,29 +75,6 @@ escape sequence of the text after colorizing it.
 
 By default `1`, one-indexed, indicates in which column `baleia` should start 
 colorizing lines.
-
-#### colors
-
-By default it uses values in `g:terminal_color_*` variables, which should be 
-defined by your colorscheme. If you want to customize some colors, this option 
-accepts a table in the following format:
-
-```vim
-lua <<EOF
-baleia = require('baleia').setup {
-  colors = {
-    black = 'black',
-    red = 'red', 
-    green = 'green',
-    yellow = 'yellow',
-    blue = 'blue',
-    magenta = 'magenta',
-    cyan = 'cyan',
-    white = 'white'
-  } 
-}
-EOF
-```
 
 ## With Conjure
 

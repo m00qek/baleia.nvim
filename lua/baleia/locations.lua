@@ -6,13 +6,17 @@ local locations = {}
 local function linelocs(line, text)
    local extracted = { }
 
+   local previous_style = styles.none()
+
    local position = 1
    for ansi_sequence in text:gmatch(ansi.PATTERN) do
       local column = text:find(ansi.PATTERN, position)
+      local style = styles.merge(previous_style, styles.to_style(ansi_sequence))
       table.insert(extracted, {
-         style = styles.to_style(ansi_sequence),
+         style = style,
          from  = { line = line, column = column }
       })
+      previous_style = style
       position = column + 1
    end
 

@@ -1,15 +1,16 @@
-local ansi = require("baleia.ansi")
+local ansi = require("baleia.colors.ansi")
 
 local colors = {}
 
-function colors.theme()
-  local nvim_colors = {}
+function colors.theme(default_colors)
+  local theme_colors = {}
 
-  for index, color in pairs(ansi.COLORS) do
-    nvim_colors[color] = vim.g["terminal_color_" .. index - 1] or color
+  for index = 0, 255 do
+    local color = vim.g["terminal_color_" .. index]
+    theme_colors[index] = color or default_colors[index]
   end
 
-  return nvim_colors
+  return theme_colors
 end
 
 return colors
