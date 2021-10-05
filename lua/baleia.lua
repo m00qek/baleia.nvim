@@ -44,6 +44,10 @@ function baleia.setup(opts)
 
             if opts.strip_ansi_codes then
                vim.schedule(function()
+                  if vim.api.nvim_buf_line_count(buffer) <= 0 then
+                     return
+                  end
+
                   vim.api.nvim_buf_set_text(buffer,
                                             start_row,
                                             0,

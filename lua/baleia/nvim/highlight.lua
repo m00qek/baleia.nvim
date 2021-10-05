@@ -18,7 +18,7 @@ function module.create(name, attributes)
    end
 
    if command ~= name then
-      return vim.api.nvim_command('highlight ' .. command)
+      return vim.cmd('highlight ' .. command)
    end
 end
 
