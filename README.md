@@ -2,20 +2,20 @@ baleia.nvim
 ===
 [![Integration][integration-badge]][integration-runs]
 
-Display text with ANSI escape sequences (8 or 16 colors)
+Display text with ANSI escape sequences (8, 16, 256 or TrueColor)
 
 ## Install
 
 Using [vim-plug][vim-plug]:
 
 ```vim
-Plug 'm00qek/baleia.nvim', { 'tag': 'v1.0.1' }
+Plug 'm00qek/baleia.nvim', { 'tag': 'v1.1.0' }
 ```
 
 Using [packer.nvim][packer]:
 
 ```lua
-use { 'm00qek/baleia.nvim', tag = 'v1.0.1' }
+use { 'm00qek/baleia.nvim', tag = 'v1.1.0' }
 ```
 
 ## Setup
