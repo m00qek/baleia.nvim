@@ -1,5 +1,3 @@
-local ansi = require("baleia.colors.ansi")
-
 local colors = {}
 
 function colors.theme(default_colors)
