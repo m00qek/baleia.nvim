@@ -114,15 +114,16 @@ color detection and ANSI code stripping before writing anything to the buffer.
 Example:
 
 ```lua
-local lastline = vim.api.nvim_buf_line_count(0)
 local new_lines = { '\x1b[32mHello \x1b[33mworld!' }
 
 -- appending using Neovim standard API
+local lastline = vim.api.nvim_buf_line_count(0)
 vim.api.nvim_buf_set_lines(0, lastline, lastline, true, new_lines)
 
 -- appending using Baleia API
+local lastline = vim.api.nvim_buf_line_count(0)
 local baleia = require('baleia').setup { }
-baleia.buf_set_lines(0, lastline + 1, lastline + 1, true, new_lines)
+baleia.buf_set_lines(0, lastline, lastline, true, new_lines)
 ```
 
 [integration-badge]: https://github.com/m00qek/baleia.nvim/actions/workflows/integration.yml/badge.svg
