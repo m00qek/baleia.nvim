@@ -1,8 +1,11 @@
-local END_OF_LINE = -1
-
 local module = {}
 
-function module.create(name, attributes)
+local nvim = {
+   buffer = require("baleia/nvim/buffer"),
+   api = require("baleia/nvim/api"),
+}
+
+function module.create(logger, name, attributes)
    local command = name
 
    if attributes.modes then
@@ -18,27 +21,24 @@ function module.create(name, attributes)
    end
 
    if command ~= name then
-      return vim.cmd('highlight ' .. command)
+      return nvim.api.execute(logger, 'highlight ' .. command)
    end
 end
 
-function module.one(buffer, ns, highlight)
-   return vim.api.nvim_buf_add_highlight(
-      buffer,
-      ns,
-      highlight.name,
-      highlight.line - 1,
-      highlight.firstcolumn - 1,
-      highlight.lastcolumn or END_OF_LINE)
-end
-
-function module.all(buffer, ns, definitions, highlights)
+function module.all(logger, buffer, ns, definitions, highlights)
    for name, attributes in pairs(definitions) do
-      module.create(name, attributes)
+      module.create(logger, name, attributes)
    end
 
    for _, highlight in ipairs(highlights) do
-      module.one(buffer, ns, highlight)
+      nvim.buffer.add_highlight(
+         logger,
+         buffer,
+         ns,
+         highlight.name,
+         highlight.line - 1,
+         highlight.firstcolumn - 1,
+         highlight.lastcolumn)
    end
 end
 

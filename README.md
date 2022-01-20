@@ -93,6 +93,18 @@ let s:baleia = luaeval("require('baleia').setup { line_starts_at = 3 }")
 autocmd BufWinEnter conjure-log-* call s:baleia.automatically(bufnr('%'))
 ```
 
+## What to do if something looks wrong
+
+Enable logs with
+
+```vim
+let s:baleia = luaeval("require('baleia').setup { log = 'DEBUG' }")
+command! BaleiaLogs call g:baleia.logger.show()
+```
+
+You can set the log level to `ERROR`, `WARN`, `INFO` or `DEBUG`. You can see
+the log using `BaleiaLogs`.
+
 ## Developer API
 
 `baleia` provides two functions, `buf_set_lines` and `buf_set_text`, that have
