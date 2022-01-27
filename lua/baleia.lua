@@ -50,7 +50,7 @@ function baleia.setup(opts)
 
             if opts.strip_ansi_codes then
                vim.schedule(function()
-                  if nvim.buffer.is_empty() then
+                  if nvim.buffer.is_empty(buffer) then
                      return
                   end
 
