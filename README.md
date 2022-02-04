@@ -99,7 +99,7 @@ Enable logs with
 
 ```vim
 let s:baleia = luaeval("require('baleia').setup { log = 'DEBUG' }")
-command! BaleiaLogs call g:baleia.logger.show()
+command! BaleiaLogs call s:baleia.logger.show()
 ```
 
 You can set the log level to `ERROR`, `WARN`, `INFO` or `DEBUG`. You can see
