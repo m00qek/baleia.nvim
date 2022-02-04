@@ -145,6 +145,10 @@ describe("[none]", function()
 end)
 
 describe("[to_style]", function()
+   it("ignores unknown codes", function()
+      assert.combinators.match(styles.none(), styles.to_style("\x1b[99m"))
+   end)
+
    it("extract reset code", function()
       assert.combinators.match(styles.reset(4), styles.to_style("\x1b[0m"))
    end)

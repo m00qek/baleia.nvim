@@ -94,7 +94,7 @@ function styles.to_style(ansi_sequence)
       index = index + 5
 
     else
-      ansi = ansi + 1
+      index = index + 1
     end
   end
 
