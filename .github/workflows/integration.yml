@@ -32,10 +32,10 @@ jobs:
     - name: Install dependencies
       run: |
         luarocks install luacheck
-        make prepare
+        cd test/ && make prepare
 
     - name: Run linter
       run: luacheck lua/ spec/
 
     - name: Run tests
-      run: make test
+      run: cd test && make test
