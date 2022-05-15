@@ -1,6 +1,6 @@
-set rtp+=.
-set rtp+=.vendor/plenary.nvim/
-set rtp+=.vendor/matcher_combinators.lua/
+set rtp+=..
+set rtp+=vendor/plenary.nvim/
+set rtp+=vendor/matcher_combinators.lua/
 
 runtime plugin/plenary.vim
 
