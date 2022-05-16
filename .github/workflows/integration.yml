@@ -12,6 +12,10 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        nvim-versions: ['stable', 'nightly']
+
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -19,7 +23,7 @@ jobs:
     - uses: rhysd/action-setup-vim@v1
       with:
         neovim: true
-        version: v0.5.0
+        version: ${{ matrix.nvim-versions }}
 
     - name: Setup ‘lua’
       uses: leafo/gh-actions-lua@v8
@@ -32,10 +36,10 @@ jobs:
     - name: Install dependencies
       run: |
         luarocks install luacheck
-        cd test/ && make prepare
+        make -C ./test test
 
     - name: Run linter
       run: luacheck lua/ test/spec/
 
     - name: Run tests
-      run: cd test && make test
+      run: make -C ./test test
