@@ -5,6 +5,9 @@ RUN=nvim --headless --noplugin -u spec.vim
 prepare:
 	@git submodule update --depth 1 --init
 
+nvim:
+	nvim --noplugin -u spec.vim
+
 test: prepare
 ifeq ($(strip $(SPEC)),) # a.k.a. $(SPEC) is empty
 	@$(RUN) -c "PlenaryBustedDirectory spec/ { minimal_init = 'spec.vim' }"
