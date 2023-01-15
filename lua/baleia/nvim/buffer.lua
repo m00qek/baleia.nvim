@@ -1,7 +1,6 @@
 local buf = {}
 
 local END_OF_FILE = -1
-
 function buf.set_lines(logger, buffer, start, end_, strict_indexing, lines)
   local status, value = pcall(function()
     return vim.api.nvim_buf_set_lines(buffer, start, end_, strict_indexing, lines)
@@ -59,6 +58,24 @@ function buf.get_lines(logger, buffer, start_row, end_row)
       buffer = buffer,
       start_row = start_row or 0,
       end_row = end_row or END_OF_FILE,
+    }
+  })
+
+  return value
+end
+
+function buf.create_highlight(logger, name, attributes)
+  local status, value = pcall(function()
+    return vim.api.nvim_set_hl(0, name, attributes)
+  end)
+
+  local logfn = not status and logger.error or logger.debug
+  logfn('vim.api.nvim_set_hl', {
+    result = value,
+    params = {
+      namespace = 0,
+      name = name,
+      attributes = attributes
     }
   })
 
