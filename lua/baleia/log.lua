@@ -31,10 +31,10 @@ local function create(hlgroup)
   })
 
   for name, level in pairs(log.LEVELS) do
-    nvim.highlight.create(log.NULL_LOGGER, hlgroup .. name, {
+    nvim.buffer.create_highlight(log.NULL_LOGGER, hlgroup .. name, {
+      foreground = level.color,
       ctermfg = level.color,
-      guifg = level.color,
-      modes = { "bold" },
+      bold = true,
     })
   end
 

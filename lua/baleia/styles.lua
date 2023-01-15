@@ -120,24 +120,18 @@ function styles.name(prefix, style)
 end
 
 function styles.attributes(style, theme_colors)
-  local attributes = {}
+  local attributes = { }
 
-  local modes = {}
   for mode, value in pairs(style.modes) do
     if value.set and value.value then
-      table.insert(modes, mode)
+      attributes[mode] = true
     end
-  end
-
-  if #modes > 0 then
-    table.sort(modes)
-    attributes.modes = modes
   end
 
   if style.foreground.set then
     local value = style.foreground.value
     attributes.ctermfg = value.cterm
-    attributes.guifg = value.gui
+    attributes.foreground = value.gui
       and value.gui
       or (theme_colors[value.cterm] or value.inferred.gui)
   end
@@ -145,7 +139,7 @@ function styles.attributes(style, theme_colors)
   if style.background.set then
     local value = style.background.value
     attributes.ctermbg = value.cterm
-    attributes.guibg = value.gui
+    attributes.background = value.gui
       and value.gui
       or (theme_colors[value.cterm] or value.inferred.gui)
   end
