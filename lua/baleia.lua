@@ -8,12 +8,10 @@ local nvim = require("baleia.nvim")
 local baleia = {}
 
 local function schedule_highlights(opts, ns, buffer, raw_lines, offset)
-   vim.schedule(function()
-      local actions = highlights.all(opts, offset, raw_lines)
-      if actions then
-         nvim.highlight.all(opts.logger, buffer, ns, actions.definitions, actions.highlights)
-      end
-   end)
+   local actions = highlights.all(opts, offset, raw_lines)
+   if actions then
+      nvim.highlight.all(opts.logger, buffer, ns, actions.definitions, actions.highlights)
+   end
 end
 
 function baleia.setup(opts)
@@ -49,11 +47,11 @@ function baleia.setup(opts)
             local raw_lines = nvim.buffer.get_lines(opts.logger, buffer, start_row, end_row)
 
             if opts.strip_ansi_codes then
-               vim.schedule(function()
-                  if nvim.buffer.is_empty(buffer) then
+               if nvim.buffer.is_empty(buffer) then
                      return
-                  end
+               end
 
+               vim.schedule(function()
                   nvim.buffer.set_text(opts.logger,
                                        buffer,
                                        start_row,
