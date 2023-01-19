@@ -47,10 +47,10 @@ describe("[attributes]", function()
    it("when it is reset()", function()
       local style = styles.reset(1)
       assert.combinators.match({
+         foreground = "none",
+         background = "none",
          ctermbg = "none",
          ctermfg = "none",
-         guibg = "none",
-         guifg = "none",
       }, styles.attributes(style, colors))
    end)
 
@@ -61,7 +61,8 @@ describe("[attributes]", function()
       style.modes.bold = { set = true, value = true }
 
       assert.combinators.match({
-         modes = { "bold", "italic" },
+         italic = true,
+         bold = true,
       }, styles.attributes(style, colors))
    end)
 
@@ -72,11 +73,11 @@ describe("[attributes]", function()
       style.modes.bold = { set = true, value = true }
 
       assert.combinators.match({
+         background = "#008000",
+         foreground = "#000080",
          ctermbg = 2,
          ctermfg = 4,
-         guibg = "#008000",
-         guifg = "#000080",
-         modes = { "bold" },
+         bold = true,
       }, styles.attributes(style, colors))
    end)
 
@@ -87,10 +88,10 @@ describe("[attributes]", function()
       style.foreground = { set = true, value = { inferred = { gui = "#000080" }, name = 4, cterm = 4 } }
 
       assert.combinators.match({
+         background = "#008000",
+         foreground = "#000080",
          ctermbg = 2,
          ctermfg = 4,
-         guibg = "#008000",
-         guifg = "#000080",
       }, styles.attributes(style, colors))
    end)
 
@@ -105,10 +106,10 @@ describe("[attributes]", function()
       style.foreground = { set = true, value = { inferred = { gui = "#000080" }, name = 4, cterm = 4 } }
 
       assert.combinators.match({
+         background = "#123ABC",
+         foreground = "#fa8bf9",
          ctermbg = 2,
          ctermfg = 4,
-         guibg = "#123ABC",
-         guifg = "#fa8bf9",
       }, styles.attributes(style, custom_colors))
    end)
 end)
