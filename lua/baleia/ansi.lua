@@ -42,12 +42,19 @@ ansi.background = {
   [107] = 15,
 }
 
+-- the last ones are not ANSI but they use a common kitty extension for
+-- underlines
 ansi.modes = {
-  [1] = "bold",
-  [3] = "italic",
-  [4] = "underline",
-  [7] = "reverse",
-  [9] = "strikethrough"
+  [1]     =  { attribute = "bold",          definition = { set = true, value = true, name = 2^0 } },
+  [3]     =  { attribute = "italic",        definition = { set = true, value = true, name = 2^1 } },
+  [7]     =  { attribute = "reverse",       definition = { set = true, value = true, name = 2^2 } },
+  [9]     =  { attribute = "strikethrough", definition = { set = true, value = true, name = 2^3 } },
+  [4]     =  { attribute = "underline",     definition = { set = true, value = true, name = 2^4 } },
+  ["4:1"] =  { attribute = "underline",     definition = { set = true, value = true, name = 2^4 } },
+  ["4:2"] =  { attribute = "underdouble",   definition = { set = true, value = true, name = 2^5 } },
+  ["4:3"] =  { attribute = "undercurl",     definition = { set = true, value = true, name = 2^6 } },
+  ["4:4"] =  { attribute = "underdotted",   definition = { set = true, value = true, name = 2^7 } },
+  ["4:5"] =  { attribute = "underdashed",   definition = { set = true, value = true, name = 2^8 } },
 }
 
 return ansi
