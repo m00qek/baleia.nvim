@@ -6,11 +6,11 @@ describe("[all]", function()
 
       assert.combinators.match({
             highlights = {
-             { line = 1, firstcolumn = 18, name = "B_2_none" },
-             { line = 2, firstcolumn = 8,  name = "B_1_none" } },
+             { line = 1, firstcolumn = 18, name = "B_0_2_none_none" },
+             { line = 2, firstcolumn = 8,  name = "B_0_1_none_none" } },
            definitions = {
-             B_1_none = { foreground = "#800000", ctermfg = 1 },
-             B_2_none = { foreground = "#008000", ctermfg = 2 },
+             B_0_1_none_none = { foreground = "#800000", ctermfg = 1 },
+             B_0_2_none_none = { foreground = "#008000", ctermfg = 2 },
            },
          },
          highlight.all({ name = 'B', line_starts_at = 3, colors = { cterm = { }, gui = { } } },

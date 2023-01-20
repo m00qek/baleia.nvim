@@ -14,12 +14,13 @@ function styles.merge(from, to)
   local style = {
     foreground = merge_value(from.foreground, to.foreground),
     background = merge_value(from.background, to.background),
+    special = merge_value(from.special, to.special),
     offset = to.offset or from.offset,
-    modes = { },
+    modes = {},
   }
 
   for _, mode in pairs(ansi.modes) do
-    style.modes[mode] = merge_value(from.modes[mode], to.modes[mode])
+    style.modes[mode.attribute] = merge_value(from.modes[mode.attribute], to.modes[mode.attribute])
   end
 
   return style
@@ -27,13 +28,14 @@ end
 
 function styles.none()
   local style = {
-    foreground = { set = false, value = { name = 'none', cterm = 'none', gui = 'none'} },
-    background = { set = false, value = { name = 'none', cterm = 'none', gui = 'none'} },
-    modes = { },
+    foreground = { set = false, value = { name = 'none', cterm = 'none', gui = 'none' } },
+    background = { set = false, value = { name = 'none', cterm = 'none', gui = 'none' } },
+    special = { set = false, value = { name = 'none', cterm = 'none', gui = 'none' } },
+    modes = {},
   }
 
   for _, mode in pairs(ansi.modes) do
-    style.modes[mode] = { set = false, value = false }
+    style.modes[mode.attribute] = { set = false, value = false, name = mode.definition.name }
   end
 
   return style
@@ -41,14 +43,15 @@ end
 
 function styles.reset(offset)
   local style = {
-    foreground = { set = true, value = { name = 'none', cterm = 'none', gui = 'none'} },
-    background = { set = true, value = { name = 'none', cterm = 'none', gui = 'none'} },
-    modes = { },
+    foreground = { set = true, value = { name = 'none', cterm = 'none', gui = 'none' } },
+    background = { set = true, value = { name = 'none', cterm = 'none', gui = 'none' } },
+    special = { set = true, value = { name = 'none', cterm = 'none', gui = 'none' } },
+    modes = {},
     offset = offset,
   }
 
   for _, mode in pairs(ansi.modes) do
-    style.modes[mode] = { set = true, value = false }
+    style.modes[mode.attribute] = { set = true, value = false, name = mode.definition.name }
   end
 
   return style
@@ -56,8 +59,8 @@ end
 
 function styles.to_style(ansi_sequence)
   local codes = {}
-  for code in ansi_sequence:gmatch("[0-9]+") do
-    table.insert(codes, tonumber(code))
+  for code in ansi_sequence:gmatch("[:0-9]+") do
+    table.insert(codes, tonumber(code) or code)
   end
 
   local style = styles.none()
@@ -69,7 +72,7 @@ function styles.to_style(ansi_sequence)
 
     elseif ansi.modes[codes[index]] then
       local mode = ansi.modes[codes[index]]
-      style.modes[mode] = { set = true, value = true }
+      style.modes[mode.attribute] = mode.definition
       index = index + 1
 
     elseif ansi.background[codes[index]] then
@@ -93,6 +96,10 @@ function styles.to_style(ansi_sequence)
       style.background = colors.from_truecolor(codes[index + 2], codes[index + 3], codes[index + 4])
       index = index + 5
 
+    elseif codes[index] == 58 and codes[index + 1] == 5 then
+      style.special = colors.from_xterm(codes[index + 2])
+      index = index + 3
+
     else
       index = index + 1
     end
@@ -103,28 +110,22 @@ function styles.to_style(ansi_sequence)
 end
 
 function styles.name(prefix, style)
-  local modes = { }
-  for mode, value in pairs(style.modes) do
+  local modename = 0
+  for _, value in pairs(style.modes) do
     if value.set and value.value then
-      table.insert(modes, mode:sub(1,1):upper())
+      modename = bit.bor(modename, value.name)
     end
   end
 
-  local name = prefix
-  if #modes > 0 then
-    table.sort(modes)
-    name = name .. "_" .. table.concat(modes)
-  end
-
-  return name .. "_" .. style.foreground.value.name .. "_" .. style.background.value.name
+  return prefix .. "_" .. modename .. "_" .. style.foreground.value.name .. "_" .. style.background.value.name .. "_" .. style.special.value.name
 end
 
 function styles.attributes(style, theme_colors)
-  local attributes = { }
+  local attributes = {}
 
   for mode, value in pairs(style.modes) do
-    if value.set and value.value then
-      attributes[mode] = true
+    if value.set then
+      attributes[mode] = value.value
     end
   end
 
@@ -132,16 +133,23 @@ function styles.attributes(style, theme_colors)
     local value = style.foreground.value
     attributes.ctermfg = value.cterm
     attributes.foreground = value.gui
-      and value.gui
-      or (theme_colors[value.cterm] or value.inferred.gui)
+        and value.gui
+        or (theme_colors[value.cterm] or value.inferred.gui)
   end
 
   if style.background.set then
     local value = style.background.value
     attributes.ctermbg = value.cterm
     attributes.background = value.gui
-      and value.gui
-      or (theme_colors[value.cterm] or value.inferred.gui)
+        and value.gui
+        or (theme_colors[value.cterm] or value.inferred.gui)
+  end
+
+  if style.special.set then
+    local value = style.special.value
+    attributes.special = value.gui
+        and value.gui
+        or (theme_colors[value.cterm] or value.inferred.gui)
   end
 
   return attributes

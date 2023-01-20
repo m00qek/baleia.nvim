@@ -3,13 +3,13 @@ local styles = require('baleia.styles')
 describe("[name]", function()
    it("when it is none()", function()
       local style = styles.none()
-      assert.combinators.match("Baleia_none_none",
+      assert.combinators.match("Baleia_0_none_none_none",
          styles.name("Baleia", style))
    end)
 
    it("when it is reset()", function()
       local style = styles.reset(1)
-      assert.combinators.match("Baleia_none_none",
+      assert.combinators.match("Baleia_0_none_none_none",
          styles.name("Baleia", style))
    end)
 
@@ -19,7 +19,7 @@ describe("[name]", function()
       style.background = { set = true, value = { name = 'green' } }
       style.foreground = { set = true, value = { name = 'blue' } }
 
-      assert.combinators.match("Baleia_blue_green",
+      assert.combinators.match("Baleia_0_blue_green_none",
          styles.name("Baleia", style))
    end)
 
@@ -28,10 +28,10 @@ describe("[name]", function()
 
       style.background = { set = true, value = { name = 'green' } }
       style.foreground = { set = true, value = { name = 'blue' } }
-      style.modes.italic = { set = true, value = true }
-      style.modes.bold = { set = true, value = true }
+      style.modes.italic = { set = true, value = true, name = 2^0 }
+      style.modes.bold = { set = true, value = true, name = 2^1 }
 
-      assert.combinators.match("Baleia_BI_blue_green",
+      assert.combinators.match("Baleia_3_blue_green_none",
          styles.name("Baleia", style))
    end)
 end)
@@ -168,7 +168,7 @@ describe("[to_style]", function()
 
    it("extract modifier", function()
       assert.combinators.match({
-         modes = { bold  = { set = true, value = true } }
+         modes = { bold = { set = true, value = true, name = 2^0 } }
       }, styles.to_style("\x1b[1m"))
    end)
 
