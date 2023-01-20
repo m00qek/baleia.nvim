@@ -9,7 +9,7 @@ describe("[name]", function()
 
    it("when it is reset()", function()
       local style = styles.reset(1)
-      assert.combinators.match("Baleia_0_none_none_none",
+      assert.combinators.match("Baleia_598_none_none_none",
          styles.name("Baleia", style))
    end)
 
@@ -168,7 +168,7 @@ describe("[to_style]", function()
 
    it("extract modifier", function()
       assert.combinators.match({
-         modes = { bold = { set = true, value = true, name = 2^0 } }
+         modes = { bold = { set = true, value = true, name = 2^1 } }
       }, styles.to_style("\x1b[1m"))
    end)
 

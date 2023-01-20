@@ -19,8 +19,12 @@ function styles.merge(from, to)
     modes = {},
   }
 
-  for _, mode in pairs(ansi.modes) do
-    style.modes[mode.attribute] = merge_value(from.modes[mode.attribute], to.modes[mode.attribute])
+  for attr, from_value in pairs(from.modes) do
+    style.modes[attr] = from_value
+  end
+
+  for attr, to_value in pairs(to.modes) do
+    style.modes[attr] = merge_value(from.modes[attr], to_value)
   end
 
   return style
@@ -70,9 +74,21 @@ function styles.to_style(ansi_sequence)
       style = styles.reset(#ansi_sequence);
       index = index + 1
 
+    elseif ansi.color_reset[codes[index]] then
+      local attr = ansi.color_reset[codes[index]]
+      style[attr] = colors.reset()
+      index = index + 1
+
     elseif ansi.modes[codes[index]] then
       local mode = ansi.modes[codes[index]]
       style.modes[mode.attribute] = mode.definition
+      index = index + 1
+
+    elseif ansi.kittymodes[codes[index]] then
+      local mode = ansi.kittymodes[codes[index]]
+      for _, attr in ipairs(mode.attributes) do
+        style.modes[attr] = mode.definition
+      end
       index = index + 1
 
     elseif ansi.background[codes[index]] then
@@ -112,7 +128,7 @@ end
 function styles.name(prefix, style)
   local modename = 0
   for _, value in pairs(style.modes) do
-    if value.set and value.value then
+    if value.set then
       modename = bit.bor(modename, value.name)
     end
   end
