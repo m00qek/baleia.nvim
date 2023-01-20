@@ -2,15 +2,24 @@ local xterm = require('baleia.colors.xterm')
 
 local colors = {}
 
+colors.reset = function()
+  return {
+    set = true,
+    value = {
+      name = 'NONE',
+      cterm = 'NONE',
+      inferred = { gui = 'NONE' }
+    }
+  }
+end
+
 colors.from_xterm = function(code)
   return {
     set = true,
     value = {
       name = code,
       cterm = code,
-      inferred = {
-        gui = code ~= 'none' and xterm.to_truecolor(code) or code,
-      }
+      inferred = { gui = xterm.to_truecolor(code) }
     }
   }
 end
