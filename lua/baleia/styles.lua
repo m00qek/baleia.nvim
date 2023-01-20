@@ -74,21 +74,9 @@ function styles.to_style(ansi_sequence)
       style = styles.reset(#ansi_sequence);
       index = index + 1
 
-    elseif ansi.color_reset[codes[index]] then
-      local attr = ansi.color_reset[codes[index]]
+    elseif ansi.color.reset[codes[index]] then
+      local attr = ansi.color.reset[codes[index]]
       style[attr] = colors.reset()
-      index = index + 1
-
-    elseif ansi.modes[codes[index]] then
-      local mode = ansi.modes[codes[index]]
-      style.modes[mode.attribute] = mode.definition
-      index = index + 1
-
-    elseif ansi.kittymodes[codes[index]] then
-      local mode = ansi.kittymodes[codes[index]]
-      for _, attr in ipairs(mode.attributes) do
-        style.modes[attr] = mode.definition
-      end
       index = index + 1
 
     elseif ansi.background[codes[index]] then
@@ -98,23 +86,27 @@ function styles.to_style(ansi_sequence)
       style.foreground = colors.from_xterm(ansi.foreground[codes[index]])
       index = index + 1
 
-    elseif codes[index] == 48 and codes[index + 1] == 5 then
-      style.background = colors.from_xterm(codes[index + 2])
-      index = index + 3
-    elseif codes[index] == 38 and codes[index + 1] == 5 then
-      style.foreground = colors.from_xterm(codes[index + 2])
-      index = index + 3
+    elseif ansi.modes[codes[index]] then
+      local mode = ansi.modes[codes[index]]
+      style.modes[mode.attribute] = mode.definition
+      index = index + 1
 
-    elseif codes[index] == 38 and codes[index + 1] == 2 then
-      style.foreground = colors.from_truecolor(codes[index + 2], codes[index + 3], codes[index + 4])
-      index = index + 5
-    elseif codes[index] == 48 and codes[index + 1] == 2 then
-      style.background = colors.from_truecolor(codes[index + 2], codes[index + 3], codes[index + 4])
-      index = index + 5
+    elseif ansi.color.set[codes[index]] then
+      local attr = ansi.color.set[codes[index]]
+      if codes[index + 1] == 5 then
+        style[attr] = colors.from_xterm(codes[index + 2])
+        index = index + 3
+      elseif codes[index + 1] == 2 then
+        style[attr] = colors.from_truecolor(codes[index + 2], codes[index + 3], codes[index + 4])
+        index = index + 5
+      end
 
-    elseif codes[index] == 58 and codes[index + 1] == 5 then
-      style.special = colors.from_xterm(codes[index + 2])
-      index = index + 3
+    elseif ansi.kittymodes[codes[index]] then
+      local mode = ansi.kittymodes[codes[index]]
+      for _, attr in ipairs(mode.attributes) do
+        style.modes[attr] = mode.definition
+      end
+      index = index + 1
 
     else
       index = index + 1

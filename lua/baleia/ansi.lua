@@ -46,40 +46,53 @@ ansi.background = {
   [107] = 15,
 }
 
-ansi.color_reset = {
-  [39] =  'foreground',
-  [49] =  'background',
-  [59] =  'special',
+ansi.color = {
+  set = {
+    [38] = 'foreground',
+    [48] = 'background',
+
+    -- not ANSI but part of a common kitty extension for underlines
+    -- see https://sw.kovidgoyal.net/kitty/underlines/
+    [58] = 'special',
+  },
+  reset = {
+    [39] = 'foreground',
+    [49] = 'background',
+
+    -- not ANSI but part of a common kitty extension for underlines
+    -- see https://sw.kovidgoyal.net/kitty/underlines/
+    [59] = 'special',
+  }
 }
 
 ansi.modes = {
-  [22]    =  { attribute = "bold",          definition = { set = true, value = false, name = 2^0  } },
-   [1]    =  { attribute = "bold",          definition = { set = true, value = true,  name = 2^1  } },
+  [22] = { attribute = "bold",          definition = { set = true, value = false, name = 2^0 } },
+   [1] = { attribute = "bold",          definition = { set = true, value = true,  name = 2^1 } },
 
-  [23]    =  { attribute = "italic",        definition = { set = true, value = false, name = 2^2  } },
-   [3]    =  { attribute = "italic",        definition = { set = true, value = true,  name = 2^3  } },
+  [23] = { attribute = "italic",        definition = { set = true, value = false, name = 2^2 } },
+   [3] = { attribute = "italic",        definition = { set = true, value = true,  name = 2^3 } },
 
-  [24]    =  { attribute = "underline",     definition = { set = true, value = false, name = 2^4  } },
-   [4]    =  { attribute = "underline",     definition = { set = true, value = true,  name = 2^5  } },
+  [24] = { attribute = "underline",     definition = { set = true, value = false, name = 2^4 } },
+   [4] = { attribute = "underline",     definition = { set = true, value = true,  name = 2^5 } },
 
-  [27]    =  { attribute = "reverse",       definition = { set = true, value = false, name = 2^6  } },
-   [7]    =  { attribute = "reverse",       definition = { set = true, value = true,  name = 2^7  } },
+  [27] = { attribute = "reverse",       definition = { set = true, value = false, name = 2^6 } },
+   [7] = { attribute = "reverse",       definition = { set = true, value = true,  name = 2^7 } },
 
-  [29]    =  { attribute = "strikethrough", definition = { set = true, value = false, name = 2^8  } },
-   [9]    =  { attribute = "strikethrough", definition = { set = true, value = true,  name = 2^9  } },
+  [29] = { attribute = "strikethrough", definition = { set = true, value = false, name = 2^8 } },
+   [9] = { attribute = "strikethrough", definition = { set = true, value = true,  name = 2^9 } },
 }
 
 -- these are not ANSI but part of a common kitty extension for underlines
 -- see https://sw.kovidgoyal.net/kitty/underlines/
 ansi.kittymodes = {
-  ["4:0"] =  { attributes = { "underline", "underdouble", "undercurl", "underdotted", "underdashed" },
-               definition = { set = true, value = false, name = 2^10 } },
+  ["4:0"] = { attributes = { "underline", "underdouble", "undercurl", "underdotted", "underdashed" },
+              definition = { set = true, value = false, name = 2^10 } },
 
-  ["4:1"] =  { attributes = { "underline"   }, definition = { set = true, value = true,  name = 2^11 } },
-  ["4:2"] =  { attributes = { "underdouble" }, definition = { set = true, value = true,  name = 2^12 } },
-  ["4:3"] =  { attributes = { "undercurl"   }, definition = { set = true, value = true,  name = 2^13 } },
-  ["4:4"] =  { attributes = { "underdotted" }, definition = { set = true, value = true,  name = 2^14 } },
-  ["4:5"] =  { attributes = { "underdashed" }, definition = { set = true, value = true,  name = 2^15 } },
+  ["4:1"] = { attributes = { "underline"   }, definition = { set = true, value = true,  name = 2^11 } },
+  ["4:2"] = { attributes = { "underdouble" }, definition = { set = true, value = true,  name = 2^12 } },
+  ["4:3"] = { attributes = { "undercurl"   }, definition = { set = true, value = true,  name = 2^13 } },
+  ["4:4"] = { attributes = { "underdotted" }, definition = { set = true, value = true,  name = 2^14 } },
+  ["4:5"] = { attributes = { "underdashed" }, definition = { set = true, value = true,  name = 2^15 } },
 }
 
 return ansi
