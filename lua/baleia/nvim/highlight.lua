@@ -7,8 +7,12 @@ local nvim = {
 
 function module.all(logger, buffer, ns, definitions, highlights)
    vim.schedule(function()
+      -- TODO: check which versions of neovim support this
+      local hl = nvim.api.highlights(logger, 0)
       for name, attributes in pairs(definitions) do
-         nvim.buffer.create_highlight(logger, name, attributes)
+         if hl.undefined(name) then
+            nvim.buffer.create_highlight(logger, name, attributes)
+         end
       end
    end)
 

@@ -9,7 +9,7 @@ describe("[name]", function()
 
    it("when it is reset()", function()
       local style = styles.reset(1)
-      assert.combinators.match("Baleia_598_none_none_none",
+      assert.combinators.match("Baleia_0_none_none_none",
          styles.name("Baleia", style))
    end)
 

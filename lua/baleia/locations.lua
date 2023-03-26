@@ -6,21 +6,67 @@ local locations = {}
 local function linelocs(line, text)
    local extracted = { }
 
-   local previous_style = styles.none()
-
    local position = 1
    for ansi_sequence in text:gmatch(ansi.PATTERN) do
       local column = text:find(ansi.PATTERN, position)
-      local style = styles.merge(previous_style, styles.to_style(ansi_sequence))
+      local style = styles.to_style(ansi_sequence)
       table.insert(extracted, {
          style = style,
          from  = { line = line, column = column }
       })
-      previous_style = style
       position = column + 1
    end
 
    return extracted
+end
+
+local function can_merge(previous, current)
+   local on_the_same_line = current.from.line == previous.from.line
+   local in_different_lines = current.from.line == previous.from.line + 1
+
+   local no_text_between_locations = current.from.column == previous.from.column + previous.style.offset
+
+   local current_location_at_start = current.from.column == 1
+   local previous_location_at_the_end = previous.to.column == nil
+
+   return (on_the_same_line and no_text_between_locations)
+      or (in_different_lines and current_location_at_start and previous_location_at_the_end)
+end
+
+local function merge(previous, current)
+   local style = styles.merge(previous.style, current.style)
+
+   if current.from.line == previous.from.line then
+      style.offset = previous.style.offset + current.style.offset
+   end
+
+   return {
+      style = style,
+      from  = previous.from,
+      to    = current.to,
+   }
+end
+
+function locations.merge_neighbours(locs)
+   local merged = { }
+
+   local previous = nil
+   for _, current in ipairs(locs) do
+      if previous and can_merge(previous, current) then
+         previous = merge(previous, current)
+      elseif previous then
+         table.insert(merged, previous)
+         previous = current
+      else
+         previous = current
+      end
+   end
+
+   if previous then
+      table.insert(merged, previous)
+   end
+
+   return merged
 end
 
 function locations.extract(lines)
@@ -44,11 +90,24 @@ function locations.extract(lines)
             lastline = lastline - 1
             lastcolumn = nil
          end
-
       end
    end
 
-   return extracted
+   local reversed = { }
+
+   local previous = nil
+   for index = #extracted, 1, -1 do
+      local current = extracted[index]
+
+      if previous then
+        current.style = styles.merge(previous.style, current.style)
+      end
+
+      reversed[#extracted - index + 1] = current
+      previous = current
+   end
+
+   return reversed
 end
 
 function locations.with_offset(offset, locs)
@@ -78,12 +137,10 @@ function locations.strip_ansi_codes(locs)
    local line = locs[1].to.line
    local offset = 0
 
-   for index = #locs, 1, -1 do
-      local loc = locs[index]
-
+   for _, loc in ipairs(locs) do
       if line ~= loc.from.line then
-        line = loc.from.line
-        offset = 0
+         line = loc.from.line
+         offset = 0
       end
 
       loc.from.column = loc.from.column - offset
@@ -92,17 +149,15 @@ function locations.strip_ansi_codes(locs)
       if not loc.to.column then
          line = loc.to.line
          offset = 0
+      elseif line ~= loc.to.line then
+         line = loc.to.line
+         offset = 0
       else
-         if line ~= loc.to.line then
-            line = loc.to.line
-            offset = 0
-         else
-            loc.to.column = loc.to.column - offset
-         end
+         loc.to.column = loc.to.column - offset
       end
    end
 
-  return locs
+   return locs
 end
 
 return locations
