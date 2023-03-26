@@ -2,18 +2,29 @@ local xterm = require('baleia.colors.xterm')
 
 local colors = {}
 
-colors.reset = function()
+function colors.none()
   return {
-    set = true,
+    set = false,
     value = {
-      name = 'NONE',
-      cterm = 'NONE',
-      inferred = { gui = 'NONE' }
+      name = 'none',
+      cterm = 'none',
+      gui = 'none',
     }
   }
 end
 
-colors.from_xterm = function(code)
+function colors.reset()
+  return {
+    set = true,
+    value = {
+      name = 'none',
+      cterm = 'none',
+      gui = 'none',
+    }
+  }
+end
+
+function colors.from_xterm(code)
   return {
     set = true,
     value = {
@@ -24,7 +35,7 @@ colors.from_xterm = function(code)
   }
 end
 
-colors.from_truecolor = function(red, green, blue)
+function colors.from_truecolor(red, green, blue)
   local hexcode = string.format('%02x%02x%02x', red or 0, green or 0, blue or 0)
   return {
     set = true,

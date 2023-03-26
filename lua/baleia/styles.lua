@@ -32,14 +32,22 @@ end
 
 function styles.none()
   local style = {
-    foreground = { set = false, value = { name = 'none', cterm = 'none', gui = 'none' } },
-    background = { set = false, value = { name = 'none', cterm = 'none', gui = 'none' } },
-    special = { set = false, value = { name = 'none', cterm = 'none', gui = 'none' } },
+    foreground = colors.none(),
+    background = colors.none(),
+    special = colors.none(),
     modes = {},
   }
 
   for _, mode in pairs(ansi.modes) do
-    style.modes[mode.attribute] = { set = false, value = false, name = mode.definition.name }
+    for attr, definition in ipairs(mode) do
+      if style.modes[attr] == nil or style.modes[attr].name > definition.name then
+        style.modes[attr] = {
+          name = definition.name,
+          value = false,
+          set = false,
+        }
+      end
+    end
   end
 
   return style
@@ -47,15 +55,19 @@ end
 
 function styles.reset(offset)
   local style = {
-    foreground = { set = true, value = { name = 'none', cterm = 'none', gui = 'none' } },
-    background = { set = true, value = { name = 'none', cterm = 'none', gui = 'none' } },
-    special = { set = true, value = { name = 'none', cterm = 'none', gui = 'none' } },
-    modes = {},
+    foreground = colors.reset(),
+    background = colors.reset(),
+    special = colors.reset(),
     offset = offset,
+    modes = {},
   }
 
   for _, mode in pairs(ansi.modes) do
-    style.modes[mode.attribute] = { set = true, value = false, name = mode.definition.name }
+    for attr, definition in ipairs(mode) do
+      if style.modes[attr] == nil or style.modes[attr].name > definition.name then
+        style.modes[attr] = { set = true, value = false, name = definition.name }
+      end
+    end
   end
 
   return style
@@ -72,45 +84,39 @@ function styles.to_style(ansi_sequence)
   while index <= #codes do
     if codes[index] == 0 then
       style = styles.reset(#ansi_sequence);
-      index = index + 1
 
-    elseif ansi.color.reset[codes[index]] then
-      local attr = ansi.color.reset[codes[index]]
-      style[attr] = colors.reset()
-      index = index + 1
+    elseif ansi.colors[codes[index]] then
+      local entry = ansi.colors[codes[index]]
 
-    elseif ansi.background[codes[index]] then
-      style.background = colors.from_xterm(ansi.background[codes[index]])
-      index = index + 1
-    elseif ansi.foreground[codes[index]] then
-      style.foreground = colors.from_xterm(ansi.foreground[codes[index]])
-      index = index + 1
+      if entry.definition then
+        for attr, value in pairs(entry.definition) do
+          style[attr] = value
+        end
+      elseif entry.generators then
+        local flag = codes[index + 1]
+        local generator = entry.generators[flag]
+
+        local params = {}
+        for i = 1, generator.params, 1 do
+          params[i] = codes[index + 1 + i]
+        end
+
+        for attr, fn in pairs(generator.fn) do
+          style[attr] = fn(unpack(params))
+        end
+
+        -- current index + 1 flag + N parameters
+        index = index + 1 + generator.params
+      end
 
     elseif ansi.modes[codes[index]] then
       local mode = ansi.modes[codes[index]]
-      style.modes[mode.attribute] = mode.definition
-      index = index + 1
-
-    elseif ansi.color.set[codes[index]] then
-      local attr = ansi.color.set[codes[index]]
-      if codes[index + 1] == 5 then
-        style[attr] = colors.from_xterm(codes[index + 2])
-        index = index + 3
-      elseif codes[index + 1] == 2 then
-        style[attr] = colors.from_truecolor(codes[index + 2], codes[index + 3], codes[index + 4])
-        index = index + 5
+      for attr, value in pairs(mode.definition) do
+        style.modes[attr] = value
       end
-
-    elseif ansi.kittymodes[codes[index]] then
-      local mode = ansi.kittymodes[codes[index]]
-      for _, attr in ipairs(mode.attributes) do
-        style.modes[attr] = mode.definition
-      end
-      index = index + 1
-
-    else
-      index = index + 1
     end
+
+    index = index + 1
   end
 
   style.offset = #ansi_sequence

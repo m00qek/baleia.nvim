@@ -41,31 +41,11 @@ local function multi_line(line_starts_at, name, location)
   return highlights
 end
 
-local function apply_offset(offset, strip_ansi_codes, locs)
-  local new_locs
-
-  if strip_ansi_codes then
-     new_locs = locations.strip_ansi_codes(locs)
-  else
-     new_locs = locations.ignore_ansi_codes(locs)
-  end
-
-  return locations.with_offset(offset, new_locs)
-end
-
-function highlight.all(options, offset, lines)
-  local raw_locations = locations.extract(lines)
-  if not next(raw_locations) then
-     return nil
-  end
-
-  local offseted_locations = apply_offset(offset, options.strip_ansi_codes, raw_locations)
-
+local function to_highlights(options, locs)
   local definitions = {}
   local all_highlights = {}
 
-  for index = #offseted_locations, 1, -1 do
-    local location = offseted_locations[index]
+  for _, location in pairs(locs) do
     local name = styles.name(options.name, location.style)
 
     if location.from.line == location.to.line then
@@ -84,6 +64,26 @@ function highlight.all(options, offset, lines)
     definitions = definitions,
     highlights = all_highlights
   }
+
+end
+
+function highlight.all(options, offset, lines)
+  local locs = locations.extract(lines)
+  if not next(locs) then
+     return nil
+  end
+
+  locs = locations.merge_neighbours(locs)
+
+  if options.strip_ansi_codes then
+    locs = locations.strip_ansi_codes(locs)
+  else
+    locs = locations.ignore_ansi_codes(locs)
+  end
+
+  locs = locations.with_offset(offset, locs)
+
+  return to_highlights(options, locs)
 end
 
 return highlight
