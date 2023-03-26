@@ -125,7 +125,11 @@ function styles.name(prefix, style)
     end
   end
 
-  return prefix .. "_" .. modename .. "_" .. style.foreground.value.name .. "_" .. style.background.value.name .. "_" .. style.special.value.name
+  return prefix ..
+    "_" .. modename ..
+    "_" .. style.foreground.value.name ..
+    "_" .. style.background.value.name ..
+    "_" .. style.special.value.name
 end
 
 function styles.attributes(style, theme_colors)
