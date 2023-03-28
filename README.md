@@ -9,13 +9,13 @@ Colorize text with ANSI escape sequences (8, 16, 256 or TrueColor)
 Using [vim-plug][vim-plug]:
 
 ```vim
-Plug 'm00qek/baleia.nvim', { 'tag': 'v1.2.0' }
+Plug 'm00qek/baleia.nvim', { 'tag': 'v1.3.0' }
 ```
 
 Using [packer.nvim][packer]:
 
 ```lua
-use { 'm00qek/baleia.nvim', tag = 'v1.2.0' }
+use { 'm00qek/baleia.nvim', tag = 'v1.3.0' }
 ```
 
 ## Setup
