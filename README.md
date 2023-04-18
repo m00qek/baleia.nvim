@@ -50,6 +50,17 @@ autocmd BufWinEnter my-buffer call s:baleia.automatically(bufnr('%'))
 where `my_buffer` is how you identify in which buffers it should run (please
 read `:h autocmd`)
 
+## Automatically colorize text added to the quickfix window
+
+To automatically colorize text added to the quickfix use `BufReadPost`
+
+```vim
+let s:baleia = luaeval("require('baleia').setup { }")
+autocmd BufReadPost quickfix setlocal modifiable
+  \ | silent call g:baleia.once(bufnr('%'))
+  \ | setlocal nomodifiable
+```
+
 ### Setup options
 
 When calling the `setup` function, the following options are available:
