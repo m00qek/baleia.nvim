@@ -1,9 +1,5 @@
-local xterm = {}
-
 -- This is basically a translation to Lua from the C codebase of TMUX
 -- https://github.com/tmux/tmux/blob/dae2868d1227b95fd076fb4a5efa6256c7245943/colour.c
-
----@alias hexcode string
 
 local function distance(color1, color2)
 	return (color1.red - color2.red) ^ 2 + (color1.green - color2.green) ^ 2 + (color1.blue - color2.blue) ^ 2
@@ -42,6 +38,10 @@ local function closest_grey(original_color)
 	local grey = 8 + 10 * code
 	return code + 232, { red = grey, green = grey, blue = grey }
 end
+
+---@alias hexcode string
+
+local xterm = {}
 
 -- Completes {theme} with current colorscheme
 --
