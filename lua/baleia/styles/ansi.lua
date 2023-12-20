@@ -1,9 +1,25 @@
 local colors = require("baleia.styles.colors")
+local modes = require("baleia.styles.modes")
+
+---@class AttributeGenerator
+---@field params integer
+---@field fn table<string, function>
+
+---@class AttributeGenerator
+---@field generators table<integer, AttributeGenerator>
+
+---@class ModeAttributeDefinition
+---@field definition table<string, ModeAttribute>
+
+---@class ColorAttributeDefinition
+---@field definition table<string, ColorAttribute>
 
 local ansi = {}
 
+---@type string
 ansi.PATTERN = "\x1b[[0-9][:;0-9]*m"
 
+---@type table<integer, ColorAttributeDefinition|AttributeGenerator>
 ansi.colors = {
 	[30] = { definition = { foreground = colors.from_xterm(0) } },
 	[31] = { definition = { foreground = colors.from_xterm(1) } },
@@ -68,39 +84,48 @@ ansi.colors = {
 	[59] = { definition = { special = colors.reset() } },
 }
 
+---@type table<integer|string, ModeAttributeDefinition>
 ansi.modes = {
-	[22] = { definition = { bold = { set = true, value = false, name = 2 ^ 0 } } },
-	[1] = { definition = { bold = { set = true, value = true, name = 2 ^ 1 } } },
+	[22] = { definition = { bold = modes.turn_off(2 ^ 0) } },
+	[01] = { definition = { bold = modes.turn_on(2 ^ 1) } },
 
-	[23] = { definition = { italic = { set = true, value = false, name = 2 ^ 2 } } },
-	[3] = { definition = { italic = { set = true, value = true, name = 2 ^ 3 } } },
+	[23] = { definition = { italic = modes.turn_off(2 ^ 2) } },
+	[03] = { definition = { italic = modes.turn_on(2 ^ 3) } },
 
-	[24] = { definition = { underline = { set = true, value = false, name = 2 ^ 4 } } },
-	[4] = { definition = { underline = { set = true, value = true, name = 2 ^ 5 } } },
+	[27] = { definition = { reverse = modes.turn_off(2 ^ 4) } },
+	[07] = { definition = { reverse = modes.turn_on(2 ^ 5) } },
 
-	[27] = { definition = { reverse = { set = true, value = false, name = 2 ^ 6 } } },
-	[7] = { definition = { reverse = { set = true, value = true, name = 2 ^ 7 } } },
+	[29] = { definition = { strikethrough = modes.turn_off(2 ^ 6) } },
+	[09] = { definition = { strikethrough = modes.turn_on(2 ^ 7) } },
 
-	[29] = { definition = { strikethrough = { set = true, value = false, name = 2 ^ 8 } } },
-	[9] = { definition = { strikethrough = { set = true, value = true, name = 2 ^ 9 } } },
+	[24] = {
+		definition = {
+			underline = modes.turn_off(2 ^ 8),
+			underdouble = modes.turn_off(2 ^ 8),
+			undercurl = modes.turn_off(2 ^ 8),
+			underdotted = modes.turn_off(2 ^ 8),
+			underdashed = modes.turn_off(2 ^ 8),
+		},
+	},
+	[04] = { definition = { underline = modes.turn_on(2 ^ 9) } },
 
 	-- these are not ANSI but part of a common kitty extension for underlines
 	-- see https://sw.kovidgoyal.net/kitty/underlines/
 	["4:0"] = {
 		definition = {
-			underline = { set = true, value = false, name = 2 ^ 10 },
-			underdouble = { set = true, value = false, name = 2 ^ 10 },
-			undercurl = { set = true, value = false, name = 2 ^ 10 },
-			underdotted = { set = true, value = false, name = 2 ^ 10 },
-			underdashed = { set = true, value = false, name = 2 ^ 10 },
+			underline = modes.turn_off(2 ^ 8),
+			underdouble = modes.turn_off(2 ^ 8),
+			undercurl = modes.turn_off(2 ^ 8),
+			underdotted = modes.turn_off(2 ^ 8),
+			underdashed = modes.turn_off(2 ^ 8),
 		},
 	},
 
-	["4:1"] = { definition = { underline = { set = true, value = true, name = 2 ^ 4 } } },
-	["4:2"] = { definition = { underdouble = { set = true, value = true, name = 2 ^ 12 } } },
-	["4:3"] = { definition = { undercurl = { set = true, value = true, name = 2 ^ 13 } } },
-	["4:4"] = { definition = { underdotted = { set = true, value = true, name = 2 ^ 14 } } },
-	["4:5"] = { definition = { underdashed = { set = true, value = true, name = 2 ^ 15 } } },
+	["4:1"] = { definition = { underline = modes.turn_on(2 ^ 9) } },
+	["4:2"] = { definition = { underdouble = modes.turn_on(2 ^ 10) } },
+	["4:3"] = { definition = { undercurl = modes.turn_on(2 ^ 11) } },
+	["4:4"] = { definition = { underdotted = modes.turn_on(2 ^ 12) } },
+	["4:5"] = { definition = { underdashed = modes.turn_on(2 ^ 13) } },
 }
 
 return ansi
