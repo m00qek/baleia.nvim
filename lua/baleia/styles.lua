@@ -1,7 +1,15 @@
-local ansi = require("baleia.ansi")
+local ansi = require("baleia.styles.ansi")
 local colors = require("baleia.styles.colors")
+local modes = require("baleia.styles.modes")
 
 local styles = {}
+
+---@class Style
+---@field background ColorAttribute
+---@field foreground ColorAttribute
+---@field special ColorAttribute
+---@field modes table<string, ModeAttribute>
+---@field offset integer
 
 local function merge_value(from, to)
 	if to.set then
@@ -10,6 +18,9 @@ local function merge_value(from, to)
 	return from
 end
 
+---@param from Style
+---@param to Style
+---@return Style
 function styles.merge(from, to)
 	local style = {
 		foreground = merge_value(from.foreground, to.foreground),
@@ -19,33 +30,33 @@ function styles.merge(from, to)
 		modes = {},
 	}
 
-	for attr, from_value in pairs(from.modes) do
-		style.modes[attr] = from_value
+	for name, attr in pairs(from.modes) do
+		style.modes[name] = attr
 	end
 
-	for attr, to_value in pairs(to.modes) do
-		style.modes[attr] = merge_value(from.modes[attr], to_value)
+	for name, attr in pairs(to.modes) do
+		style.modes[name] = merge_value(from.modes[name], attr)
 	end
 
 	return style
 end
 
+---@return Style
 function styles.none()
+	---@type Style
 	local style = {
 		foreground = colors.none(),
 		background = colors.none(),
 		special = colors.none(),
+		offset = 0,
 		modes = {},
 	}
 
+	---TODO: WTF
 	for _, mode in pairs(ansi.modes) do
-		for attr, definition in ipairs(mode) do
-			if style.modes[attr] == nil or style.modes[attr].name > definition.name then
-				style.modes[attr] = {
-					name = definition.name,
-					value = false,
-					set = false,
-				}
+		for name, attr in pairs(mode.definition) do
+			if style.modes[name] == nil or style.modes[name].value.tag > attr.value.tag then
+				style.modes[name] = modes.ignore(attr.value.tag)
 			end
 		end
 	end
@@ -53,7 +64,10 @@ function styles.none()
 	return style
 end
 
+---@param offset integer
+---@return Style
 function styles.reset(offset)
+	---@type Style
 	local style = {
 		foreground = colors.reset(),
 		background = colors.reset(),
@@ -63,9 +77,9 @@ function styles.reset(offset)
 	}
 
 	for _, mode in pairs(ansi.modes) do
-		for attr, definition in ipairs(mode) do
-			if style.modes[attr] == nil or style.modes[attr].name > definition.name then
-				style.modes[attr] = { set = true, value = false, name = definition.name }
+		for name, attr in pairs(mode.definition) do
+			if style.modes[name] == nil or style.modes[name].value.tag > attr.value.tag then
+				style.modes[name] = modes.turn_off(attr.value.tag)
 			end
 		end
 	end
@@ -73,6 +87,8 @@ function styles.reset(offset)
 	return style
 end
 
+---@param ansi_sequence string
+---@return Style
 function styles.to_style(ansi_sequence)
 	local codes = {}
 	for code in ansi_sequence:gmatch("[:0-9]+") do
@@ -109,8 +125,8 @@ function styles.to_style(ansi_sequence)
 			end
 		elseif ansi.modes[codes[index]] then
 			local mode = ansi.modes[codes[index]]
-			for attr, value in pairs(mode.definition) do
-				style.modes[attr] = value
+			for name, attr in pairs(mode.definition) do
+				style.modes[name] = attr
 			end
 		end
 
@@ -121,11 +137,14 @@ function styles.to_style(ansi_sequence)
 	return style
 end
 
+---@param prefix string
+---@param style Style
+---@return string
 function styles.name(prefix, style)
 	local modename = 0
-	for _, value in pairs(style.modes) do
-		if value.set then
-			modename = bit.bor(modename, value.name)
+	for _, attr in pairs(style.modes) do
+		if attr.set then
+			modename = bit.bor(modename, attr.value.tag)
 		end
 	end
 
@@ -140,12 +159,14 @@ function styles.name(prefix, style)
 		.. style.special.value.name
 end
 
+---@param style Style
+---@param theme Theme
 function styles.attributes(style, theme)
 	local attributes = {}
 
-	for mode, value in pairs(style.modes) do
-		if value.set then
-			attributes[mode] = value.value
+	for name, attr in pairs(style.modes) do
+		if attr.set then
+			attributes[name] = attr.value.enabled
 		end
 	end
 
