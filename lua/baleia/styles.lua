@@ -11,6 +11,23 @@ local styles = {}
 ---@field modes table<string, ModeAttribute>
 ---@field offset integer
 
+---@class Highlight
+---@field foreground? string
+---@field background? string
+---@field special? string
+---@field ctermfg? string
+---@field ctermbg? string
+---@field bold? boolean
+---@field standout? boolean
+---@field underline? boolean
+---@field undercurl? boolean
+---@field underdouble? boolean
+---@field underdotted? boolean
+---@field underdashed? boolean
+---@field strikethrough? boolean
+---@field italic? boolean
+---@field reverse? boolean
+
 local function merge_value(from, to)
 	if to.set then
 		return to
@@ -161,7 +178,9 @@ end
 
 ---@param style Style
 ---@param theme Theme
+---@return Highlight
 function styles.attributes(style, theme)
+	---@type Highlight
 	local attributes = {}
 
 	for name, attr in pairs(style.modes) do
