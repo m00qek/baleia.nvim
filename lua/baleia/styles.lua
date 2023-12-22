@@ -4,6 +4,8 @@ local modes = require("baleia.styles.modes")
 
 local styles = {}
 
+styles.ANSI_CODES_PATTERN = ansi.PATTERN
+
 ---@class Style
 ---@field background ColorAttribute
 ---@field foreground ColorAttribute
