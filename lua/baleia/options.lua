@@ -18,25 +18,21 @@ local options = {}
 function options.with_defaults(user_options)
 	local opts = user_options or {}
 
-	local final_opts = {
-		strip_ansi_codes = true,
-		line_starts_at = 1,
-		log_level = opts.log or "ERROR",
-		colors = themes.with_colorscheme(themes.NR_8),
-		name = "BaleiaColors",
+	local name = opts.name or "BaleiaColors"
+	local namespace = nvim.create_namespace(name)
+	local log_level = opts.log or "ERROR"
+	local theme = opts.colors or themes.NR_8
+
+	---@type Options
+	return {
+		strip_ansi_codes = opts.strip_ansi_codes or true,
+		line_starts_at = opts.line_starts_at or 1,
+		namespace = namespace,
+		log_level = log_level,
+		logger = logger.new(name .. "Log", namespace, log_level),
+		colors = themes.with_colorscheme(theme),
+		name = name,
 	}
-
-	final_opts.namespace = nvim.create_namespace(final_opts.name)
-	final_opts.logger = logger.new(final_opts.name .. "Log", final_opts.ns, final_opts.log_level)
-
-	for key, _ in pairs(final_opts) do
-		local user_value = opts[key]
-		if user_value ~= nil then
-			final_opts[key] = user_value
-		end
-	end
-
-	return final_opts
 end
 
 return options
