@@ -1,4 +1,3 @@
-local ansi = require("baleia.styles.ansi")
 local styles = require("baleia.styles")
 
 local locations = {}
@@ -7,8 +6,8 @@ local function linelocs(line, text)
 	local extracted = {}
 
 	local position = 1
-	for ansi_sequence in text:gmatch(ansi.PATTERN) do
-		local column = text:find(ansi.PATTERN, position)
+	for ansi_sequence in text:gmatch(styles.ANSI_CODES_PATTERN) do
+		local column = text:find(styles.ANSI_CODES_PATTERN, position)
 		local style = styles.to_style(ansi_sequence)
 		table.insert(extracted, {
 			style = style,

@@ -18,18 +18,18 @@ local options = {}
 function options.with_defaults(user_options)
 	local opts = user_options or {}
 
-	local name = opts.name or "BaleiaColors"
-	local namespace = nvim.create_namespace(name)
-	local log_level = opts.log or "ERROR"
 	local theme = opts.colors or themes.NR_8
+	local name = opts.name or "BaleiaColors"
+	local log_level = opts.log or "ERROR"
+	local logname = name .. "Logs"
 
 	---@type Options
 	return {
 		strip_ansi_codes = opts.strip_ansi_codes or true,
 		line_starts_at = opts.line_starts_at or 1,
-		namespace = namespace,
+		namespace = nvim.create_namespace(name),
 		log_level = log_level,
-		logger = logger.new(name .. "Log", namespace, log_level),
+		logger = logger.new(logname, nvim.create_namespace(logname), log_level),
 		colors = themes.with_colorscheme(theme),
 		name = name,
 	}
