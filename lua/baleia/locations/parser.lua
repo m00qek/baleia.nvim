@@ -14,6 +14,8 @@ local styles = require("baleia.styles")
 ---@field from StrictPosition
 ---@field to LoosePosition
 
+local M = {}
+
 local function rpairs(table)
 	return function(t, i)
 		i = i - 1
@@ -84,11 +86,9 @@ local function merge_styles(locations)
 	return merged
 end
 
-local parser = {}
-
 ---@param lines table<string>
 ---@return table<Location>
-function parser.parse(lines)
+function M.parse(lines)
 	if not next(lines) then
 		return {}
 	end
@@ -97,4 +97,4 @@ function parser.parse(lines)
 	return merge_styles(locations)
 end
 
-return parser
+return M

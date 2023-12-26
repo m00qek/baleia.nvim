@@ -6,6 +6,8 @@ local styles = require("baleia.styles")
 ---@field lastcolumn? integer
 ---@field line integer
 
+local M = {}
+
 ---@param highlight_name string
 ---@param location Location
 ---@return Mark
@@ -50,8 +52,6 @@ local function multi_line(line_starts_at, highlight_name, location)
 
 	return highlights
 end
-
-local M = {}
 
 ---@param options BasicOptions
 ---@param locations table<Location>

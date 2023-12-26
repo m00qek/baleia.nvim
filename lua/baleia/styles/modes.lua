@@ -6,7 +6,7 @@
 ---@field set boolean
 ---@field value Mode
 
-local modes = {}
+local M = {}
 
 -- Applies a mode attribute to a highlight
 --
@@ -14,7 +14,7 @@ local modes = {}
 --   • {tag}  Unique identifier used to generate highlight group names
 ---@param tag integer
 ---@return ModeAttribute
-function modes.turn_on(tag)
+function M.turn_on(tag)
 	return {
 		set = true,
 		value = { enabled = true, tag = tag },
@@ -27,7 +27,7 @@ end
 --   • {tag}  Unique identifier used to generate highlight group names
 ---@param tag integer
 ---@return ModeAttribute
-function modes.turn_off(tag)
+function M.turn_off(tag)
 	return {
 		set = true,
 		value = { enabled = false, tag = tag },
@@ -40,11 +40,11 @@ end
 --   • {tag}  Unique identifier used to generate highlight group names
 ---@param tag integer
 ---@return ModeAttribute
-function modes.ignore(tag)
+function M.ignore(tag)
 	return {
 		set = false,
 		value = { enabled = false, tag = tag },
 	}
 end
 
-return modes
+return M

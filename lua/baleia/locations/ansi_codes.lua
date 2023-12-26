@@ -1,8 +1,8 @@
-local ansi_codes = {}
+local M = {}
 
 ---@param locations table<Location>
 ---@return table<Location>
-function ansi_codes.ignore(locations)
+function M.ignore(locations)
 	for _, location in ipairs(locations) do
 		location.from.column = location.from.column + location.style.offset
 	end
@@ -12,7 +12,7 @@ end
 
 ---@param locations table<Location>
 ---@return table<Location>
-function ansi_codes.strip(locations)
+function M.strip(locations)
 	local line_number = locations[1].to.line
 	local offset = 0
 
@@ -39,4 +39,4 @@ function ansi_codes.strip(locations)
 	return locations
 end
 
-return ansi_codes
+return M

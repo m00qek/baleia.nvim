@@ -1,6 +1,6 @@
 local xterm = require("baleia.styles.xterm")
 
-local colors = {}
+local M = {}
 
 ---@class TermColor
 ---@field name string
@@ -24,7 +24,7 @@ local colors = {}
 ---@param color TermColor | GuiColor
 ---@param theme Theme
 ---@return string
-function colors.gui(color, theme)
+function M.gui(color, theme)
 	if color.gui then
 		return color.gui
 	end
@@ -38,7 +38,7 @@ end
 --   • {color}  Color
 ---@param color TermColor | GuiColor
 ---@return string
-function colors.cterm(color)
+function M.cterm(color)
 	if color.cterm then
 		return color.cterm
 	end
@@ -49,7 +49,7 @@ end
 -- Identity color: when applied does not change anything
 --
 ---@return ColorAttribute
-function colors.none()
+function M.none()
 	return {
 		set = false,
 		value = {
@@ -63,7 +63,7 @@ end
 -- Default highlight color
 --
 ---@return ColorAttribute
-function colors.reset()
+function M.reset()
 	return {
 		set = true,
 		value = {
@@ -80,7 +80,7 @@ end
 --   • {code}  ANSI color code (between 0 and 255)
 ---@param code integer
 ---@return ColorAttribute
-function colors.from_xterm(code)
+function M.from_xterm(code)
 	return {
 		set = true,
 		value = {
@@ -101,7 +101,7 @@ end
 ---@param green integer
 ---@param blue integer
 ---@return ColorAttribute
-function colors.from_truecolor(red, green, blue)
+function M.from_truecolor(red, green, blue)
 	local hexcode = string.format("%02x%02x%02x", red or 0, green or 0, blue or 0)
 	return {
 		set = true,
@@ -113,4 +113,4 @@ function colors.from_truecolor(red, green, blue)
 	}
 end
 
-return colors
+return M

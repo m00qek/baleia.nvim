@@ -6,7 +6,7 @@ local highlights = require("baleia.text.highlights")
 ---@field highlights table<string, HighlightAttributes>
 ---@field marks table<Mark>
 
-local text = {}
+local M = {}
 
 local function strip_color_codes(raw_lines)
 	local lines = {}
@@ -19,7 +19,7 @@ local function strip_color_codes(raw_lines)
 	return lines
 end
 
-function text.lastcolumn(lines)
+function M.lastcolumn(lines)
 	local lastline = lines[#lines]
 	return #lastline
 end
@@ -27,7 +27,7 @@ end
 ---@param options BasicOptions
 ---@param lines table<string>
 ---@return table<string>
-function text.content(options, lines)
+function M.content(options, lines)
 	return options.strip_ansi_codes and strip_color_codes(lines) or lines
 end
 
@@ -35,7 +35,7 @@ end
 ---@param lines table<string>
 ---@param offset OffsetConfig
 ---@return table<Mark>, table<string, HighlightAttributes>
-function text.colors(options, lines, offset)
+function M.colors(options, lines, offset)
 	local locs = locations.extract(options, offset, lines)
 	if not next(locs) then
 		return {}, {}
@@ -44,4 +44,4 @@ function text.colors(options, lines, offset)
 	return highlights.from_locations(options, locs)
 end
 
-return text
+return M

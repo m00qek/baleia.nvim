@@ -1,6 +1,6 @@
 local styles = require("baleia.styles")
 
-local neighbours = {}
+local M = {}
 
 ---@param previous Location
 ---@param current Location
@@ -36,7 +36,7 @@ end
 
 ---@param locations table<Location>
 ---@return table<Location>
-function neighbours.merge(locations)
+function M.merge(locations)
 	local merged = {}
 
 	local previous = nil
@@ -58,4 +58,4 @@ function neighbours.merge(locations)
 	return merged
 end
 
-return neighbours
+return M

@@ -1,5 +1,7 @@
 local api = require("baleia.logger.api")
 
+local M = {}
+
 local function do_nothing() end
 
 local function logfn(level, buffer, current_priority, hlgroup, hlnamespace)
@@ -14,12 +16,10 @@ local function logfn(level, buffer, current_priority, hlgroup, hlnamespace)
 	end
 end
 
-local logger = {}
-
 -- Creates a logger that does not log anything.
 --
 --- @return Logger
-function logger.null()
+function M.null()
 	return api.NULL_LOGGER
 end
 
@@ -33,7 +33,7 @@ end
 ---@param hlnamespace integer
 ---@param level string
 ---@return Logger
-function logger.new(hlgroup, hlnamespace, level)
+function M.new(hlgroup, hlnamespace, level)
 	local buffer = api.create(hlgroup)
 	local current_priority = api.LEVELS[level].priority
 
@@ -49,4 +49,4 @@ function logger.new(hlgroup, hlnamespace, level)
 	}
 end
 
-return logger
+return M
