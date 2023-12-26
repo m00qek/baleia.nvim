@@ -1,3 +1,4 @@
+local options = require("baleia.options")
 local text = require("baleia.text")
 
 local nvim = require("baleia.nvim")
@@ -9,14 +10,39 @@ local function last_column(lines)
 	return #lastline
 end
 
-local function colorize(opts, buffer, lines, offset)
-	local marks, highlights = text.colors(opts, lines, offset)
+local function colorize_async(opts, buffer, lines, offset)
+	local callback = nil
 
-	if not next(marks) then
-		return
+	callback = vim.loop.new_async(function(result)
+		local marks, highlights = unpack(vim.mpack.decode(result))
+
+		if next(marks) then
+			nvim.highlight.all(opts.logger, opts.namespace, buffer, marks, highlights)
+		end
+
+		vim.loop.close(callback)
+	end)
+
+	local taskfn = function(donefn, arguments)
+		local decoded = vim.mpack.decode(arguments)
+		local result = { require("baleia.text").colors(unpack(decoded)) }
+		vim.loop.async_send(donefn, vim.mpack.encode(result))
 	end
 
-	nvim.highlight.all(opts.logger, buffer, opts.namespace, highlights, marks)
+	vim.loop.new_thread(taskfn, callback, vim.mpack.encode({ options.basic(opts), lines, offset }))
+end
+
+local function colorize_sync(opts, buffer, lines, offset)
+	local marks, highlights = text.colors(opts, lines, offset)
+
+	if next(marks) then
+		nvim.highlight.all(opts.logger, opts.namespace, buffer, marks, highlights)
+	end
+end
+
+local function colorize(opts, buffer, lines, offset)
+	local fn = opts.async and colorize_async or colorize_sync
+	return fn(opts, buffer, lines, offset)
 end
 
 function api.once(opts, buffer)

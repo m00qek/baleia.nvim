@@ -5,7 +5,7 @@ local parser = require("baleia.locations.parser")
 
 local locations = {}
 
----@param options Options
+---@param options BasicOptions
 ---@param offset OffsetConfig
 ---@param lines table<string>
 ---@return table<Location>

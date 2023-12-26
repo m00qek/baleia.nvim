@@ -24,14 +24,14 @@ function text.lastcolumn(lines)
 	return #lastline
 end
 
----@param options Options
+---@param options BasicOptions
 ---@param lines table<string>
 ---@return table<string>
 function text.content(options, lines)
 	return options.strip_ansi_codes and strip_color_codes(lines) or lines
 end
 
----@param options Options
+---@param options BasicOptions
 ---@param lines table<string>
 ---@param offset OffsetConfig
 ---@return table<Mark>, table<string, HighlightAttributes>

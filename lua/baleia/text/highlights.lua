@@ -53,7 +53,7 @@ end
 
 local M = {}
 
----@param options Options
+---@param options BasicOptions
 ---@param locations table<Location>
 ---@return table<Mark>, table<string, HighlightAttributes>
 function M.from_locations(options, locations)
