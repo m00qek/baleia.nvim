@@ -13,7 +13,7 @@ styles.ANSI_CODES_PATTERN = ansi.PATTERN
 ---@field modes table<string, ModeAttribute>
 ---@field offset integer
 
----@class Highlight
+---@class HighlightAttributes
 ---@field foreground? string
 ---@field background? string
 ---@field special? string
@@ -180,9 +180,9 @@ end
 
 ---@param style Style
 ---@param theme Theme
----@return Highlight
+---@return HighlightAttributes
 function styles.attributes(style, theme)
-	---@type Highlight
+	---@type HighlightAttributes
 	local attributes = {}
 
 	for name, attr in pairs(style.modes) do
