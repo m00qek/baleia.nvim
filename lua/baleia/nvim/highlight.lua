@@ -5,11 +5,15 @@ local nvim = {
 	api = require("baleia/nvim/api"),
 }
 
-function module.all(logger, buffer, namespace, definitions, highlights)
+---@param logger Logger
+---@param buffer integer
+---@param namespace integer
+---@param highlights table<string, HighlightAttributes>
+---@param marks table<Mark>
+function module.all(logger, buffer, namespace, highlights, marks)
 	vim.schedule(function()
-		-- TODO: check which versions of neovim support this
 		local hl = nvim.api.highlights(logger, 0)
-		for name, attributes in pairs(definitions) do
+		for name, attributes in pairs(highlights) do
 			if hl.undefined(name) then
 				nvim.buffer.create_highlight(logger, name, attributes)
 			end
@@ -17,15 +21,15 @@ function module.all(logger, buffer, namespace, definitions, highlights)
 	end)
 
 	vim.schedule(function()
-		for _, highlight in ipairs(highlights) do
+		for _, mark in ipairs(marks) do
 			nvim.buffer.add_highlight(
 				logger,
 				buffer,
 				namespace,
-				highlight.name,
-				highlight.line - 1,
-				highlight.firstcolumn - 1,
-				highlight.lastcolumn
+				mark.highlight,
+				mark.line - 1,
+				mark.firstcolumn - 1,
+				mark.lastcolumn
 			)
 		end
 	end)

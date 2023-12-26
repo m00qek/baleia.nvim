@@ -1,21 +1,47 @@
 local styles = require("baleia.styles")
+local locations = require("baleia.locations")
+local highlights = require("baleia.text.highlights")
+
+---@class TextColors
+---@field highlights table<string, HighlightAttributes>
+---@field marks table<Mark>
 
 local text = {}
 
-text.strip_color_codes = function(raw_lines)
-	local transformed_lines = {}
+local function strip_color_codes(raw_lines)
+	local lines = {}
 
 	for _, line in ipairs(raw_lines) do
 		local stripped_line = line:gsub(styles.ANSI_CODES_PATTERN, "")
-		table.insert(transformed_lines, stripped_line)
+		table.insert(lines, stripped_line)
 	end
 
-	return transformed_lines
+	return lines
 end
 
-text.lastcolumn = function(lines)
+function text.lastcolumn(lines)
 	local lastline = lines[#lines]
 	return #lastline
+end
+
+---@param options Options
+---@param lines table<string>
+---@return table<string>
+function text.content(options, lines)
+	return options.strip_ansi_codes and strip_color_codes(lines) or lines
+end
+
+---@param options Options
+---@param lines table<string>
+---@param offset OffsetConfig
+---@return table<Mark>, table<string, HighlightAttributes>
+function text.colors(options, lines, offset)
+	local locs = locations.extract(options, offset, lines)
+	if not next(locs) then
+		return {}, {}
+	end
+
+	return highlights.from_locations(options, locs)
 end
 
 return text
