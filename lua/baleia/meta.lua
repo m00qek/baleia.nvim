@@ -5,6 +5,7 @@ error("Cannot require a meta file")
 ---@field strip_ansi_codes? boolean
 ---@field line_starts_at? integer
 ---@field colors? Theme
+---@field async? boolean
 ---@field name? string
 ---@field log? string
 
