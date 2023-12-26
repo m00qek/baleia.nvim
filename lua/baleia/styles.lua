@@ -2,9 +2,9 @@ local ansi = require("baleia.styles.ansi")
 local colors = require("baleia.styles.colors")
 local modes = require("baleia.styles.modes")
 
-local styles = {}
+local M = {}
 
-styles.ANSI_CODES_PATTERN = ansi.PATTERN
+M.ANSI_CODES_PATTERN = ansi.PATTERN
 
 ---@class Style
 ---@field background ColorAttribute
@@ -40,7 +40,7 @@ end
 ---@param from Style
 ---@param to Style
 ---@return Style
-function styles.merge(from, to)
+function M.merge(from, to)
 	local style = {
 		foreground = merge_value(from.foreground, to.foreground),
 		background = merge_value(from.background, to.background),
@@ -61,7 +61,7 @@ function styles.merge(from, to)
 end
 
 ---@return Style
-function styles.none()
+function M.none()
 	---@type Style
 	local style = {
 		foreground = colors.none(),
@@ -85,7 +85,7 @@ end
 
 ---@param offset integer
 ---@return Style
-function styles.reset(offset)
+function M.reset(offset)
 	---@type Style
 	local style = {
 		foreground = colors.reset(),
@@ -108,17 +108,17 @@ end
 
 ---@param ansi_sequence string
 ---@return Style
-function styles.to_style(ansi_sequence)
+function M.to_style(ansi_sequence)
 	local codes = {}
 	for code in ansi_sequence:gmatch("[:0-9]+") do
 		table.insert(codes, tonumber(code) or code)
 	end
 
-	local style = styles.none()
+	local style = M.none()
 	local index = 1
 	while index <= #codes do
 		if codes[index] == 0 then
-			style = styles.reset(#ansi_sequence)
+			style = M.reset(#ansi_sequence)
 		elseif ansi.colors[codes[index]] then
 			local entry = ansi.colors[codes[index]]
 
@@ -159,7 +159,7 @@ end
 ---@param prefix string
 ---@param style Style
 ---@return string
-function styles.name(prefix, style)
+function M.name(prefix, style)
 	local modename = 0
 	for _, attr in pairs(style.modes) do
 		if attr.set then
@@ -181,7 +181,7 @@ end
 ---@param style Style
 ---@param theme Theme
 ---@return HighlightAttributes
-function styles.attributes(style, theme)
+function M.attributes(style, theme)
 	---@type HighlightAttributes
 	local attributes = {}
 
@@ -211,4 +211,4 @@ function styles.attributes(style, theme)
 	return attributes
 end
 
-return styles
+return M

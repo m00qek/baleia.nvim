@@ -6,7 +6,7 @@
 ---@field global Offset
 ---@field lines? table<integer, Offset>
 
-local offsets = {}
+local M = {}
 
 ---@param offset Offset
 ---@param position StrictPosition|LoosePosition
@@ -18,7 +18,7 @@ end
 ---@param offset OffsetConfig
 ---@param locations table<Location>
 ---@return table<Location>
-function offsets.apply(offset, locations)
+function M.apply(offset, locations)
 	local lines_offset = offset.lines or {}
 	local default_offset = offset.global or { line = 0, column = 0 }
 
@@ -30,4 +30,4 @@ function offsets.apply(offset, locations)
 	return locations
 end
 
-return offsets
+return M

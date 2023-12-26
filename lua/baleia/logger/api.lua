@@ -1,8 +1,8 @@
 local nvim = require("baleia.nvim")
 
-local api = {}
+local M = {}
 
-api.LEVELS = {
+M.LEVELS = {
 	ERROR = { priority = 10, color = "DarkRed" },
 	WARN = { priority = 20, color = "DarkYellow" },
 	INFO = { priority = 30, color = "DarkGreen" },
@@ -12,7 +12,7 @@ api.LEVELS = {
 local function do_nothing() end
 
 --- @type Logger
-api.NULL_LOGGER = {
+M.NULL_LOGGER = {
 	show = function()
 		print("Baleia logs are disabled.")
 	end,
@@ -24,19 +24,19 @@ api.NULL_LOGGER = {
 
 ---@param hlgroup string
 ---@return buffer
-function api.create(hlgroup)
+function M.create(hlgroup)
 	local bufname = "baleia-log-" .. vim.fn.strftime("%s000")
 	local buffer = vim.fn.bufadd(bufname)
 
-	nvim.buffer.set_options(api.NULL_LOGGER, buffer, {
+	nvim.buffer.set_options(M.NULL_LOGGER, buffer, {
 		modifiable = false,
 		buftype = "nofile",
 		bufhidden = "hide",
 		swapfile = false,
 	})
 
-	for name, level in pairs(api.LEVELS) do
-		nvim.buffer.create_highlight(api.NULL_LOGGER, hlgroup .. name, {
+	for name, level in pairs(M.LEVELS) do
+		nvim.buffer.create_highlight(M.NULL_LOGGER, hlgroup .. name, {
 			foreground = level.color,
 			ctermfg = level.color,
 			bold = true,
@@ -69,7 +69,7 @@ end
 ---@param level string
 ---@param message string
 ---@param data table
-function api.log(buffer, name, namespace, level, message, data)
+function M.log(buffer, name, namespace, level, message, data)
 	local start_row = nvim.buffer.last_row(buffer)
 	local end_row = start_row == 0 and 1 or start_row
 	local hlgroup = name .. level
@@ -84,17 +84,17 @@ function api.log(buffer, name, namespace, level, message, data)
 		table.insert(lines, "")
 	end
 
-	nvim.buffer.with_options(api.NULL_LOGGER, buffer, { modifiable = true }, function()
-		nvim.buffer.set_lines(api.NULL_LOGGER, buffer, start_row, end_row, true, lines)
+	nvim.buffer.with_options(M.NULL_LOGGER, buffer, { modifiable = true }, function()
+		nvim.buffer.set_lines(M.NULL_LOGGER, buffer, start_row, end_row, true, lines)
 	end)
 
-	nvim.buffer.add_highlight(api.NULL_LOGGER, buffer, namespace, hlgroup, start_row, 0, #level)
+	nvim.buffer.add_highlight(M.NULL_LOGGER, buffer, namespace, hlgroup, start_row, 0, #level)
 	for row = start_row + 1, start_row + #lines do
-		nvim.buffer.add_highlight(api.NULL_LOGGER, buffer, namespace, hlgroup, row, #level - 1, #level)
+		nvim.buffer.add_highlight(M.NULL_LOGGER, buffer, namespace, hlgroup, row, #level - 1, #level)
 	end
 
 	nvim.window.do_in(buffer, function(window)
-		nvim.window.set_cursor(api.NULL_LOGGER, window, {
+		nvim.window.set_cursor(M.NULL_LOGGER, window, {
 			row = start_row + #lines,
 			column = 0,
 		})
@@ -102,15 +102,15 @@ function api.log(buffer, name, namespace, level, message, data)
 end
 
 ---@param buffer buffer
-function api.show(buffer)
+function M.show(buffer)
 	local bufname = nvim.buffer.get_name(buffer)
-	nvim.execute(api.NULL_LOGGER, "vertical split " .. bufname)
+	nvim.execute(M.NULL_LOGGER, "vertical split " .. bufname)
 	nvim.window.do_in(buffer, function(window)
-		nvim.window.set_cursor(api.NULL_LOGGER, window, {
+		nvim.window.set_cursor(M.NULL_LOGGER, window, {
 			row = nvim.buffer.last_row(buffer),
 			column = 0,
 		})
 	end)
 end
 
-return api
+return M

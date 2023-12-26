@@ -14,13 +14,13 @@ local modes = require("baleia.styles.modes")
 ---@class ColorAttributeDefinition
 ---@field definition table<string, ColorAttribute>
 
-local ansi = {}
+local M = {}
 
 ---@type string
-ansi.PATTERN = "\x1b[[0-9][:;0-9]*m"
+M.PATTERN = "\x1b[[0-9][:;0-9]*m"
 
 ---@type table<integer, ColorAttributeDefinition|AttributeGenerator>
-ansi.colors = {
+M.colors = {
 	[30] = { definition = { foreground = colors.from_xterm(0) } },
 	[31] = { definition = { foreground = colors.from_xterm(1) } },
 	[32] = { definition = { foreground = colors.from_xterm(2) } },
@@ -85,7 +85,7 @@ ansi.colors = {
 }
 
 ---@type table<integer|string, ModeAttributeDefinition>
-ansi.modes = {
+M.modes = {
 	[22] = { definition = { bold = modes.turn_off(2 ^ 0) } },
 	[01] = { definition = { bold = modes.turn_on(2 ^ 1) } },
 
@@ -128,4 +128,4 @@ ansi.modes = {
 	["4:5"] = { definition = { underdashed = modes.turn_on(2 ^ 13) } },
 }
 
-return ansi
+return M

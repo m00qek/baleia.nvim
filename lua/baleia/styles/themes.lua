@@ -1,26 +1,9 @@
-local themes = {}
+local M = {}
 
 ---@alias Theme table<integer, string>
 
--- Completes {theme} with current colorscheme
---
--- Parameters: ~
---   • {theme}  Custom theme
----@param theme Theme
----@return Theme
-function themes.with_colorscheme(theme)
-	local colors = {}
-
-	for index = 0, 255 do
-		local color = vim.g["terminal_color_" .. index]
-		colors[index] = color or theme[index]
-	end
-
-	return colors
-end
-
 ---@type Theme
-themes.NR_16 = {
+M.NR_16 = {
 	[00] = "Black",
 	[01] = "DarkBlue",
 	[02] = "DarkGreen",
@@ -40,7 +23,7 @@ themes.NR_16 = {
 }
 
 ---@type Theme
-themes.NR_8 = {
+M.NR_8 = {
 	[00] = "Black",
 	[01] = "DarkRed",
 	[02] = "DarkGreen",
@@ -59,4 +42,4 @@ themes.NR_8 = {
 	[15] = "White",
 }
 
-return themes
+return M

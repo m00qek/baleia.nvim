@@ -3,7 +3,7 @@ local text = require("baleia.text")
 
 local nvim = require("baleia.nvim")
 
-local api = {}
+local M = {}
 
 local function last_column(lines)
 	local lastline = lines[#lines]
@@ -45,7 +45,7 @@ local function colorize(opts, buffer, lines, offset)
 	return fn(opts, buffer, lines, offset)
 end
 
-function api.once(opts, buffer)
+function M.once(opts, buffer)
 	local raw_lines = nvim.buffer.get_lines(opts.logger, buffer)
 
 	if opts.strip_ansi_codes then
@@ -63,7 +63,7 @@ function api.once(opts, buffer)
 	colorize(opts, buffer, raw_lines, { global = { column = 0, line = 0 } })
 end
 
-function api.automatically(opts, buffer)
+function M.automatically(opts, buffer)
 	nvim.buffer.on_new_lines(opts.logger, buffer, opts.namespace, function(_, _, start_row, end_row)
 		if nvim.buffer.is_empty(buffer) then
 			return
@@ -89,13 +89,13 @@ function api.automatically(opts, buffer)
 	end)
 end
 
-function api.buf_set_lines(opts, buffer, start, end_, strict_indexing, raw_lines)
+function M.buf_set_lines(opts, buffer, start, end_, strict_indexing, raw_lines)
 	nvim.buffer.set_lines(opts.logger, buffer, start, end_, strict_indexing, text.content(opts, raw_lines))
 
 	colorize(opts, buffer, raw_lines, { global = { column = 0, line = start } })
 end
 
-function api.buf_set_text(opts, buffer, start_row, start_col, end_row, end_col, raw_lines)
+function M.buf_set_text(opts, buffer, start_row, start_col, end_row, end_col, raw_lines)
 	nvim.buffer.set_text(opts.logger, buffer, start_row, start_col, end_row, end_col, text.content(opts, raw_lines))
 
 	colorize(opts, buffer, raw_lines, {
@@ -104,4 +104,4 @@ function api.buf_set_text(opts, buffer, start_row, start_col, end_row, end_col, 
 	})
 end
 
-return api
+return M

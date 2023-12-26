@@ -1,6 +1,10 @@
 -- This is basically a translation to Lua from the C codebase of TMUX
 -- https://github.com/tmux/tmux/blob/dae2868d1227b95fd076fb4a5efa6256c7245943/colour.c
 
+---@alias hexcode string
+
+local M = {}
+
 local function distance(color1, color2)
 	return (color1.red - color2.red) ^ 2 + (color1.green - color2.green) ^ 2 + (color1.blue - color2.blue) ^ 2
 end
@@ -39,18 +43,14 @@ local function closest_grey(original_color)
 	return code + 232, { red = grey, green = grey, blue = grey }
 end
 
----@alias hexcode string
-
-local xterm = {}
-
 -- Completes {theme} with current colorscheme
 --
 -- Parameters: ~
 --   • {code}  ANSI color code (between 0 and 255)
 ---@param code integer
 ---@return hexcode
-function xterm.to_truecolor(code)
-	return "#" .. xterm.colors[code]
+function M.to_truecolor(code)
+	return "#" .. M.colors[code]
 end
 
 -- Convert an RGB triplet to the xterm 256 colour palette.
@@ -72,7 +72,7 @@ end
 ---@param green integer
 ---@param blue integer
 ---@return integer
-function xterm.from_rgb(red, green, blue)
+function M.from_rgb(red, green, blue)
 	local original = { red = red, green = green, blue = blue }
 
 	-- Map RGB to 6x6x6 cube.
@@ -102,7 +102,7 @@ function xterm.from_rgb(red, green, blue)
 end
 
 ---@type table<integer, string>
-xterm.colors = {
+M.colors = {
 	[000] = "000000",
 	[001] = "800000",
 	[002] = "008000",
@@ -361,4 +361,4 @@ xterm.colors = {
 	[255] = "eeeeee",
 }
 
-return xterm
+return M
