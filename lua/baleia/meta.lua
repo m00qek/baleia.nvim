@@ -1,4 +1,5 @@
 ---@meta _
+--# selene: allow(unused_variable)
 error("Cannot require a meta file")
 
 ---@class UserOptions

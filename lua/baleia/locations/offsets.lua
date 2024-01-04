@@ -11,23 +11,23 @@ local M = {}
 ---@param offset Offset
 ---@param position StrictPosition|LoosePosition
 local function update_position(position, offset)
-	position.line = position.line + offset.line
-	position.column = position.column and position.column + offset.column
+  position.line = position.line + offset.line
+  position.column = position.column and position.column + offset.column
 end
 
 ---@param offset OffsetConfig
 ---@param locations table<Location>
 ---@return table<Location>
 function M.apply(offset, locations)
-	local lines_offset = offset.lines or {}
-	local default_offset = offset.global or { line = 0, column = 0 }
+  local lines_offset = offset.lines or {}
+  local default_offset = offset.global or { line = 0, column = 0 }
 
-	for _, location in ipairs(locations) do
-		update_position(location.from, lines_offset[location.from.line] or default_offset)
-		update_position(location.to, lines_offset[location.to.line] or default_offset)
-	end
+  for _, location in ipairs(locations) do
+    update_position(location.from, lines_offset[location.from.line] or default_offset)
+    update_position(location.to, lines_offset[location.to.line] or default_offset)
+  end
 
-	return locations
+  return locations
 end
 
 return M
