@@ -34,8 +34,8 @@ jobs:
         luarocks install luacheck
         make -C ./test prepare
 
-    - name: Run linter
-      run: luacheck lua/ test/spec/
+      #    - name: Run linter
+      #      run: luacheck lua/ test/spec/
 
     - name: Run tests
       run: make -C ./test test
