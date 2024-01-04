@@ -9,19 +9,19 @@ Colorize text with ANSI escape sequences (8, 16, 256 or TrueColor)
 Using [vim-plug][vim-plug]:
 
 ```vim
-Plug 'm00qek/baleia.nvim', { 'tag': 'v1.3.0' }
+Plug 'm00qek/baleia.nvim', { 'tag': 'v1.4.0' }
 ```
 
 Using [packer.nvim][packer]:
 
 ```lua
-use { 'm00qek/baleia.nvim', tag = 'v1.3.0' }
+use { 'm00qek/baleia.nvim', tag = 'v1.4.0' }
 ```
 
 ## Setup
 
 `baleia` can colorize an entire buffer or/and apply colors every time a new line
-is added to it. 
+is added to it.
 
 ### Colorizing the entire buffer
 
@@ -65,27 +65,14 @@ autocmd BufReadPost quickfix setlocal modifiable
 
 When calling the `setup` function, the following options are available:
 
-|      option      |      default value     |
-| -----------------| ---------------------- |
-| name             | 'BaleiaColors'         |
-| strip_ansi_codes | true                   |
-| line_starts_at   | 1 (one-indexed)        |
-
-#### name
-
-By default `BaleiaColors`, this will be the name of the highlight namespace 
-defined by `baleia` as well as a prefix in the name of all highlight groups
-created by it.
-
-#### strip_ansi_codes
-
-By default `true`, indicates whether `baleia` should or not remove the ANSI 
-escape sequence of the text after colorizing it.
-
-#### line_starts_at
-
-By default `1`, one-indexed, indicates in which column `baleia` should start 
-colorizing lines.
+|      option      |  default value  |                        description                        |
+| -----------------| --------------- | --------------------------------------------------------- |
+| name             | "BaleiaColors"  | prefix used to name highlight groups                      |
+| strip_ansi_codes | true            | remove ANSI color codes from text                         |
+| line_starts_at   | 1 (one-indexed) | at which column start colorizing                          |
+| colors           | [NR_8][nr_8]    | table mapping 256 color codes to vim colors               |
+| async            | true            | highlight asynchronously                                  |
+| log              | "ERROR"         | log level, possible values are ERROR, WARN, INFO or DEBUG |
 
 ## With Conjure
 
@@ -120,7 +107,7 @@ the log using `BaleiaLogs`.
 
 `baleia` provides two functions, `buf_set_lines` and `buf_set_text`, that have
 the same interface as the default `vim.api.nvim_buf_set_lines` and
-`vim.api.nvim_but_set_text`. Using those is very efficient because they do all 
+`vim.api.nvim_but_set_text`. Using those is very efficient because they do all
 color detection and ANSI code stripping before writing anything to the buffer.
 Example:
 
@@ -142,3 +129,4 @@ baleia.buf_set_lines(0, lastline, lastline, true, new_lines)
 [vim-plug]: https://github.com/junegunn/vim-plug
 [conjure]: https://github.com/Olical/conjure
 [packer]: https://github.com/wbthomason/packer.nvim
+[nr_8]: ./lua/baleia/styles/themes.lua

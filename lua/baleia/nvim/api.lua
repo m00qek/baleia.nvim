@@ -10,9 +10,9 @@ function api.execute(logger, command)
   end)
 
   if status then
-    logger.debug('vim.fn.execute', { command = command, result = result })
+    logger.debug("vim.fn.execute", { command = command, result = result })
   else
-    logger.error('vim.fn.execute', { command = command, error = result })
+    logger.error("vim.fn.execute", { command = command, error = result })
   end
 
   return result
@@ -43,7 +43,7 @@ function api.highlights(logger, ns)
   return {
     undefined = function(hl_name)
       return not result[hl_name]
-    end
+    end,
   }
 end
 

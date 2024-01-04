@@ -15,10 +15,10 @@ local M = {}
 ---@param tag integer
 ---@return ModeAttribute
 function M.turn_on(tag)
-	return {
-		set = true,
-		value = { enabled = true, tag = tag },
-	}
+  return {
+    set = true,
+    value = { enabled = true, tag = tag },
+  }
 end
 
 -- Clears a mode attribute in a highlight
@@ -28,10 +28,10 @@ end
 ---@param tag integer
 ---@return ModeAttribute
 function M.turn_off(tag)
-	return {
-		set = true,
-		value = { enabled = false, tag = tag },
-	}
+  return {
+    set = true,
+    value = { enabled = false, tag = tag },
+  }
 end
 
 -- Ignores a mode attribute in a highlight
@@ -41,10 +41,10 @@ end
 ---@param tag integer
 ---@return ModeAttribute
 function M.ignore(tag)
-	return {
-		set = false,
-		value = { enabled = false, tag = tag },
-	}
+  return {
+    set = false,
+    value = { enabled = false, tag = tag },
+  }
 end
 
 return M
