@@ -11,7 +11,7 @@ M.ANSI_CODES_PATTERN = ansi.PATTERN
 ---@field foreground ColorAttribute
 ---@field special ColorAttribute
 ---@field modes table<string, ModeAttribute>
----@field offset integer
+---@field offset? integer
 
 ---@class HighlightAttributes
 ---@field foreground? string
@@ -67,14 +67,14 @@ function M.none()
     foreground = colors.none(),
     background = colors.none(),
     special = colors.none(),
-    offset = 0,
+    offset = nil,
     modes = {},
   }
 
   ---TODO: WTF
   for _, mode in pairs(ansi.modes) do
     for name, attr in pairs(mode.definition) do
-      if style.modes[name] == nil or style.modes[name].value.tag > attr.value.tag then
+      if style.modes[name] == nil then
         style.modes[name] = modes.ignore(attr.value.tag)
       end
     end

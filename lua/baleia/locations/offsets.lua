@@ -11,8 +11,11 @@ local M = {}
 ---@param offset Offset
 ---@param position StrictPosition|LoosePosition
 local function update_position(position, offset)
-  position.line = position.line + offset.line
-  position.column = position.column and position.column + offset.column
+  local line_offset = offset.line or 0
+  local column_offset = offset.column or 0
+
+  position.line = position.line + line_offset
+  position.column = position.column and position.column + column_offset
 end
 
 ---@param offset OffsetConfig
