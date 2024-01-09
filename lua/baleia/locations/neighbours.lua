@@ -34,8 +34,8 @@ local function merge(previous, current)
   }
 end
 
----@param locations table<Location>
----@return table<Location>
+---@param locations Location[]
+---@return Location[]
 function M.merge(locations)
   local merged = {}
 

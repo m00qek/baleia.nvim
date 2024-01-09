@@ -23,7 +23,7 @@ end
 ---@param line_starts_at integer
 ---@param highlight_name string
 ---@param location Location
----@return table<Mark>
+---@return Mark[]
 local function multi_line(line_starts_at, highlight_name, location)
   local highlights = {}
 
@@ -54,12 +54,12 @@ local function multi_line(line_starts_at, highlight_name, location)
 end
 
 ---@param options BasicOptions
----@param locations table<Location>
----@return table<Mark>, table<string, HighlightAttributes>
+---@param locations Location[]
+---@return Mark[], { [string]: HighlightAttributes }
 function M.from_locations(options, locations)
-  ---@type table<string, HighlightAttributes>
+  ---@type { [string]: HighlightAttributes }
   local highlights = {}
-  ---@type table<Mark>
+  ---@type Mark[]
   local marks = {}
 
   for _, location in pairs(locations) do

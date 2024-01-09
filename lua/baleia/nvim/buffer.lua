@@ -1,7 +1,52 @@
-local buf = {}
+local M = {}
 
 local END_OF_FILE = -1
-function buf.set_lines(logger, buffer, start, end_, strict_indexing, lines)
+
+---@param logger Logger
+---@param namespace integer
+---@param buffer buffer
+function M.clear_empty_extmarks(logger, namespace, buffer)
+  local opts = { type = "highlight", hl_name = false, details = true }
+  local status, extmarks = pcall(function()
+    return vim.api.nvim_buf_get_extmarks(buffer, namespace, 0, -1, opts)
+  end)
+
+  local logfn = not status and logger.error or logger.debug
+  logfn("vim.api.nvim_buf_get_extmarks", {
+    result = status and { number_of_marks = #extmarks },
+    params = {
+      buffer = buffer,
+      namespace = namespace,
+      start_row = 0,
+      end_row = -1,
+      options = opts,
+    },
+  })
+
+  if not status then
+    return
+  end
+
+  local removed = {}
+  for _, mark in ipairs(extmarks) do
+    local id, row, column, details = mark[1], mark[2], mark[3], mark[4]
+
+    if row == details.end_row and column == details.end_col then
+      vim.api.nvim_buf_del_extmark(buffer, opts.namespace, id)
+      table.insert(removed, id)
+    end
+  end
+
+  logfn("vim.api.nvim_buf_del_extmark", {
+    params = {
+      buffer = buffer,
+      namespace = namespace,
+      ids = removed,
+    },
+  })
+end
+
+function M.set_lines(logger, buffer, start, end_, strict_indexing, lines)
   local status, value = pcall(function()
     return vim.api.nvim_buf_set_lines(buffer, start, end_, strict_indexing, lines)
   end)
@@ -21,7 +66,7 @@ function buf.set_lines(logger, buffer, start, end_, strict_indexing, lines)
   return value
 end
 
-function buf.set_text(logger, buffer, start_row, start_col, end_row, end_col, lines)
+function M.set_text(logger, buffer, start_row, start_col, end_row, end_col, lines)
   local status, value = pcall(function()
     return vim.api.nvim_buf_set_text(buffer, start_row, start_col, end_row, end_col, lines)
   end)
@@ -42,7 +87,7 @@ function buf.set_text(logger, buffer, start_row, start_col, end_row, end_col, li
   return value
 end
 
-function buf.get_lines(logger, buffer, start_row, end_row)
+function M.get_lines(logger, buffer, start_row, end_row)
   local status, value = pcall(function()
     return vim.api.nvim_buf_get_lines(buffer, start_row or 0, end_row or END_OF_FILE, true)
   end)
@@ -60,7 +105,7 @@ function buf.get_lines(logger, buffer, start_row, end_row)
   return value
 end
 
-function buf.create_highlight(logger, name, attributes)
+function M.create_highlight(logger, name, attributes)
   local status, value = pcall(function()
     return vim.api.nvim_set_hl(0, name, attributes)
   end)
@@ -78,7 +123,7 @@ function buf.create_highlight(logger, name, attributes)
   return value
 end
 
-function buf.add_highlight(logger, buffer, ns, hlgroup, line, start_col, end_col)
+function M.add_highlight(logger, buffer, ns, hlgroup, line, start_col, end_col)
   local status, value = pcall(function()
     return vim.api.nvim_buf_add_highlight(buffer, ns, hlgroup, line, start_col, end_col or END_OF_FILE)
   end)
@@ -99,20 +144,20 @@ function buf.add_highlight(logger, buffer, ns, hlgroup, line, start_col, end_col
   return value
 end
 
-buf.last_row = vim.api.nvim_buf_line_count
-buf.get_name = vim.api.nvim_buf_get_name
+M.last_row = vim.api.nvim_buf_line_count
+M.get_name = vim.api.nvim_buf_get_name
 
-function buf.is_empty(buffer)
+function M.is_empty(buffer)
   return vim.api.nvim_buf_line_count(buffer) <= 0
 end
 
-function buf.get_var(_, buffer, varname)
+function M.get_var(_, buffer, varname)
   return vim.api.nvim_buf_call(buffer, function()
     return vim.b[varname]
   end)
 end
 
-function buf.set_var(logger, buffer, varname, value)
+function M.set_var(logger, buffer, varname, value)
   logger.info("vim.api.nvim_buf_set_var", {
     buffer = buffer,
     varname = varname,
@@ -122,13 +167,13 @@ function buf.set_var(logger, buffer, varname, value)
   return vim.api.nvim_buf_set_var(buffer, varname, value)
 end
 
-function buf.on_new_lines(logger, buffer, namespace, fn)
-  if buf.get_var(logger, buffer, "baleia_on_new_lines") then
+function M.on_new_lines(logger, buffer, namespace, fn)
+  if M.get_var(logger, buffer, "baleia_on_new_lines") then
     logger.debug("Skipping buffer.on_new_lines", { buffer = buffer })
     return
   end
 
-  buf.set_var(logger, buffer, "baleia_on_new_lines", true)
+  M.set_var(logger, buffer, "baleia_on_new_lines", true)
 
   logger.info("vim.api.nvim_buf_attach", { buffer = buffer, namespace = namespace })
 
@@ -150,7 +195,7 @@ function buf.on_new_lines(logger, buffer, namespace, fn)
   })
 end
 
-function buf.set_options(logger, buffer, options)
+function M.set_options(logger, buffer, options)
   for option, value in pairs(options) do
     local status, result = pcall(function()
       vim.api.nvim_set_option_value(option, value, { buf = buffer })
@@ -164,16 +209,16 @@ function buf.set_options(logger, buffer, options)
   end
 end
 
-function buf.with_options(logger, buffer, options, thunk)
+function M.with_options(logger, buffer, options, thunk)
   local old_options = {}
   for option, _ in pairs(options) do
     old_options[option] = vim.api.nvim_get_option_value(option, { buf = buffer })
   end
 
-  buf.set_options(logger, buffer, options)
+  M.set_options(logger, buffer, options)
   local result = thunk()
-  buf.set_options(logger, buffer, old_options)
+  M.set_options(logger, buffer, old_options)
   return result
 end
 
-return buf
+return M
