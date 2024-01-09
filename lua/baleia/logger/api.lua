@@ -43,13 +43,14 @@ function M.create(hlgroup)
     })
   end
 
+  ---@cast buffer integer
   return buffer
 end
 
 ---@param n integer
 ---@param char string
 ---@param text string
----@return table<string>
+---@return string[]
 local function prefix(n, char, text)
   local begining = string.rep(char, n)
 

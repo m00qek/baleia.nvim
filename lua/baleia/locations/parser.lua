@@ -25,8 +25,8 @@ local function rpairs(table)
   end, table, #table + 1
 end
 
----@param lines table<string>
----@return table<Location>
+---@param lines string[]
+---@return Location[]
 local function parse_all(lines)
   return ansi_codes.map(lines, function(ansi_sequence, from, to)
     ---@type Location
@@ -38,8 +38,8 @@ local function parse_all(lines)
   end, { backwards = true })
 end
 
----@param locations table<Location>
----@return table<Location>
+---@param locations Location[]
+---@return Location[]
 local function merge_styles(locations)
   local merged = {}
 
@@ -55,8 +55,8 @@ local function merge_styles(locations)
   return merged
 end
 
----@param lines table<string>
----@return table<Location>
+---@param lines string[]
+---@return Location[]
 function M.parse(lines)
   if not next(lines) then
     return {}

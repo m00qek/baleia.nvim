@@ -7,8 +7,8 @@ local M = {}
 
 ---@param options BasicOptions
 ---@param offset OffsetConfig
----@param lines table<string>
----@return table<Location>
+---@param lines string[]
+---@return Location[]
 function M.extract(options, offset, lines)
   local locs = parser.parse(lines)
   if not next(locs) then

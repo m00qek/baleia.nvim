@@ -10,7 +10,7 @@ M.ANSI_CODES_PATTERN = ansi.PATTERN
 ---@field background ColorAttribute
 ---@field foreground ColorAttribute
 ---@field special ColorAttribute
----@field modes table<string, ModeAttribute>
+---@field modes { [string]: ModeAttribute }
 ---@field offset? integer
 
 ---@class HighlightAttributes

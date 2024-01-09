@@ -3,8 +3,8 @@ local locations = require("baleia.locations")
 local styles = require("baleia.styles")
 
 ---@class TextColors
----@field highlights table<string, HighlightAttributes>
----@field marks table<Mark>
+---@field highlights { [string]: HighlightAttributes }
+---@field marks Mark[]
 
 local M = {}
 
@@ -25,16 +25,16 @@ function M.lastcolumn(lines)
 end
 
 ---@param options BasicOptions
----@param lines table<string>
----@return table<string>
+---@param lines string[]
+---@return string[]
 function M.content(options, lines)
   return options.strip_ansi_codes and strip_color_codes(lines) or lines
 end
 
 ---@param options BasicOptions
----@param lines table<string>
+---@param lines string[]
 ---@param offset OffsetConfig
----@return table<Mark>, table<string, HighlightAttributes>
+---@return Mark[], { [string]: HighlightAttributes }
 function M.colors(options, lines, offset)
   local locs = locations.extract(options, offset, lines)
   if not next(locs) then

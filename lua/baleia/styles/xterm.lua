@@ -102,7 +102,7 @@ function M.from_rgb(red, green, blue)
   return color_code
 end
 
----@type table<integer, string>
+---@type { [integer]: string }
 M.colors = {
   [000] = "000000",
   [001] = "800000",
