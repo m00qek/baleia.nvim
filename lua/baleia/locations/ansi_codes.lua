@@ -1,7 +1,7 @@
 local M = {}
 
----@param locations table<Location>
----@return table<Location>
+---@param locations Location[]
+---@return Location[]
 function M.ignore(locations)
   for _, location in ipairs(locations) do
     location.from.column = location.from.column + location.style.offset
@@ -10,8 +10,8 @@ function M.ignore(locations)
   return locations
 end
 
----@param locations table<Location>
----@return table<Location>
+---@param locations Location[]
+---@return Location[]
 function M.strip(locations)
   local line_number = locations[1].to.line
   local offset = 0

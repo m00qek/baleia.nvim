@@ -19,8 +19,8 @@ local function update_position(position, offset)
 end
 
 ---@param offset OffsetConfig
----@param locations table<Location>
----@return table<Location>
+---@param locations Location[]
+---@return Location[]
 function M.apply(offset, locations)
   local lines_offset = offset.lines or {}
   local default_offset = offset.global or { line = 0, column = 0 }

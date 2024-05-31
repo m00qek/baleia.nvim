@@ -27,7 +27,7 @@ end
 
 ---@param line_number integer
 ---@param text string
----@return table<Location>
+---@return Location[]
 local function parse_line(line_number, text)
   local locations = {}
 
@@ -44,8 +44,8 @@ local function parse_line(line_number, text)
   return locations
 end
 
----@param lines table<string>
----@return table<Location>
+---@param lines string[]
+---@return Location[]
 local function parse_all(lines)
   local lastline = #lines
   local lastcolumn = nil
@@ -69,8 +69,8 @@ local function parse_all(lines)
   return locations
 end
 
----@param locations table<Location>
----@return table<Location>
+---@param locations Location[]
+---@return Location[]
 local function merge_styles(locations)
   local merged = {}
 
@@ -86,8 +86,8 @@ local function merge_styles(locations)
   return merged
 end
 
----@param lines table<string>
----@return table<Location>
+---@param lines string[]
+---@return Location[]
 function M.parse(lines)
   if not next(lines) then
     return {}
