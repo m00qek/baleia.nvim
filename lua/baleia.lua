@@ -19,7 +19,7 @@ end
 --                     • async: Highlight asynchronously [default: true]
 --                     • name: Prefix used to name highlight groups [default: "BaleiaColors"]
 --                     • log: Log level (ERROR, WARN, INFO or DEBUG)
----@param user_options? UserOptions
+---@param user_options? baleia.Options
 ---@return Baleia
 function baleia.setup(user_options)
   local opts = options.with_defaults(user_options)

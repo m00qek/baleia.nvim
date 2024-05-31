@@ -11,7 +11,7 @@ M.LEVELS = {
 
 local function do_nothing() end
 
---- @type Logger
+--- @type baleia.Logger
 M.NULL_LOGGER = {
   show = function()
     print("Baleia logs are disabled.")
@@ -23,7 +23,7 @@ M.NULL_LOGGER = {
 }
 
 ---@param hlgroup string
----@return buffer
+---@return integer
 function M.create(hlgroup)
   local bufname = "baleia-log-" .. vim.fn.strftime("%s000")
   local buffer = vim.fn.bufadd(bufname)
@@ -101,7 +101,7 @@ function M.log(buffer, name, namespace, level, message, data)
   end)
 end
 
----@param buffer buffer
+---@param buffer integer
 function M.show(buffer)
   local bufname = nvim.buffer.get_name(buffer)
   nvim.execute(M.NULL_LOGGER, "vertical split " .. bufname)

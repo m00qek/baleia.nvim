@@ -1,6 +1,7 @@
 local buf = {}
 
 local END_OF_FILE = -1
+
 function buf.set_lines(logger, buffer, start, end_, strict_indexing, lines)
   local status, value = pcall(function()
     return vim.api.nvim_buf_set_lines(buffer, start, end_, strict_indexing, lines)

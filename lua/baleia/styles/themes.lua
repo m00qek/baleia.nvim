@@ -1,8 +1,8 @@
 local M = {}
 
----@alias Theme { integer: string }
+---@alias baleia.styles.Theme { [integer]: string }
 
----@type Theme
+---@type baleia.styles.Theme
 M.NR_16 = {
   [00] = "Black",
   [01] = "DarkBlue",
@@ -22,7 +22,7 @@ M.NR_16 = {
   [15] = "White",
 }
 
----@type Theme
+---@type baleia.styles.Theme
 M.NR_8 = {
   [00] = "Black",
   [01] = "DarkRed",

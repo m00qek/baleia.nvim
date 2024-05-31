@@ -5,11 +5,11 @@ local nvim = {
   api = require("baleia/nvim/api"),
 }
 
----@param logger Logger
+---@param logger baleia.Logger
 ---@param namespace integer
 ---@param buffer integer
----@param marks Mark[]
----@param highlights { string: HighlightAttributes }
+---@param marks baleia.text.Mark[]
+---@param highlights { string: baleia.styles.Highlight }
 function module.all(logger, namespace, buffer, marks, highlights)
   vim.schedule(function()
     local hl = nvim.api.highlights(logger, 0)

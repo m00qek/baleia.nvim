@@ -1,19 +1,14 @@
 local styles = require("baleia.styles")
 
----@class StrictPosition
+---@class baleia.locations.Position
 ---@field line integer
 ---@field column integer
 ---@field offset integer?
 
----@class LoosePosition
----@field line integer
----@field column? integer
-
----@class Location
----@field text string
----@field style Style
----@field from StrictPosition
----@field to StrictPosition
+---@class baleia.locations.Location
+---@field style baleia.styles.Style
+---@field from baleia.locations.Position
+---@field to baleia.locations.Position
 
 local M = {}
 
@@ -32,7 +27,7 @@ end
 
 ---@param line_number integer
 ---@param text string
----@return Location[]
+---@return baleia.locations.Location[]
 local function parse_line(line_number, text)
   local locations = {}
 
@@ -51,7 +46,7 @@ local function parse_line(line_number, text)
 end
 
 ---@param lines string[]
----@return Location[]
+---@return baleia.locations.Location[]
 local function parse_all(lines)
   local lastline = #lines
   local lastcolumn = #lines[lastline]
@@ -84,8 +79,8 @@ local function parse_all(lines)
   return locations
 end
 
----@param locations Location[]
----@return Location[]
+---@param locations baleia.locations.Location[]
+---@return baleia.locations.Location[]
 local function merge_styles(locations)
   local merged = {}
 
@@ -102,7 +97,7 @@ local function merge_styles(locations)
 end
 
 ---@param lines string[]
----@return Location[]
+---@return baleia.locations.Location[]
 function M.parse(lines)
   if not next(lines) then
     return {}

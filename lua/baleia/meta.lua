@@ -2,19 +2,19 @@
 --# selene: allow(unused_variable)
 error("Cannot require a meta file")
 
----@class UserOptions
+---@class baleia.Options
 ---@field strip_ansi_codes? boolean
 ---@field line_starts_at? integer
----@field colors? Theme
+---@field colors? baleia.styles.Theme
 ---@field async? boolean
 ---@field name? string
----@field log? string
+---@field log? baleia.log.Levels
 
 ---@class Baleia
 local baleia = {}
 
 --- Logger for Baleia
----@type Logger
+---@type baleia.Logger
 baleia.logger = nil
 
 --- Parses the contents of {buffer} and colorizes them respecting any ANSI
@@ -22,7 +22,7 @@ baleia.logger = nil
 ---
 -- Parameters: ~
 --   • {buffer}  Buffer handle
---- @param buffer buffer
+--- @param buffer number
 function baleia.once(buffer) end
 
 --- Every time a new line is added to {buffer}, parses the new contents and
@@ -30,7 +30,7 @@ function baleia.once(buffer) end
 ---
 -- Parameters: ~
 --   • {buffer}  Buffer handle
---- @param buffer buffer
+--- @param buffer number
 function baleia.automatically(buffer) end
 
 -- Sets (replaces) a line-range in the buffer, parses ANSI color codes and
@@ -58,7 +58,7 @@ function baleia.automatically(buffer) end
 --
 -- See also: ~
 --   • |nvim_buf_set_text()|
---- @param buffer buffer
+--- @param buffer number
 --- @param start number
 --- @param end_ number
 --- @param strict_indexing boolean
@@ -96,7 +96,7 @@ function baleia.buf_set_lines(buffer, start, end_, strict_indexing, replacement)
 --
 -- See also: ~
 --   • |nvim_buf_set_lines()|
---- @param buffer buffer
+--- @param buffer number
 --- @param start_row number
 --- @param start_col number
 --- @param end_row number

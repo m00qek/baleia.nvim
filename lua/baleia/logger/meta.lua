@@ -2,7 +2,13 @@
 --# selene: allow(unused_variable)
 error("Cannot require a meta file")
 
----@class Logger
+---@alias baleia.log.Levels
+---| "ERROR"
+---| "WARN"
+---| "INFO"
+---| "DEBUG"
+
+---@class baleia.Logger
 local logger = {}
 
 -- Shows the log buffer.

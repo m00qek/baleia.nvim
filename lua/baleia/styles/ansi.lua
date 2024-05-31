@@ -1,18 +1,18 @@
 local colors = require("baleia.styles.colors")
 local modes = require("baleia.styles.modes")
 
----@class AttributeGenerator
+---@class baleia.styles.attributes.Generator
 ---@field params integer
----@field fn { string: fun() }
+---@field fn { [string]: fun(...: integer): (baleia.styles.attributes.Mode | baleia.styles.attributes.Color) }
 
----@class AttributeGenerator
----@field generators { integer: AttributeGenerator }
+---@class baleia.styles.attributes.definition.Generator
+---@field generators { [integer]: baleia.styles.attributes.Generator }
 
----@class ModeAttributeDefinition
----@field definition { string: ModeAttribute }
+---@class baleia.styles.attributes.definition.Mode
+---@field definition { [string]: baleia.styles.attributes.Mode }
 
----@class ColorAttributeDefinition
----@field definition { string: ColorAttribute }
+---@class baleia.styles.attributes.definition.Color
+---@field definition { [string]: baleia.styles.attributes.Color }
 
 local M = {}
 
@@ -20,7 +20,7 @@ local M = {}
 ---@type string
 M.PATTERN = "\x1b[[0-9][:;0-9]*m"
 
----@type { integer: ColorAttributeDefinition|AttributeGenerator }
+---@type { [integer]: baleia.styles.attributes.definition.Color | baleia.styles.attributes.definition.Generator }
 M.colors = {
   [30] = { definition = { foreground = colors.from_xterm(0) } },
   [31] = { definition = { foreground = colors.from_xterm(1) } },
@@ -85,7 +85,7 @@ M.colors = {
   [59] = { definition = { special = colors.reset() } },
 }
 
----@type table<integer|string, ModeAttributeDefinition>
+---@type { [integer|string]: baleia.styles.attributes.definition.Mode }
 M.modes = {
   [22] = { definition = { bold = modes.turn_off(2 ^ 0) } },
   [01] = { definition = { bold = modes.turn_on(2 ^ 1) } },

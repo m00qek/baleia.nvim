@@ -2,18 +2,14 @@ local ansi = require("baleia.styles.ansi")
 local colors = require("baleia.styles.colors")
 local modes = require("baleia.styles.modes")
 
-local M = {}
-
-M.ANSI_CODES_PATTERN = ansi.PATTERN
-
----@class Style
----@field background ColorAttribute
----@field foreground ColorAttribute
----@field special ColorAttribute
----@field modes { string: ModeAttribute }
+---@class baleia.styles.Style
+---@field background baleia.styles.attributes.Color
+---@field foreground baleia.styles.attributes.Color
+---@field special baleia.styles.attributes.Color
+---@field modes { [string]: baleia.styles.attributes.Mode }
 ---@field offset? integer
 
----@class HighlightAttributes
+---@class baleia.styles.Highlight
 ---@field foreground? string
 ---@field background? string
 ---@field special? string
@@ -30,6 +26,10 @@ M.ANSI_CODES_PATTERN = ansi.PATTERN
 ---@field italic? boolean
 ---@field reverse? boolean
 
+local M = {}
+
+M.ANSI_CODES_PATTERN = ansi.PATTERN
+
 local function merge_value(from, to)
   if to.set then
     return to
@@ -37,9 +37,9 @@ local function merge_value(from, to)
   return from
 end
 
----@param from Style
----@param to Style
----@return Style
+---@param from baleia.styles.Style
+---@param to baleia.styles.Style
+---@return baleia.styles.Style
 function M.merge(from, to)
   local style = {
     foreground = merge_value(from.foreground, to.foreground),
@@ -60,9 +60,9 @@ function M.merge(from, to)
   return style
 end
 
----@return Style
+---@return baleia.styles.Style
 function M.none()
-  ---@type Style
+  ---@type baleia.styles.Style
   local style = {
     foreground = colors.none(),
     background = colors.none(),
@@ -84,9 +84,9 @@ function M.none()
 end
 
 ---@param offset integer
----@return Style
+---@return baleia.styles.Style
 function M.reset(offset)
-  ---@type Style
+  ---@type baleia.styles.Style
   local style = {
     foreground = colors.reset(),
     background = colors.reset(),
@@ -107,7 +107,7 @@ function M.reset(offset)
 end
 
 ---@param ansi_sequence string
----@return Style
+---@return baleia.styles.Style
 function M.to_style(ansi_sequence)
   local codes = {}
   for code in ansi_sequence:gmatch("[:0-9]+") do
@@ -157,7 +157,7 @@ function M.to_style(ansi_sequence)
 end
 
 ---@param prefix string
----@param style Style
+---@param style baleia.styles.Style
 ---@return string
 function M.name(prefix, style)
   local modename = 0
@@ -178,11 +178,11 @@ function M.name(prefix, style)
     .. style.special.value.name
 end
 
----@param style Style
----@param theme Theme
----@return HighlightAttributes
+---@param style baleia.styles.Style
+---@param theme baleia.styles.Theme
+---@return baleia.styles.Highlight
 function M.attributes(style, theme)
-  ---@type HighlightAttributes
+  ---@type baleia.styles.Highlight
   local attributes = {}
 
   for name, attr in pairs(style.modes) do

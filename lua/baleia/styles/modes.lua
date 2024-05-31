@@ -1,10 +1,10 @@
----@class Mode
+---@class baleia.styles.attributes.modes.Value
 ---@field tag integer
 ---@field enabled boolean
 
----@class ModeAttribute
+---@class baleia.styles.attributes.Mode
 ---@field set boolean
----@field value Mode
+---@field value baleia.styles.attributes.modes.Value
 
 local M = {}
 
@@ -13,7 +13,7 @@ local M = {}
 -- Parameters: ~
 --   • {tag}  Unique identifier used to generate highlight group names
 ---@param tag integer
----@return ModeAttribute
+---@return baleia.styles.attributes.Mode
 function M.turn_on(tag)
   return {
     set = true,
@@ -26,7 +26,7 @@ end
 -- Parameters: ~
 --   • {tag}  Unique identifier used to generate highlight group names
 ---@param tag integer
----@return ModeAttribute
+---@return baleia.styles.attributes.Mode
 function M.turn_off(tag)
   return {
     set = true,
@@ -39,7 +39,7 @@ end
 -- Parameters: ~
 --   • {tag}  Unique identifier used to generate highlight group names
 ---@param tag integer
----@return ModeAttribute
+---@return baleia.styles.attributes.Mode
 function M.ignore(tag)
   return {
     set = false,

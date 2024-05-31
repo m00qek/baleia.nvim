@@ -5,10 +5,10 @@ local parser = require("baleia.locations.parser")
 
 local M = {}
 
----@param options BasicOptions
----@param offset OffsetConfig
+---@param options baleia.options.Basic
+---@param offset baleia.offsets.Config
 ---@param lines string[]
----@return Location[]
+---@return baleia.locations.Location[]
 function M.extract(options, offset, lines)
   local locs = parser.parse(lines)
   if not next(locs) then

@@ -1,6 +1,6 @@
 local styles = require("baleia.styles")
 
----@class Mark
+---@class baleia.text.Mark
 ---@field highlight string
 ---@field firstcolumn integer
 ---@field lastcolumn? integer
@@ -9,8 +9,8 @@ local styles = require("baleia.styles")
 local M = {}
 
 ---@param highlight_name string
----@param location Location
----@return Mark
+---@param location baleia.locations.Location
+---@return baleia.text.Mark
 local function single_line(highlight_name, location)
   return {
     highlight = highlight_name,
@@ -22,8 +22,8 @@ end
 
 ---@param line_starts_at integer
 ---@param highlight_name string
----@param location Location
----@return Mark[]
+---@param location baleia.locations.Location
+---@return baleia.text.Mark[]
 local function multi_line(line_starts_at, highlight_name, location)
   local highlights = {}
 
@@ -53,13 +53,14 @@ local function multi_line(line_starts_at, highlight_name, location)
   return highlights
 end
 
----@param options BasicOptions
----@param locations Location[]
----@return Mark[], { string: HighlightAttributes }
+---@param options baleia.options.Basic
+---@param locations baleia.locations.Location[]
+---@return baleia.text.Mark[], { [string]: baleia.styles.Highlight }
 function M.from_locations(options, locations)
-  ---@type { string: HighlightAttributes }
+  ---@type { [string]: baleia.styles.Highlight }
   local highlights = {}
-  ---@type Mark[]
+
+  ---@type baleia.text.Mark[]
   local marks = {}
 
   for _, location in pairs(locations) do

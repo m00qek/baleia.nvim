@@ -1,7 +1,7 @@
 local M = {}
 
----@param locations Location[]
----@return Location[]
+---@param locations baleia.locations.Location[]
+---@return baleia.locations.Location[]
 function M.ignore(locations)
   for _, location in ipairs(locations) do
     location.from.column = location.from.column + location.from.offset
@@ -10,8 +10,8 @@ function M.ignore(locations)
   return locations
 end
 
----@param locations Location[]
----@return Location[]
+---@param locations baleia.locations.Location[]
+---@return baleia.locations.Location[]
 function M.strip(locations)
   local current_line = 0
   local lineoffset = 0

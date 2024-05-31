@@ -1,28 +1,28 @@
 local xterm = require("baleia.styles.xterm")
 
-local M = {}
-
----@class TermColor
+---@class baleia.styles.attributes.colors.Term
 ---@field name string
 ---@field cterm string
 ---@field inferred string
 
----@class GuiColor
+---@class baleia.styles.attributes.colors.GUI
 ---@field name string
 ---@field gui string
 ---@field inferred string
 
----@class ColorAttribute
+---@class baleia.styles.attributes.Color
 ---@field set boolean
----@field value TermColor | GuiColor
+---@field value baleia.styles.attributes.colors.Term | baleia.styles.attributes.colors.GUI
+
+local M = {}
 
 -- Returns the GUI color hexcode
 --
 -- Parameters: ~
 --   • {color}  Color
 --   • {theme}  Custom theme
----@param color TermColor | GuiColor
----@param theme Theme
+---@param color baleia.styles.attributes.colors.Term | baleia.styles.attributes.colors.GUI
+---@param theme baleia.styles.Theme
 ---@return string
 function M.gui(color, theme)
   if color.gui then
@@ -36,7 +36,7 @@ end
 --
 -- Parameters: ~
 --   • {color}  Color
----@param color TermColor | GuiColor
+---@param color baleia.styles.attributes.colors.Term | baleia.styles.attributes.colors.GUI
 ---@return string
 function M.cterm(color)
   if color.cterm then
@@ -48,7 +48,7 @@ end
 
 -- Identity color: when applied does not change anything
 --
----@return ColorAttribute
+---@return baleia.styles.attributes.Color
 function M.none()
   return {
     set = false,
@@ -62,7 +62,7 @@ end
 
 -- Default highlight color
 --
----@return ColorAttribute
+---@return baleia.styles.attributes.Color
 function M.reset()
   return {
     set = true,
@@ -79,7 +79,7 @@ end
 -- Parameters: ~
 --   • {code}  ANSI color code (between 0 and 255)
 ---@param code integer
----@return ColorAttribute
+---@return baleia.styles.attributes.Color
 function M.from_xterm(code)
   return {
     set = true,
@@ -100,7 +100,7 @@ end
 ---@param red integer
 ---@param green integer
 ---@param blue integer
----@return ColorAttribute
+---@return baleia.styles.attributes.Color
 function M.from_truecolor(red, green, blue)
   local hexcode = string.format("%02x%02x%02x", red or 0, green or 0, blue or 0)
   return {

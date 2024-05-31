@@ -2,8 +2,8 @@ local styles = require("baleia.styles")
 
 local M = {}
 
----@param previous Location
----@param current Location
+---@param previous baleia.locations.Location
+---@param current baleia.locations.Location
 ---@return boolean
 local function can_merge(previous, current)
   local on_the_same_line = current.from.line == previous.from.line
@@ -18,9 +18,9 @@ local function can_merge(previous, current)
     or (in_different_lines and current_location_at_start and previous_location_at_the_end)
 end
 
----@param previous Location
----@param current Location
----@return Location
+---@param previous baleia.locations.Location
+---@param current baleia.locations.Location
+---@return baleia.locations.Location
 local function merge(previous, current)
   local style = styles.merge(previous.style, current.style)
 
@@ -43,8 +43,8 @@ local function merge(previous, current)
   }
 end
 
----@param locations Location[]
----@return Location[]
+---@param locations baleia.locations.Location[]
+---@return baleia.locations.Location[]
 function M.merge(locations)
   local merged = {}
 

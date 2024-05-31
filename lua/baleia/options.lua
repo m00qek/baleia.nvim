@@ -2,23 +2,19 @@ local logger = require("baleia.logger")
 local nvim = require("baleia.nvim")
 local themes = require("baleia.styles.themes")
 
----@class CompleteOptions
----@field strip_ansi_codes boolean
----@field line_starts_at integer
+---@class baleia.options.UI
 ---@field namespace integer
 ---@field log_level string
----@field colors Theme
----@field logger Logger
+---@field logger baleia.Logger
 ---@field async boolean
----@field name string
 
----@class BasicOptions
+---@class baleia.options.Basic
 ---@field strip_ansi_codes boolean
 ---@field line_starts_at integer
----@field colors Theme
+---@field colors baleia.styles.Theme
 ---@field name string
 
----@alias Options BasicOptions|CompleteOptions
+---@alias baleia.options.Complete baleia.options.Basic | baleia.options.UI
 
 local M = {}
 
@@ -40,8 +36,8 @@ local function with_colorscheme(theme)
   return colors
 end
 
----@param user_options? UserOptions
----@return Options
+---@param user_options? baleia.Options
+---@return baleia.options.Complete
 function M.with_defaults(user_options)
   local options = user_options or {}
 
@@ -50,7 +46,7 @@ function M.with_defaults(user_options)
   local log_level = either(options.log, "ERROR")
   local logname = name .. "Logs"
 
-  ---@type Options
+  ---@type baleia.options.Complete
   return {
     strip_ansi_codes = either(options.strip_ansi_codes, true),
     line_starts_at = either(options.line_starts_at, 1),
@@ -63,8 +59,8 @@ function M.with_defaults(user_options)
   }
 end
 
----@param options Options
----@return BasicOptions
+---@param options baleia.options.Complete
+---@return baleia.options.Basic
 function M.basic(options)
   return {
     strip_ansi_codes = options.strip_ansi_codes,

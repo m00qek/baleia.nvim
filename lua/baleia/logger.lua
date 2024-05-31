@@ -18,7 +18,7 @@ end
 
 -- Creates a logger that does not log anything.
 --
---- @return Logger
+--- @return baleia.Logger
 function M.null()
   return api.NULL_LOGGER
 end
@@ -32,7 +32,7 @@ end
 ---@param hlgroup string
 ---@param hlnamespace integer
 ---@param level string
----@return Logger
+---@return baleia.Logger
 function M.new(hlgroup, hlnamespace, level)
   local buffer = api.create(hlgroup)
   local current_priority = api.LEVELS[level].priority

@@ -1,8 +1,6 @@
 -- This is basically a translation to Lua from the C codebase of TMUX
 -- https://github.com/tmux/tmux/blob/dae2868d1227b95fd076fb4a5efa6256c7245943/colour.c
 
----@alias hexcode string
-
 local M = {}
 
 local function distance(color1, color2)
@@ -50,7 +48,7 @@ local within_levels = { [0] = 0x00, [1] = 0x5f, [2] = 0x87, [3] = 0xaf, [4] = 0x
 -- Parameters: ~
 --   • {code}  ANSI color code (between 0 and 255)
 ---@param code integer
----@return hexcode
+---@return string
 function M.to_truecolor(code)
   return "#" .. M.colors[code]
 end
@@ -102,7 +100,7 @@ function M.from_rgb(red, green, blue)
   return color_code
 end
 
----@type { integer: string }
+---@type { [integer]: string }
 M.colors = {
   [000] = "000000",
   [001] = "800000",
