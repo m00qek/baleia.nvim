@@ -1,7 +1,5 @@
 # baleia.nvim
 
-===
-
 [![Integration][integration-badge]][integration-runs]
 
 Colorize text with ANSI escape sequences (8, 16, 256 or TrueColor)
