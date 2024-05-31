@@ -2,23 +2,37 @@ local locations = require("baleia.locations")
 
 describe("[merge_neighbours]", function()
   it("Two codes,in the **same** line, without text between them", function()
-    local locs = locations.extract({ strip_ansi_codes = true }, {}, { "\x1b[0m\x1b[31mfirst line" })
+    local locs = locations.extract({ strip_ansi_codes = true }, {}, { "\x1b[0m\x1b[31mfirst \x1b[0mline" })
     assert.combinators.match({
       {
         style = { offset = 9 },
         from = { line = 1, column = 1 },
-        to = { line = 1 },
+        to = { line = 1, column = 6 },
+      },
+      {
+        style = { offset = 4 },
+        from = { line = 1, column = 7 },
+        to = { line = 1, column = 10 },
       },
     }, locs)
   end)
 
   it("Two codes,in **different** line, without text between them", function()
-    local locs = locations.extract({ strip_ansi_codes = true }, {}, { "first line\x1b[1m", "\x1b[31msecond line" })
+    local locs = locations.extract(
+      { strip_ansi_codes = true },
+      {},
+      { "first line\x1b[1m", "\x1b[31msecond \x1b[0mline" }
+    )
     assert.combinators.match({
       {
         style = { offset = 5 },
         from = { line = 1, column = 11 },
-        to = { line = 2 },
+        to = { line = 2, column = 7 },
+      },
+      {
+        style = { offset = 4 },
+        from = { line = 2, column = 8 },
+        to = { line = 2, column = 11 },
       },
     }, locs)
   end)
@@ -53,8 +67,8 @@ describe("[extract]", function()
   it("with blank line between", function()
     local lines = { "first line\x1b[0m", "second line", "third \x1b[0mline" }
     assert.combinators.match({
-      { from = { line = 1, column = 11 }, to = { line = 3 } },
-      { from = { line = 3, column = 7 }, to = { line = 3 } },
+      { from = { line = 1, column = 11 }, to = { line = 3, column = 6 } },
+      { from = { line = 3, column = 7 }, to = { line = 3, column = 10 } },
     }, locations.extract({ strip_ansi_codes = true }, {}, lines))
   end)
 

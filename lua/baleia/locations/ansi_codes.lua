@@ -1,36 +1,37 @@
 local M = {}
 
----@param locations table<Location>
----@return table<Location>
+---@param locations Location[]
+---@return Location[]
 function M.ignore(locations)
   for _, location in ipairs(locations) do
-    location.from.column = location.from.column + location.style.offset
+    location.from.column = location.from.column + location.from.offset
   end
 
   return locations
 end
 
----@param locations table<Location>
----@return table<Location>
+---@param locations Location[]
+---@return Location[]
 function M.strip(locations)
-  local line_number = locations[1].to.line
-  local offset = 0
+  local current_line = 0
+  local lineoffset = 0
 
   for _, location in ipairs(locations) do
-    if line_number ~= location.from.line then
-      line_number = location.from.line
-      offset = 0
+    if current_line ~= location.from.line then
+      current_line = location.from.line
+      lineoffset = 0
     end
 
-    location.from.column = location.from.column - offset
-    offset = offset + location.style.offset
+    location.from.column = location.from.column - lineoffset
 
-    if not location.to.column or line_number ~= location.to.line then
-      line_number = location.to.line
-      offset = 0
-    else
-      location.to.column = location.to.column - offset
+    if location.from.line ~= location.to.line then
+      current_line = location.to.line
+      lineoffset = 0
     end
+
+    print(location.from.column, lineoffset)
+    lineoffset = lineoffset + location.to.offset
+    location.to.column = location.to.column - lineoffset
   end
 
   return locations
