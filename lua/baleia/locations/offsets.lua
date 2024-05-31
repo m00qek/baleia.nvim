@@ -4,7 +4,7 @@
 
 ---@class OffsetConfig
 ---@field global Offset
----@field lines? table<integer, Offset>
+---@field lines? { integer: Offset }
 
 local M = {}
 

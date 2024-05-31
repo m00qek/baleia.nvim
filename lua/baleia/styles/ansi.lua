@@ -3,16 +3,16 @@ local modes = require("baleia.styles.modes")
 
 ---@class AttributeGenerator
 ---@field params integer
----@field fn table<string, function>
+---@field fn { string: fun() }
 
 ---@class AttributeGenerator
----@field generators table<integer, AttributeGenerator>
+---@field generators { integer: AttributeGenerator }
 
 ---@class ModeAttributeDefinition
----@field definition table<string, ModeAttribute>
+---@field definition { string: ModeAttribute }
 
 ---@class ColorAttributeDefinition
----@field definition table<string, ColorAttribute>
+---@field definition { string: ColorAttribute }
 
 local M = {}
 
@@ -20,7 +20,7 @@ local M = {}
 ---@type string
 M.PATTERN = "\x1b[[0-9][:;0-9]*m"
 
----@type table<integer, ColorAttributeDefinition|AttributeGenerator>
+---@type { integer: ColorAttributeDefinition|AttributeGenerator }
 M.colors = {
   [30] = { definition = { foreground = colors.from_xterm(0) } },
   [31] = { definition = { foreground = colors.from_xterm(1) } },

@@ -1,6 +1,6 @@
 local M = {}
 
----@alias Theme table<integer, string>
+---@alias Theme { integer: string }
 
 ---@type Theme
 M.NR_16 = {

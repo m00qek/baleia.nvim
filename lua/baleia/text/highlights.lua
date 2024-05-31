@@ -55,9 +55,9 @@ end
 
 ---@param options BasicOptions
 ---@param locations Location[]
----@return Mark[], table<string, HighlightAttributes>
+---@return Mark[], { string: HighlightAttributes }
 function M.from_locations(options, locations)
-  ---@type table<string, HighlightAttributes>
+  ---@type { string: HighlightAttributes }
   local highlights = {}
   ---@type Mark[]
   local marks = {}

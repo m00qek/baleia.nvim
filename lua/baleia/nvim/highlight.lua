@@ -9,7 +9,7 @@ local nvim = {
 ---@param namespace integer
 ---@param buffer integer
 ---@param marks Mark[]
----@param highlights table<string, HighlightAttributes>
+---@param highlights { string: HighlightAttributes }
 function module.all(logger, namespace, buffer, marks, highlights)
   vim.schedule(function()
     local hl = nvim.api.highlights(logger, 0)
