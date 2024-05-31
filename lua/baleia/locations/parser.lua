@@ -3,6 +3,7 @@ local styles = require("baleia.styles")
 ---@class StrictPosition
 ---@field line integer
 ---@field column integer
+---@field offset integer?
 
 ---@class LoosePosition
 ---@field line integer
@@ -12,17 +13,21 @@ local styles = require("baleia.styles")
 ---@field text string
 ---@field style Style
 ---@field from StrictPosition
----@field to LoosePosition
+---@field to StrictPosition
 
 local M = {}
 
-local function rpairs(table)
+--- Reverses a list.
+---@generic T
+---@param list T[]
+---@return (fun(t: T[], i: integer): integer?, T?), T[], integer
+local function rpairs(list)
   return function(t, i)
     i = i - 1
     if i ~= 0 then
       return i, t[i]
     end
-  end, table, #table + 1
+  end, list, #list + 1
 end
 
 ---@param line_number integer
@@ -34,9 +39,10 @@ local function parse_line(line_number, text)
   local position = 1
   for ansi_sequence in string.gmatch(text, styles.ANSI_CODES_PATTERN) do
     local column_number = string.find(text, styles.ANSI_CODES_PATTERN, position)
+    local style = styles.to_style(ansi_sequence)
     table.insert(locations, {
-      style = styles.to_style(ansi_sequence),
-      from = { line = line_number, column = column_number },
+      style = style,
+      from = { line = line_number, column = column_number, offset = style.offset },
     })
     position = column_number + 1
   end
@@ -48,20 +54,29 @@ end
 ---@return Location[]
 local function parse_all(lines)
   local lastline = #lines
-  local lastcolumn = nil
+  local lastcolumn = #lines[lastline]
 
   local locations = {}
 
   for line_number, current_line in rpairs(lines) do
     for _, current_location in rpairs(parse_line(line_number, current_line)) do
-      current_location.to = { line = lastline, column = lastcolumn }
+      current_location.to = {
+        line = lastline,
+        column = lastcolumn,
+        offset = lastline == current_location.from.line and current_location.style.offset or 0,
+      }
       table.insert(locations, current_location)
 
       lastline = line_number
       lastcolumn = current_location.from.column - 1
       if lastcolumn < 1 then
         lastline = lastline - 1
-        lastcolumn = nil
+
+        if lines[lastline] then
+          lastcolumn = #lines[lastline]
+        else
+          lastcolumn = 0
+        end
       end
     end
   end

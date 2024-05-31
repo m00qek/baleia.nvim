@@ -12,7 +12,7 @@ local function can_merge(previous, current)
   local no_text_between_locations = current.from.column == previous.from.column + previous.style.offset
 
   local current_location_at_start = current.from.column == 1
-  local previous_location_at_the_end = previous.to.column == nil
+  local previous_location_at_the_end = previous.to.column == previous.from.column + previous.style.offset - 1
 
   return (on_the_same_line and no_text_between_locations)
     or (in_different_lines and current_location_at_start and previous_location_at_the_end)
@@ -23,14 +23,23 @@ end
 ---@return Location
 local function merge(previous, current)
   local style = styles.merge(previous.style, current.style)
+
+  local from = previous.from
+  local to = current.to
+
   if current.from.line == previous.from.line then
     style.offset = previous.style.offset + current.style.offset
+    to.offset = previous.to.offset + current.to.offset
+    from.offset = previous.from.offset + current.from.offset
+  else
+    to.offset = current.to.offset
+    from.offset = previous.from.offset
   end
 
   return {
     style = style,
-    from = previous.from,
-    to = current.to,
+    from = from,
+    to = to,
   }
 end
 
