@@ -1,64 +1,65 @@
-baleia.nvim
+# baleia.nvim
+
 ===
+
 [![Integration][integration-badge]][integration-runs]
 
 Colorize text with ANSI escape sequences (8, 16, 256 or TrueColor)
 
 ## Install
 
-Using [vim-plug][vim-plug]:
-
-```vim
-Plug 'm00qek/baleia.nvim', { 'tag': 'v1.4.0' }
-```
-
-Using [packer.nvim][packer]:
+Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ```lua
-use { 'm00qek/baleia.nvim', tag = 'v1.4.0' }
-```
+{
+  "m00qek/baleia.nvim",
+  version = "*",
+  config = function()
+    vim.g.baleia = require("baleia").setup({ })
 
-## Setup
+    -- Command to colorize the current buffer
+    vim.api.nvim_create_user_command("BaleiaColorize", function()
+      vim.g.baleia.once(vim.api.nvim_get_current_buf())
+    end, { bang = true })
 
-`baleia` can colorize an entire buffer or/and apply colors every time a new line
-is added to it.
-
-### Colorizing the entire buffer
-
-The best approach is to create a command. In `vimscript`: 
-
-```vim
-let s:baleia = luaeval("require('baleia').setup { }")
-command! BaleiaColorize call s:baleia.once(bufnr('%'))
-```
-
-To highlight the current buffer:
-
-```vim
-:BaleiaColorize
+    -- Command to show logs 
+    vim.api.nvim_create_user_command("BaleiaLogs", vim.g.baleia.logger.show, { bang = true })
+  end,
+}
 ```
 
 ## Automatically colorize when lines are added to the buffer
 
 To automatically colorize when a new line is added use
 
-```vim
-let s:baleia = luaeval("require('baleia').setup { }")
-autocmd BufWinEnter my-buffer call s:baleia.automatically(bufnr('%'))
+```lua
+vim.g.baleia = require("baleia").setup({ })
+vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
+  pattern = "*.txt",
+  callback = function()
+    vim.g.baleia.automatically(vim.api.nvim_get_current_buf())
+  end,
+})
 ```
 
-where `my_buffer` is how you identify in which buffers it should run (please
-read `:h autocmd`)
+This will register every buffer that matches `.txt` to be automatically
+colorized.
 
 ## Automatically colorize text added to the quickfix window
 
 To automatically colorize text added to the quickfix use `BufReadPost`
 
-```vim
-let s:baleia = luaeval("require('baleia').setup { }")
-autocmd BufReadPost quickfix setlocal modifiable
-  \ | silent call g:baleia.once(bufnr('%'))
-  \ | setlocal nomodifiable
+```lua
+vim.g.baleia = require("baleia").setup({ })
+vim.api.nvim_create_autocmd({ "BufReadPost" }, {
+  pattern = "quickfix",
+  callback = function()
+    vim.api.nvim_set_option_value("modifiable", true, { buf = buffer })
+    vim.g.baleia.automatically(vim.api.nvim_get_current_buf())
+    vim.api.nvim_set_option_value("modified", false, { buf = buffer })
+    vim.api.nvim_set_option_value("modifiable", false, { buf = buffer })
+  end,
+})
 ```
 
 ### Setup options
@@ -76,32 +77,63 @@ When calling the `setup` function, the following options are available:
 
 ## With Conjure
 
-This can be used to colorize [Conjure][conjure] log buffer. To do it you must 
+This can be used to colorize [Conjure][conjure] log buffer. To do it you **must**
 tell conjure to not strip ANSI escape codes:
 
-```vim
-" tell Conjure to not strip ANSI sequences
-let g:conjure#log#strip_ansi_escape_sequences_line_limit = 0
-```
+```lua
+{
+  "m00qek/baleia.nvim",
+  version = "*",
+  config = function()
+    vim.g.conjure_baleia = require("baleia").setup({ line_starts_at = 3 })
 
-To automatically enable `baleia` for all Conjure log buffers use 
+    local augroup = vim.api.nvim_create_augroup("ConjureBaleia", { clear = true })
 
-```vim
-let s:baleia = luaeval("require('baleia').setup { line_starts_at = 3 }")
-autocmd BufWinEnter conjure-log-* call s:baleia.automatically(bufnr('%'))
+    vim.api.nvim_create_user_command("BaleiaColorize", function()
+      vim.g.conjure_baleia.once(vim.api.nvim_get_current_buf())
+    end, { bang = true })
+
+    vim.api.nvim_create_user_command("BaleiaLogs", vim.g.conjure_baleia.logger.show, { bang = true })
+  end,
+},
+{
+  "Olical/conjure",
+  ft = { "clojure", "fennel" },
+  config = function()
+    require("conjure.main").main()
+    require("conjure.mapping")["on-filetype"]()
+  end,
+  init = function()
+    -- Print color codes if baleia.nvim is available
+    local colorize = require("lazyvim.util").has("baleia.nvim")
+    vim.g["conjure#log#strip_ansi_escape_sequences_line_limit"] = colorize and 1 or nil
+
+    -- Disable diagnostics in log buffer and colorize it
+    vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
+      pattern = "conjure-log-*",
+      callback = function()
+        local buffer = vim.api.nvim_get_current_buf()
+        vim.diagnostic.enable(false, { bufnr = buffer })
+        if colorize and vim.g.conjure_baleia then
+          vim.g.conjure_baleia.automatically(buffer)
+        end
+      end,
+    })
+  end,
+},
 ```
 
 ## What to do if something looks wrong
 
 Enable logs with
 
-```vim
-let s:baleia = luaeval("require('baleia').setup { log = 'DEBUG' }")
-command! BaleiaLogs call s:baleia.logger.show()
+```lua
+vim.g.baleia = require("baleia").setup({ log = 'DEBUG' })
+vim.api.nvim_create_user_command("BaleiaLogs", vim.g.conjure_baleia.logger.show, { bang = true })
 ```
 
 You can set the log level to `ERROR`, `WARN`, `INFO` or `DEBUG`. You can see
-the log using `BaleiaLogs`.
+the logs using `BaleiaLogs`.
 
 ## Developer API
 
@@ -126,7 +158,5 @@ baleia.buf_set_lines(0, lastline, lastline, true, new_lines)
 
 [integration-badge]: https://github.com/m00qek/baleia.nvim/actions/workflows/integration.yml/badge.svg
 [integration-runs]: https://github.com/m00qek/baleia.nvim/actions/workflows/integration.yml
-[vim-plug]: https://github.com/junegunn/vim-plug
 [conjure]: https://github.com/Olical/conjure
-[packer]: https://github.com/wbthomason/packer.nvim
 [nr_8]: ./lua/baleia/styles/themes.lua
