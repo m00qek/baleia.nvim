@@ -29,7 +29,6 @@ function M.strip(locations)
       lineoffset = 0
     end
 
-    print(location.from.column, lineoffset)
     lineoffset = lineoffset + location.to.offset
     location.to.column = location.to.column - lineoffset
   end
