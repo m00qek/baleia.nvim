@@ -62,21 +62,37 @@ local function colorize(opts, buffer, lines, offset)
 end
 
 function M.once(opts, buffer)
-  local raw_lines = nvim.buffer.get_lines(opts.logger, buffer)
+  local total_lines = nvim.buffer.last_row(buffer)
+  local chunk_size = opts.chunk_size
 
-  if opts.strip_ansi_codes then
-    nvim.buffer.set_text(
-      opts.logger,
-      buffer,
-      0,
-      0,
-      #raw_lines - 1,
-      last_column(raw_lines),
-      text.content(opts, raw_lines)
-    )
+  local function process_chunk(start_line)
+    if start_line >= total_lines then
+      return
+    end
+
+    local end_line = math.min(start_line + chunk_size, total_lines)
+    local raw_lines = nvim.buffer.get_lines(opts.logger, buffer, start_line, end_line)
+
+    if opts.strip_ansi_codes then
+      nvim.buffer.set_text(
+        opts.logger,
+        buffer,
+        start_line,
+        0,
+        end_line - 1,
+        last_column(raw_lines),
+        text.content(opts, raw_lines)
+      )
+    end
+
+    colorize(opts, buffer, raw_lines, { global = { column = 0, line = start_line } })
+
+    vim.defer_fn(function()
+      process_chunk(end_line)
+    end, 1)
   end
 
-  colorize(opts, buffer, raw_lines, { global = { column = 0, line = 0 } })
+  process_chunk(0)
 end
 
 function M.automatically(opts, buffer)
