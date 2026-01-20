@@ -5,31 +5,47 @@ local nvim = require("baleia.nvim")
 
 local M = {}
 
+local options = require("baleia.options")
+local text = require("baleia.text")
+
+local nvim = require("baleia.nvim")
+
+local M = {}
+
+local tasks = {}
+local next_task_id = 0
+
+local function work_fn(encoded_args)
+  local decoded = vim.mpack.decode(encoded_args)
+  local basic_opts, lines, offset, task_id = unpack(decoded)
+  local marks, highlights = require("baleia.text").colors(basic_opts, lines, offset)
+  return vim.mpack.encode({ marks, highlights, task_id })
+end
+
+local function after_work_fn(encoded_result)
+  local marks, highlights, task_id = unpack(vim.mpack.decode(encoded_result))
+  local context = tasks[task_id]
+  if context then
+    tasks[task_id] = nil
+    if next(marks) then
+      nvim.highlight.all(context.opts.logger, context.opts.namespace, context.buffer, marks, highlights)
+    end
+  end
+end
+
+local work = vim.loop.new_work(work_fn, after_work_fn)
+
 local function last_column(lines)
   local lastline = lines[#lines]
   return #lastline
 end
 
 local function colorize_async(opts, buffer, lines, offset)
-  local callback = nil
+  local task_id = next_task_id
+  next_task_id = next_task_id + 1
+  tasks[task_id] = { opts = opts, buffer = buffer }
 
-  callback = vim.loop.new_async(function(result)
-    local marks, highlights = unpack(vim.mpack.decode(result))
-
-    if next(marks) then
-      nvim.highlight.all(opts.logger, opts.namespace, buffer, marks, highlights)
-    end
-
-    vim.loop.close(callback)
-  end)
-
-  local taskfn = function(donefn, arguments)
-    local decoded = vim.mpack.decode(arguments)
-    local result = { require("baleia.text").colors(unpack(decoded)) }
-    vim.loop.async_send(donefn, vim.mpack.encode(result))
-  end
-
-  vim.loop.new_thread(taskfn, callback, vim.mpack.encode({ options.basic(opts), lines, offset }))
+  work:queue(vim.mpack.encode({ options.basic(opts), lines, offset, task_id }))
 end
 
 local function colorize_sync(opts, buffer, lines, offset)
