@@ -149,6 +149,10 @@ describe("[to_style]", function()
     assert.combinators.match(styles.reset(4), styles.to_style("\x1b[0m"))
   end)
 
+  it("extract simplified reset code", function()
+    assert.combinators.match(styles.reset(3), styles.to_style("\x1b[m"))
+  end)
+
   it("extract background", function()
     assert.combinators.match({
       background = { set = true, value = { inferred = "#800000", name = 1, cterm = 1 } },

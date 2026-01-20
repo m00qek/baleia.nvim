@@ -114,6 +114,11 @@ function M.to_style(ansi_sequence)
     table.insert(codes, tonumber(code) or code)
   end
 
+  -- Empty codes (e.g., \x1b[m) is equivalent to reset (\x1b[0m)
+  if #codes == 0 then
+    return M.reset(#ansi_sequence)
+  end
+
   local style = M.none()
   local index = 1
   while index <= #codes do
