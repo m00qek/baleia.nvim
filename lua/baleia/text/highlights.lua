@@ -67,11 +67,16 @@ function M.from_locations(options, locations)
     local highlight_name = styles.name(options.name, location.style)
 
     if location.from.line == location.to.line then
-      table.insert(marks, single_line(highlight_name, location))
+      local mark = single_line(highlight_name, location)
+      if not mark.lastcolumn or mark.firstcolumn <= mark.lastcolumn then
+        table.insert(marks, mark)
+      end
     else
       local new_marks = multi_line(options.line_starts_at, highlight_name, location)
       for _, mark in ipairs(new_marks) do
-        table.insert(marks, mark)
+        if not mark.lastcolumn or mark.firstcolumn <= mark.lastcolumn then
+          table.insert(marks, mark)
+        end
       end
     end
 
