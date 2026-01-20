@@ -18,7 +18,7 @@ local M = {}
 
 -- selene: allow(bad_string_escape) because it does not recognize \x1b
 ---@type string
-M.PATTERN = "\x1b[[0-9][:;0-9]*m"
+M.PATTERN = "\x1b[[0-9]?[:;0-9]*m"
 
 ---@type { [integer]: baleia.styles.attributes.definition.Color | baleia.styles.attributes.definition.Generator }
 M.colors = {
