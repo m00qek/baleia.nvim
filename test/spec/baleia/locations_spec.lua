@@ -81,6 +81,42 @@ describe("[extract]", function()
       { from = { line = 2, column = 12 }, to = { line = 3 } },
     }, locations.extract({ strip_ansi_codes = true }, {}, lines))
   end)
+
+  it("Two separated codes on the same line", function()
+    local lines = { "A \x1b[31m B \x1b[32m C" }
+    -- Code 1 at 3 (len 5). Text "A " (2 chars).
+    -- Code 2 at 10 (len 5). Text " B " (3 chars).
+    -- Original: A  [31m  B  [32m  C
+    -- Stripped: A  B  C
+    -- "A " (0-2).
+    -- Code1 (2-7).
+    -- " B " (7-10).
+    -- Code2 (10-15).
+    -- " C" (15+).
+    
+    -- Loc 1 (Red): Covers " B ".
+    -- From: 3 (1-based index of code).
+    -- After strip: 
+    -- "A " is 1,2. Code is stripped.
+    -- " B " starts at 3.
+    -- So Loc 1 from = 3.
+    
+    -- Loc 2 (Green): Covers " C".
+    -- Original From: 10.
+    -- Shift: Code 1 (5) removed.
+    -- From = 10 - 5 = 5.
+    -- "A " (1,2), " B " (3,4,5). " C" starts at 6?
+    -- A(1) space(2) B(3) space(4) C(5).
+    -- Wait, " B " is 3 chars. space, B, space.
+    -- 3, 4, 5.
+    -- So " C" starts at 6.
+    -- So Loc 2 from = 6.
+    
+    assert.combinators.match({
+      { from = { line = 1, column = 3 }, to = { line = 1, column = 5 } }, -- Red covers " B "
+      { from = { line = 1, column = 6 }, to = { line = 1, column = 7 } }, -- Green covers " C"
+    }, locations.extract({ strip_ansi_codes = true }, {}, lines))
+  end)
 end)
 
 local offsets = require("baleia.locations.offsets")

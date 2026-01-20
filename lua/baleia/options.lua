@@ -55,6 +55,7 @@ function M.with_defaults(user_options)
     logger = logger.new(logname, nvim.create_namespace(logname), log_level),
     colors = with_colorscheme(theme),
     async = either(options.async, true),
+    chunk_size = either(options.chunk_size, 500),
     name = name,
   }
 end
