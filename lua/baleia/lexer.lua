@@ -34,13 +34,14 @@ end
 ---@param lines string[] The lines to process
 ---@param strip_ansi_codes boolean? If true, ANSI codes are removed. (Default: true)
 ---@param start_highlighting_at integer? Column offset applied to ALL lines. (Default: 0)
----@return baleia.LexerItem[]
-function M.lex(lines, strip_ansi_codes, start_highlighting_at)
+---@param seed_style baleia.styles.Style? Initial style state. (Default: styles.none())
+---@return baleia.LexerItem[], baleia.styles.Style
+function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
   local output = {}
 
   -- State persists across lines.
   -- If Line 1 ends in "Red", Line 2 starts in "Red".
-  local state = styles.none()
+  local state = seed_style or styles.none()
 
   local strip = strip_ansi_codes == nil and true or strip_ansi_codes
   local offset = start_highlighting_at or 0
@@ -128,7 +129,7 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at)
     })
   end
 
-  return output
+  return output, state
 end
 
 return M

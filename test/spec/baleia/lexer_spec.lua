@@ -1,4 +1,5 @@
 local lexer = require("baleia.lexer")
+local styles = require("baleia.styles")
 
 describe("baleia.lexer", function()
   describe("code discovery & positioning", function()
@@ -458,6 +459,41 @@ describe("baleia.lexer", function()
           highlights = {},
         },
       }, result)
+    end)
+  end)
+
+  describe("streaming / chunking", function()
+    it("accepts a seed style and returns the last style", function()
+      local seed = styles.none()
+      seed.foreground.set = true
+      seed.foreground.value = { name = 1 } -- Red
+
+      local lines = { "starts red\27[32m ends green" }
+      local result, last_style = lexer.lex(lines, true, 0, seed)
+
+      -- Check if "starts red" is actually red
+      assert.combinators.match({
+        {
+          text = "starts red ends green",
+          highlights = {
+            {
+              from = 0,
+              to = 9,
+              style = { foreground = { set = true, value = { name = 1 } } },
+            },
+            {
+              from = 10,
+              to = 20,
+              style = { foreground = { set = true, value = { name = 2 } } },
+            },
+          },
+        },
+      }, result)
+
+      -- Check if last_style is green
+      assert.combinators.match({
+        foreground = { set = true, value = { name = 2 } },
+      }, last_style)
     end)
   end)
 end)

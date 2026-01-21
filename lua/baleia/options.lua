@@ -48,7 +48,7 @@ function M.with_defaults(user_options)
     namespace = vim.api.nvim_create_namespace(name),
     colors = with_colorscheme(theme),
     async = either(options.async, true),
-    chunk_size = either(options.chunk_size, 500),
+    chunk_size = either(options.chunk_size, 50),
     name = name,
   }
 end
