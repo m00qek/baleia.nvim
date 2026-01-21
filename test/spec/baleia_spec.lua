@@ -55,15 +55,15 @@ describe("baleia", function()
 
   describe("automatically", function()
     local nvim_internal = require("baleia.nvim")
-    local original_on_new_lines = nvim_internal.buffer.on_new_lines
+    local original_on_new_lines = nvim_internal.buffer_on_new_lines
 
     after_each(function()
-      nvim_internal.buffer.on_new_lines = original_on_new_lines
+      nvim_internal.buffer_on_new_lines = original_on_new_lines
     end)
 
     it("registers a callback that colors new lines", function()
       local captured_callback
-      nvim_internal.buffer.on_new_lines = function(_, _, _, fn)
+      nvim_internal.buffer_on_new_lines = function(_, _, fn)
         captured_callback = fn
       end
 
@@ -90,3 +90,4 @@ describe("baleia", function()
     end)
   end)
 end)
+

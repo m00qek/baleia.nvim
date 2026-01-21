@@ -1,11 +1,8 @@
-local logger = require("baleia.logger")
-local nvim = require("baleia.nvim")
 local themes = require("baleia.styles.themes")
 
 ---@class baleia.options.UI
+---@field chunk_size integer
 ---@field namespace integer
----@field log_level string
----@field logger baleia.Logger
 ---@field async boolean
 
 ---@class baleia.options.Basic
@@ -43,16 +40,12 @@ function M.with_defaults(user_options)
 
   local theme = either(options.colors, themes.NR_8)
   local name = either(options.name, "BaleiaColors")
-  local log_level = either(options.log, "ERROR")
-  local logname = name .. "Logs"
 
   ---@type baleia.options.Complete
   return {
     strip_ansi_codes = either(options.strip_ansi_codes, true),
     line_starts_at = either(options.line_starts_at, 1),
-    namespace = nvim.create_namespace(name),
-    log_level = log_level,
-    logger = logger.new(logname, nvim.create_namespace(logname), log_level),
+    namespace = vim.api.nvim_create_namespace(name),
     colors = with_colorscheme(theme),
     async = either(options.async, true),
     chunk_size = either(options.chunk_size, 500),

@@ -8,14 +8,10 @@ error("Cannot require a meta file")
 ---@field colors? baleia.styles.Theme
 ---@field async? boolean
 ---@field name? string
----@field log? baleia.log.Levels
+---@field chunk_size? integer
 
 ---@class Baleia
 local baleia = {}
-
---- Logger for Baleia
----@type baleia.Logger
-baleia.logger = nil
 
 --- Parses the contents of {buffer} and colorizes them respecting any ANSI
 --- color codes present in the text.

@@ -18,7 +18,6 @@ end
 --                     • colors: Custom theme
 --                     • async: Highlight asynchronously [default: true]
 --                     • name: Prefix used to name highlight groups [default: "BaleiaColors"]
---                     • log: Log level (ERROR, WARN, INFO or DEBUG)
 ---@param user_options? baleia.Options
 ---@return Baleia
 function baleia.setup(user_options)
@@ -29,7 +28,6 @@ function baleia.setup(user_options)
     automatically = with_options(opts, api.automatically),
     buf_set_lines = with_options(opts, api.buf_set_lines),
     buf_set_text = with_options(opts, api.buf_set_text),
-    logger = opts.logger,
   }
 end
 
