@@ -54,39 +54,24 @@ describe("baleia", function()
   end)
 
   describe("automatically", function()
-    local nvim_internal = require("baleia.nvim")
-    local original_on_new_lines = nvim_internal.buffer_on_new_lines
-
-    after_each(function()
-      nvim_internal.buffer_on_new_lines = original_on_new_lines
-    end)
-
     it("registers a callback that colors new lines", function()
-      local captured_callback
-      nvim_internal.buffer_on_new_lines = function(_, _, fn)
-        captured_callback = fn
-      end
-
       local b = baleia.setup({ async = false })
       b.automatically(buffer)
 
-      assert.is_not_nil(captured_callback)
-
       -- Simulate adding lines
-      -- We must set the buffer content first because the callback reads it
       vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "\x1b[35mAuto" })
 
-      -- Manually trigger the callback
-      -- fn(buffer, namespace, start_row, end_row)
-      -- We simulate adding 1 line at row 0.
-      captured_callback(buffer, 0, 0, 1)
-
-      -- The callback uses vim.schedule for stripping.
-      -- So we still need a small wait or check schedule.
-      vim.wait(50)
+      -- The callback uses vim.schedule.
+      vim.wait(200, function()
+        local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+        return lines[1] == "Auto"
+      end)
 
       local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
       assert.combinators.match({ "Auto" }, lines)
+
+      local extmarks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, {})
+      assert.truthy(#extmarks > 0)
     end)
   end)
 end)

@@ -183,6 +183,75 @@ function M.name(prefix, style)
     .. style.special.value.name
 end
 
+local tag_to_mode = {}
+for _, mode_def in pairs(ansi.modes) do
+  for attr_name, attr_val in pairs(mode_def.definition) do
+    tag_to_mode[attr_val.value.tag] = { name = attr_name, enabled = attr_val.value.enabled }
+  end
+end
+
+local function color_from_name(name)
+  if name == "none" then
+    return colors.none()
+  end
+  if name:match("^[0-9]+$") then
+    return colors.from_xterm(tonumber(name))
+  end
+  if name:match("^[0-9a-f]+$") and #name == 6 then
+    local r = tonumber(name:sub(1, 2), 16)
+    local g = tonumber(name:sub(3, 4), 16)
+    local b = tonumber(name:sub(5, 6), 16)
+    return colors.from_truecolor(r, g, b)
+  end
+  return colors.none()
+end
+
+---@param name string
+---@return baleia.styles.Style
+function M.from_name(name)
+  local parts = {}
+  for part in name:gmatch("[^_]+") do
+    table.insert(parts, part)
+  end
+
+  -- Format: prefix_modename_fg_bg_sp
+  -- We assume prefix is "BaleiaColors" or similar, but the split might handle it.
+  -- Actually, prefix can contain underscores? "Baleia_Colors"?
+  -- The function name(prefix, style) does: prefix .. "_" .. modename ...
+  -- So we should probably count from the END.
+  -- sp = parts[#parts]
+  -- bg = parts[#parts-1]
+  -- fg = parts[#parts-2]
+  -- modename = parts[#parts-3]
+
+  local sp_name = parts[#parts]
+  local bg_name = parts[#parts - 1]
+  local fg_name = parts[#parts - 2]
+  local modename = tonumber(parts[#parts - 3])
+
+  local style = {
+    foreground = color_from_name(fg_name),
+    background = color_from_name(bg_name),
+    special = color_from_name(sp_name),
+    modes = {},
+    offset = nil,
+  }
+
+  -- Reconstruct modes
+  if modename then
+    for tag, mode in pairs(tag_to_mode) do
+      if bit.band(modename, tag) ~= 0 then
+        style.modes[mode.name] = {
+          set = true,
+          value = { enabled = mode.enabled, tag = tag },
+        }
+      end
+    end
+  end
+
+  return style
+end
+
 ---@param style baleia.styles.Style
 ---@param theme baleia.styles.Theme
 ---@return baleia.styles.Highlight
