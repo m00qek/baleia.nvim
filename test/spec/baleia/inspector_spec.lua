@@ -1,6 +1,6 @@
-local inspector = require("baleia.new_inspector")
+local inspector = require("baleia.inspector")
 
-describe("baleia.new_inspector", function()
+describe("baleia.inspector", function()
   local buffer
   local namespace
 

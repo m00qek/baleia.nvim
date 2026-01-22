@@ -26,7 +26,7 @@ describe("baleia.lexer", function()
             {
               from = 0,
               to = 2,
-              style = { foreground = { set = true, value = { name = 1 } } },
+              style = { ctermfg = 1 },
             },
           },
         },
@@ -44,7 +44,7 @@ describe("baleia.lexer", function()
             {
               from = 7,
               to = 9,
-              style = { foreground = { set = true, value = { name = 1 } } },
+              style = { ctermfg = 1 },
             },
           },
         },
@@ -104,8 +104,8 @@ describe("baleia.lexer", function()
               from = 0,
               to = 7,
               style = {
-                foreground = { set = true, value = { name = 1 } },
-                modes = { bold = { set = true, value = { enabled = true } } },
+                ctermfg = 1,
+                bold = true,
               },
             },
           },
@@ -126,7 +126,7 @@ describe("baleia.lexer", function()
               from = 0,
               to = 8,
               style = {
-                foreground = { set = true, value = { name = 208 } },
+                ctermfg = 208,
               },
             },
           },
@@ -149,8 +149,8 @@ describe("baleia.lexer", function()
               from = 0,
               to = 7,
               style = {
-                foreground = { set = true, value = { name = 1 } },
-                modes = { bold = { set = true, value = { enabled = true } } },
+                ctermfg = 1,
+                bold = true,
               },
             },
           },
@@ -170,7 +170,7 @@ describe("baleia.lexer", function()
             {
               from = 0,
               to = 2,
-              style = { foreground = { set = true, value = { name = 1 } } },
+              style = { ctermfg = 1 },
             },
           },
         },
@@ -190,7 +190,7 @@ describe("baleia.lexer", function()
             {
               from = 0,
               to = 2,
-              style = { foreground = { set = true, value = { name = 1 } } },
+              style = { ctermfg = 1 },
             },
             -- No highlight for " plain"
           },
@@ -209,12 +209,12 @@ describe("baleia.lexer", function()
             {
               from = 0,
               to = 2,
-              style = { foreground = { set = true, value = { name = 1 } } },
+              style = { ctermfg = 1 },
             },
             {
               from = 3,
               to = 7,
-              style = { foreground = { set = true, value = { name = 2 } } },
+              style = { ctermfg = 2 },
             },
           },
         },
@@ -238,12 +238,12 @@ describe("baleia.lexer", function()
             {
               from = 2,
               to = 4,
-              style = { foreground = { set = true, value = { name = 1 } } },
+              style = { ctermfg = 1 },
             },
             {
               from = 5,
               to = 6,
-              style = { foreground = { set = true, value = { name = 2 } } },
+              style = { ctermfg = 2 },
             },
           },
         },
@@ -263,7 +263,7 @@ describe("baleia.lexer", function()
             {
               from = 1,
               to = 1,
-              style = { foreground = { set = true, value = { name = 1 } } },
+              style = { ctermfg = 1 },
             },
           },
         },
@@ -284,7 +284,7 @@ describe("baleia.lexer", function()
               -- 'B' is 6
               from = 6,
               to = 6,
-              style = { foreground = { set = true, value = { name = 1 } } },
+              style = { ctermfg = 1 },
             },
           },
         },
@@ -302,7 +302,7 @@ describe("baleia.lexer", function()
           text = "red",
           highlights = {
             {
-              style = { foreground = { set = true, value = { name = 1 } } },
+              style = { ctermfg = 1 },
             },
           },
         },
@@ -312,7 +312,7 @@ describe("baleia.lexer", function()
             {
               from = 0,
               to = 8,
-              style = { foreground = { set = true, value = { name = 1 } } },
+              style = { ctermfg = 1 },
             },
           },
         },
@@ -327,7 +327,7 @@ describe("baleia.lexer", function()
         {
           text = "red",
           highlights = {
-            { style = { foreground = { set = true, value = { name = 1 } } } },
+            { style = { ctermfg = 1 } },
           },
         },
         {
@@ -356,8 +356,8 @@ describe("baleia.lexer", function()
               from = 0,
               to = 7,
               style = {
-                foreground = { set = true, value = { name = 1 } },
-                modes = { bold = { set = true, value = { enabled = true } } },
+                ctermfg = 1,
+                bold = true,
               },
             },
           },
@@ -373,7 +373,7 @@ describe("baleia.lexer", function()
         {
           text = "red",
           highlights = {
-            { style = { foreground = { set = true, value = { name = 1 } } } },
+            { style = { ctermfg = 1 } },
           },
         },
         {
@@ -386,7 +386,7 @@ describe("baleia.lexer", function()
             {
               from = 0,
               to = 8,
-              style = { foreground = { set = true, value = { name = 1 } } },
+              style = { ctermfg = 1 },
             },
           },
         },
@@ -409,7 +409,7 @@ describe("baleia.lexer", function()
             {
               from = 4,
               to = 7, -- 'o' is at 7
-              style = { foreground = { set = true, value = { name = 1 } } },
+              style = { ctermfg = 1 },
             },
           },
         },
@@ -443,7 +443,7 @@ describe("baleia.lexer", function()
             {
               from = 6,
               to = 8,
-              style = { foreground = { set = true, value = { name = 1 } } },
+              style = { ctermfg = 1 },
             },
           },
         },
@@ -464,9 +464,7 @@ describe("baleia.lexer", function()
 
   describe("streaming / chunking", function()
     it("accepts a seed style and returns the last style", function()
-      local seed = styles.none()
-      seed.foreground.set = true
-      seed.foreground.value = { name = 1 } -- Red
+      local seed = { ctermfg = 1 } -- Red
 
       local lines = { "starts red\27[32m ends green" }
       local result, last_style = lexer.lex(lines, true, 0, seed)
@@ -479,12 +477,12 @@ describe("baleia.lexer", function()
             {
               from = 0,
               to = 9,
-              style = { foreground = { set = true, value = { name = 1 } } },
+              style = { ctermfg = 1 },
             },
             {
               from = 10,
               to = 20,
-              style = { foreground = { set = true, value = { name = 2 } } },
+              style = { ctermfg = 2 },
             },
           },
         },
@@ -492,7 +490,7 @@ describe("baleia.lexer", function()
 
       -- Check if last_style is green
       assert.combinators.match({
-        foreground = { set = true, value = { name = 2 } },
+        ctermfg = 2,
       }, last_style)
     end)
   end)

@@ -1,4 +1,4 @@
-local themes = require("baleia.styles.themes")
+local themes = require("baleia.styles")
 
 ---@class baleia.options.UI
 ---@field chunk_size integer

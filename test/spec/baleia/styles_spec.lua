@@ -1,214 +1,191 @@
-local styles = require("baleia.styles")
+local new_styles = require("baleia.styles")
 
-describe("[name]", function()
-  it("when it is none()", function()
-    local style = styles.none()
-    assert.combinators.match("Baleia_0_none_none_none", styles.name("Baleia", style))
+describe("new_styles", function()
+  local function apply(sequence, base)
+    local style = base or {}
+    new_styles.apply(sequence, style)
+    return style
+  end
+
+  describe("Basic Attribute Toggling", function()
+    it("toggles bold", function()
+      assert.combinators.match({ bold = true }, apply("1"))
+      assert.combinators.match({ bold = nil }, apply("22", { bold = true }))
+    end)
+
+    it("toggles italic", function()
+      assert.combinators.match({ italic = true }, apply("3"))
+      assert.combinators.match({ italic = nil }, apply("23", { italic = true }))
+    end)
+
+    it("toggles underline", function()
+      assert.combinators.match({ underline = true }, apply("4"))
+      assert.combinators.match({ underline = nil }, apply("24", { underline = true }))
+    end)
+
+    it("toggles strikethrough", function()
+      assert.combinators.match({ strikethrough = true }, apply("9"))
+      assert.combinators.match({ strikethrough = nil }, apply("29", { strikethrough = true }))
+    end)
+
+    it("toggles reverse", function()
+      assert.combinators.match({ reverse = true }, apply("7"))
+      assert.combinators.match({ reverse = nil }, apply("27", { reverse = true }))
+    end)
   end)
 
-  it("when it is reset()", function()
-    local style = styles.reset(1)
-    assert.combinators.match("Baleia_341_none_none_none", styles.name("Baleia", style))
+  describe("Standard Colors (4-bit)", function()
+    it("sets foreground colors (30-37)", function()
+      assert.combinators.match({ ctermfg = 1 }, apply("31"))
+      assert.combinators.match({ ctermfg = 4 }, apply("34"))
+    end)
+
+    it("sets background colors (40-47)", function()
+      assert.combinators.match({ ctermbg = 2 }, apply("42"))
+      assert.combinators.match({ ctermbg = 6 }, apply("46"))
+    end)
+
+    it("sets bright foreground colors (90-97)", function()
+      assert.combinators.match({ ctermfg = 8 }, apply("90"))
+      assert.combinators.match({ ctermfg = 15 }, apply("97"))
+    end)
+
+    it("sets bright background colors (100-107)", function()
+      assert.combinators.match({ ctermbg = 8 }, apply("100"))
+      assert.combinators.match({ ctermbg = 15 }, apply("107"))
+    end)
+
+    it("resets colors", function()
+      assert.combinators.match(
+        { ctermfg = nil, foreground = nil },
+        apply("39", { ctermfg = 1, foreground = "#ff0000" })
+      )
+      assert.combinators.match(
+        { ctermbg = nil, background = nil },
+        apply("49", { ctermbg = 1, background = "#ff0000" })
+      )
+    end)
   end)
 
-  it("with only foreground and background", function()
-    local style = styles.none()
+  describe("Extended Colors (8-bit / 256-color)", function()
+    it("sets xterm foreground", function()
+      assert.combinators.match({ ctermfg = 200 }, apply("38;5;200"))
+    end)
 
-    style.background = { set = true, value = { name = "green" } }
-    style.foreground = { set = true, value = { name = "blue" } }
+    it("sets xterm background", function()
+      assert.combinators.match({ ctermbg = 15 }, apply("48;5;15"))
+    end)
 
-    assert.combinators.match("Baleia_0_blue_green_none", styles.name("Baleia", style))
+    it("sets xterm underline color", function()
+      assert.combinators.match({ ctermsp = 10 }, apply("58;5;10"))
+    end)
+
+    it("handles missing arguments gracefully", function()
+      local style = apply("38;5")
+      assert.combinators.match({ ctermfg = nil }, style)
+    end)
   end)
 
-  it("with background, foreground and modifiers", function()
-    local style = styles.none()
+  describe("TrueColor (24-bit RGB)", function()
+    it("sets rgb foreground", function()
+      assert.combinators.match({ foreground = "#ff0000" }, apply("38;2;255;0;0"))
+    end)
 
-    style.background = { set = true, value = { gui = "green", inferred = "", name = "green" } }
-    style.foreground = { set = true, value = { gui = "blue", inferred = "", name = "blue" } }
-    style.modes.italic = { set = true, value = { enabled = true, tag = 2 ^ 3 } }
-    style.modes.bold = { set = true, value = { enabled = true, tag = 2 ^ 1 } }
+    it("sets rgb background", function()
+      assert.combinators.match({ background = "#0000ff" }, apply("48;2;0;0;255"))
+    end)
 
-    assert.combinators.match("Baleia_10_blue_green_none", styles.name("Baleia", style))
-  end)
-end)
-
-describe("[attributes]", function()
-  local colors = { cterm = {}, gui = {} }
-
-  it("when it is none()", function()
-    local style = styles.none()
-    assert.combinators.match({}, styles.attributes(style, colors))
+    it("sets rgb underline color", function()
+      assert.combinators.match({ special = "#0a141e" }, apply("58;2;10;20;30"))
+    end)
   end)
 
-  it("when it is reset()", function()
-    local style = styles.reset(1)
-    assert.combinators.match({
-      foreground = "none",
-      background = "none",
-      ctermbg = "none",
-      ctermfg = "none",
-    }, styles.attributes(style, colors))
+  describe("Complex Underline Styles", function()
+    it("sets underline styles", function()
+      assert.combinators.match({ undercurl = true }, apply("4:3"))
+      assert.combinators.match({ underdouble = true }, apply("4:2"))
+      assert.combinators.match({ underdotted = true }, apply("4:4"))
+      assert.combinators.match({ underdashed = true }, apply("4:5"))
+    end)
+
+    it("resets extended underlines", function()
+      local base = { undercurl = true, underdouble = true, underline = true }
+      assert.combinators.match({
+        undercurl = nil,
+        underdouble = nil,
+        underline = nil,
+        underdotted = nil,
+        underdashed = nil,
+      }, apply("4:0", base))
+    end)
+
+    it("standard underline off clears all", function()
+      local base = { undercurl = true, underdouble = true, underline = true }
+      assert.combinators.match({
+        undercurl = nil,
+        underdouble = nil,
+        underline = nil,
+        underdotted = nil,
+        underdashed = nil,
+      }, apply("24", base))
+    end)
   end)
 
-  it("with modes", function()
-    local style = styles.none()
+  describe("Reset & Clear", function()
+    it("clears everything with 0", function()
+      local base = { bold = true, ctermfg = 1, ctermbg = 2, italic = true }
+      assert.combinators.match({}, apply("0", base))
+    end)
 
-    style.modes.italic = { set = true, value = { enabled = true, tag = 2 ^ 3 } }
-    style.modes.bold = { set = true, value = { enabled = true, tag = 2 ^ 1 } }
-
-    assert.combinators.match({
-      italic = true,
-      bold = true,
-    }, styles.attributes(style, colors))
+    it("clears everything with empty sequence (implicit 0 behavior often seen or just check specific)", function()
+      local base = { bold = true }
+      assert.combinators.match({}, apply("", base))
+    end)
   end)
 
-  it("with modes, background and foreground", function()
-    local style = styles.none()
-    style.background = { set = true, value = { inferred = "#008000", name = "2", cterm = "2" } }
-    style.foreground = { set = true, value = { inferred = "#000080", name = "4", cterm = "4" } }
-    style.modes.bold = { set = true, value = { enabled = true, tag = 2 ^ 1 } }
+  describe("Complex / Chained Sequences", function()
+    it("handles mixed attributes", function()
+      assert.combinators.match({ bold = true, italic = true, underline = true }, apply("1;3;4"))
+    end)
 
-    assert.combinators.match({
-      background = "#008000",
-      foreground = "#000080",
-      ctermbg = "2",
-      ctermfg = "4",
-      bold = true,
-    }, styles.attributes(style, colors))
+    it("handles attribute and color", function()
+      assert.combinators.match({ bold = true, ctermfg = 1 }, apply("1;31"))
+    end)
+
+    it("handles reset mid-sequence", function()
+      -- 1 sets bold, 0 resets all, 31 sets red. Result should be only red.
+      assert.combinators.match({ ctermfg = 1, bold = nil }, apply("1;0;31"))
+    end)
+
+    it("handles xterm and attributes correctly", function()
+      -- 38;5;200 consumes 200. 1 is next.
+      assert.combinators.match({ ctermfg = 200, bold = true }, apply("38;5;200;1"))
+    end)
   end)
 
-  it("with background and foreground, overriding colors", function()
-    local style = styles.none()
+  describe("State Preservation & Cloning", function()
+    it("preserves state across calls", function()
+      local s1 = {}
+      apply("1", s1)
+      assert.combinators.match({ bold = true }, s1)
+      apply("31", s1)
+      assert.combinators.match({ bold = true, ctermfg = 1 }, s1)
+    end)
 
-    style.background = { set = true, value = { inferred = "#008000", name = "2", cterm = "2" } }
-    style.foreground = { set = true, value = { inferred = "#000080", name = "4", cterm = "4" } }
+    it("clones correctly", function()
+      local s1 = { bold = true, ctermfg = 1 }
+      local s2 = new_styles.clone(s1)
+      assert.combinators.match(s1, s2)
 
-    assert.combinators.match({
-      background = "#008000",
-      foreground = "#000080",
-      ctermbg = "2",
-      ctermfg = "4",
-    }, styles.attributes(style, colors))
+      s1.italic = true
+      assert.combinators.match({ bold = true, ctermfg = 1 }, s2)
+      assert.combinators.match({ italic = true }, s1)
+    end)
   end)
 
-  it("with background and foreground", function()
-    local style = styles.none()
-    local custom_colors = {
-      [2] = "#123ABC",
-      [4] = "#fa8bf9",
-    }
-
-    style.background = { set = true, value = { inferred = { gui = "#008000" }, name = 2, cterm = 2 } }
-    style.foreground = { set = true, value = { inferred = { gui = "#000080" }, name = 4, cterm = 4 } }
-
-    assert.combinators.match({
-      background = "#123ABC",
-      foreground = "#fa8bf9",
-      ctermbg = 2,
-      ctermfg = 4,
-    }, styles.attributes(style, custom_colors))
-  end)
-end)
-
-describe("[reset]", function()
-  it("must set everything to default value", function()
-    local style = styles.reset(1)
-
-    assert.combinators.match({
-      foreground = { set = true, value = { gui = "none", name = "none", cterm = "none" } },
-      background = { set = true, value = { gui = "none", name = "none", cterm = "none" } },
-    }, style)
-
-    for _, value in pairs(style.modes) do
-      assert.combinators.match({ set = true, value = { enabled = false } }, value)
-    end
-  end)
-end)
-
-describe("[none]", function()
-  it("should not set anything", function()
-    local style = styles.none()
-
-    assert.combinators.match({
-      foreground = { set = false },
-      background = { set = false },
-    }, style)
-
-    for _, value in pairs(style.modes) do
-      assert.combinators.match({ set = false }, value)
-    end
-  end)
-end)
-
-describe("[to_style]", function()
-  it("ignores unknown codes", function()
-    assert.combinators.match(styles.none(), styles.to_style("\x1b[99m"))
-  end)
-
-  it("extract reset code", function()
-    assert.combinators.match(styles.reset(4), styles.to_style("\x1b[0m"))
-  end)
-
-  it("extract simplified reset code", function()
-    assert.combinators.match(styles.reset(3), styles.to_style("\x1b[m"))
-  end)
-
-  it("extract background", function()
-    assert.combinators.match({
-      background = { set = true, value = { inferred = "#800000", name = 1, cterm = 1 } },
-    }, styles.to_style("\x1b[41m"))
-  end)
-
-  it("extract foreground", function()
-    assert.combinators.match({
-      foreground = { set = true, value = { inferred = "#800000", name = 1, cterm = 1 } },
-    }, styles.to_style("\x1b[31m"))
-  end)
-
-  it("extract modifier", function()
-    assert.combinators.match({
-      modes = { bold = { set = true, value = { enabled = true, tag = 2 ^ 1 } } },
-    }, styles.to_style("\x1b[1m"))
-  end)
-
-  it("extract offset", function()
-    assert.combinators.match({ offset = 4 }, styles.to_style("\x1b[1m"))
-  end)
-
-  it("extract multiple attributes", function()
-    assert.combinators.match({
-      background = { set = true, value = { inferred = "#800000", name = 1, cterm = 1 } },
-      foreground = { set = true, value = { inferred = "#800000", name = 1, cterm = 1 } },
-      modes = { bold = { set = true, value = { enabled = true, tag = 2 ^ 1 } } },
-    }, styles.to_style("\x1b[1;31;41m"))
-  end)
-end)
-
-describe("[merge]", function()
-  it("merging with none always returns the original style", function()
-    assert.combinators.match(styles.reset(4), styles.merge(styles.reset(4), styles.none()))
-
-    assert.combinators.match(styles.to_style("\x1b[31m"), styles.merge(styles.to_style("\x1b[31m"), styles.none()))
-  end)
-  it("merging with reset always returns reset", function()
-    assert.combinators.match(styles.reset(4), styles.merge(styles.none(), styles.reset(4)))
-
-    assert.combinators.match(styles.reset(4), styles.merge(styles.to_style("\x1b[31m"), styles.reset(4)))
-  end)
-
-  it("merging two different styles", function()
-    local style1 = styles.none()
-    style1.background = { set = true, value = "red" }
-    style1.modes.bold = { set = true, value = true }
-
-    local style2 = styles.none()
-    style1.foreground = { set = true, value = "green" }
-    style1.modes.bold = { set = true, value = false }
-
-    assert.combinators.match({
-      background = { set = true, value = "red" },
-      foreground = { set = true, value = "green" },
-      modes = { bold = { set = true, value = false } },
-    }, styles.merge(style1, style2))
+  describe("Edge Cases", function()
+    it("ignores unknown codes", function()
+      assert.combinators.match({ bold = true }, apply("1;999"))
+    end)
   end)
 end)

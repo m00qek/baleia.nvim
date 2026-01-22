@@ -1,284 +1,226 @@
-local ansi = require("baleia.styles.ansi")
-local colors = require("baleia.styles.colors")
-local modes = require("baleia.styles.modes")
+M = {}
 
----@class baleia.styles.Style
----@field background baleia.styles.attributes.Color
----@field foreground baleia.styles.attributes.Color
----@field special baleia.styles.attributes.Color
----@field modes { [string]: baleia.styles.attributes.Mode }
----@field offset? integer
+M.PATTERN = "\x1b[[0-9]?[:;0-9]*m"
 
----@class baleia.styles.Highlight
----@field foreground? string
----@field background? string
----@field special? string
----@field ctermfg? string
----@field ctermbg? string
----@field bold? boolean
----@field standout? boolean
----@field underline? boolean
----@field undercurl? boolean
----@field underdouble? boolean
----@field underdotted? boolean
----@field underdashed? boolean
----@field strikethrough? boolean
----@field italic? boolean
----@field reverse? boolean
-
-local M = {}
-
-M.ANSI_CODES_PATTERN = ansi.PATTERN
-
-local function merge_value(from, to)
-  if to.set then
-    return to
+local function reset()
+  return function(style)
+    for attr in pairs(style) do
+      style[attr] = nil
+    end
   end
-  return from
 end
 
----@param from baleia.styles.Style
----@param to baleia.styles.Style
----@return baleia.styles.Style
-function M.merge(from, to)
-  local style = {
-    foreground = merge_value(from.foreground, to.foreground),
-    background = merge_value(from.background, to.background),
-    special = merge_value(from.special, to.special),
-    offset = to.offset or from.offset,
-    modes = {},
+local function unset(...)
+  local attrs = { ... }
+  return function(style)
+    for _, attr in ipairs(attrs) do
+      style[attr] = nil
+    end
+  end
+end
+
+local function set(attr, fn)
+  if not fn then
+    return function(style)
+      style[attr] = true
+    end
+  end
+
+  return function(style, iterator)
+    style[attr] = fn(iterator)
+  end
+end
+
+local function xterm(code)
+  return function(iterator)
+    if code then
+      return code
+    end
+    local val = iterator()
+    return tonumber(val)
+  end
+end
+
+local function rgb()
+  return function(iterator)
+    local r, g, b = tonumber(iterator()), tonumber(iterator()), tonumber(iterator())
+    return string.format("#%02x%02x%02x", r, g, b)
+  end
+end
+
+local function iter(ansi_sequence)
+  if not ansi_sequence:find("[0-9]") then
+    local done = false
+    return function()
+      if not done then
+        done = true
+        return "0"
+      end
+      return nil
+    end
+  end
+  return ansi_sequence:gmatch("[:0-9]+")
+end
+
+function M.apply(ansi_sequence, base_style)
+  local style = base_style or {}
+  local root = M.declarations
+  local node = root
+
+  local iterator = iter(ansi_sequence)
+  local token = iterator()
+
+  while token do
+    local code = tonumber(token) or token
+    local next_node = node[code]
+
+    if next_node then
+      node = next_node
+      if type(node) == "function" then
+        node(style, iterator)
+        node = root
+      end
+    else
+      node = root
+    end
+
+    token = iterator()
+  end
+
+  return style
+end
+
+function M.clone(style)
+  local style_clone = {}
+  for attr, value in pairs(style) do
+    style_clone[attr] = value
+  end
+
+  return style_clone
+end
+
+M.declarations = {
+  [00] = reset(),
+
+  [01] = set("bold"),
+  [22] = unset("bold"),
+
+  [03] = set("italic"),
+  [23] = unset("italic"),
+
+  [09] = set("strikethrough"),
+  [29] = unset("strikethrough"),
+
+  [07] = set("reverse"),
+  [27] = unset("reverse"),
+
+  [04] = set("underline"),
+  [24] = unset("underline", "undercurl", "underdouble", "underdotted", "underdashed"), -- Clears ALL underlines
+
+  [30] = set("ctermfg", xterm(0)),
+  [31] = set("ctermfg", xterm(1)),
+  [32] = set("ctermfg", xterm(2)),
+  [33] = set("ctermfg", xterm(3)),
+  [34] = set("ctermfg", xterm(4)),
+  [35] = set("ctermfg", xterm(5)),
+  [36] = set("ctermfg", xterm(6)),
+  [37] = set("ctermfg", xterm(7)),
+  [38] = {
+    [2] = set("foreground", rgb()),
+    [5] = set("ctermfg", xterm()),
+  },
+  [39] = unset("ctermfg", "foreground"),
+
+  [40] = set("ctermbg", xterm(0)),
+  [41] = set("ctermbg", xterm(1)),
+  [42] = set("ctermbg", xterm(2)),
+  [43] = set("ctermbg", xterm(3)),
+  [44] = set("ctermbg", xterm(4)),
+  [45] = set("ctermbg", xterm(5)),
+  [46] = set("ctermbg", xterm(6)),
+  [47] = set("ctermbg", xterm(7)),
+  [48] = {
+    [2] = set("background", rgb()),
+    [5] = set("ctermbg", xterm()),
+  },
+  [49] = unset("ctermbg", "background"),
+
+  -- bright colors below (not ANSI but implemented by aixterm)
+  -- see https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+  [90] = set("ctermfg", xterm(8)),
+  [91] = set("ctermfg", xterm(9)),
+  [92] = set("ctermfg", xterm(10)),
+  [93] = set("ctermfg", xterm(11)),
+  [94] = set("ctermfg", xterm(12)),
+  [95] = set("ctermfg", xterm(13)),
+  [96] = set("ctermfg", xterm(14)),
+  [97] = set("ctermfg", xterm(15)),
+
+  [100] = set("ctermbg", xterm(8)),
+  [101] = set("ctermbg", xterm(9)),
+  [102] = set("ctermbg", xterm(10)),
+  [103] = set("ctermbg", xterm(11)),
+  [104] = set("ctermbg", xterm(12)),
+  [105] = set("ctermbg", xterm(13)),
+  [106] = set("ctermbg", xterm(14)),
+  [107] = set("ctermbg", xterm(15)),
+
+  -- these are not ANSI but part of a common kitty extension for underlines
+  -- see https://sw.kovidgoyal.net/kitty/underlines/
+  [58] = {
+    [2] = set("special", rgb()),
+    [5] = set("ctermsp", xterm()),
+  },
+  [59] = unset("ctermsp", "special"),
+
+  ["4:0"] = unset("underline", "undercurl", "underdouble", "underdotted", "underdashed"),
+  ["4:1"] = set("underline"),
+  ["4:2"] = set("underdouble"),
+    ["4:3"] = set("undercurl"),
+    ["4:4"] = set("underdotted"),
+    ["4:5"] = set("underdashed"),
   }
-
-  for name, attr in pairs(from.modes) do
-    style.modes[name] = attr
-  end
-
-  for name, attr in pairs(to.modes) do
-    style.modes[name] = merge_value(from.modes[name], attr)
-  end
-
-  return style
-end
-
----@return baleia.styles.Style
-function M.none()
-  ---@type baleia.styles.Style
-  local style = {
-    foreground = colors.none(),
-    background = colors.none(),
-    special = colors.none(),
-    offset = nil,
-    modes = {},
+  
+  ---@alias baleia.styles.Theme { [integer]: string }
+  
+  ---@type baleia.styles.Theme
+  M.NR_16 = {
+    [00] = "Black",
+    [01] = "DarkBlue",
+    [02] = "DarkGreen",
+    [03] = "DarkCyan",
+    [04] = "DarkRed",
+    [05] = "DarkMagenta",
+    [06] = "DarkYellow",
+    [07] = "LightGrey",
+    [08] = "DarkGrey",
+    [09] = "LightBlue",
+    [10] = "LightGreen",
+    [11] = "LightCyan",
+    [12] = "LightRed",
+    [13] = "LightMagenta",
+    [14] = "LightYellow",
+    [15] = "White",
   }
-
-  ---TODO: WTF
-  for _, mode in pairs(ansi.modes) do
-    for name, attr in pairs(mode.definition) do
-      if style.modes[name] == nil then
-        style.modes[name] = modes.ignore(attr.value.tag)
-      end
-    end
-  end
-
-  return style
-end
-
----@param offset integer
----@return baleia.styles.Style
-function M.reset(offset)
-  ---@type baleia.styles.Style
-  local style = {
-    foreground = colors.reset(),
-    background = colors.reset(),
-    special = colors.reset(),
-    offset = offset,
-    modes = {},
+  
+  ---@type baleia.styles.Theme
+  M.NR_8 = {
+    [00] = "Black",
+    [01] = "DarkRed",
+    [02] = "DarkGreen",
+    [03] = "DarkYellow",
+    [04] = "DarkBlue",
+    [05] = "DarkMagenta",
+    [06] = "DarkCyan",
+    [07] = "LightGrey",
+    [08] = "DarkGrey",
+    [09] = "LightRed",
+    [10] = "LightGreen",
+    [11] = "LightYellow",
+    [12] = "LightBlue",
+    [13] = "LightMagenta",
+    [14] = "LightCyan",
+    [15] = "White",
   }
-
-  for _, mode in pairs(ansi.modes) do
-    for name, attr in pairs(mode.definition) do
-      if style.modes[name] == nil or style.modes[name].value.tag > attr.value.tag then
-        style.modes[name] = modes.turn_off(attr.value.tag)
-      end
-    end
-  end
-
-  return style
-end
-
----@param ansi_sequence string
----@return baleia.styles.Style
-function M.to_style(ansi_sequence)
-  local codes = {}
-  for code in ansi_sequence:gmatch("[:0-9]+") do
-    table.insert(codes, tonumber(code) or code)
-  end
-
-  -- Empty codes (e.g., \x1b[m) is equivalent to reset (\x1b[0m)
-  if #codes == 0 then
-    return M.reset(#ansi_sequence)
-  end
-
-  local style = M.none()
-  local index = 1
-  while index <= #codes do
-    if codes[index] == 0 then
-      style = M.reset(#ansi_sequence)
-    elseif ansi.colors[codes[index]] then
-      local entry = ansi.colors[codes[index]]
-
-      if entry.definition then
-        for attr, value in pairs(entry.definition) do
-          style[attr] = value
-        end
-      elseif entry.generators then
-        local flag = codes[index + 1]
-        local generator = entry.generators[flag]
-
-        local params = {}
-        for i = 1, generator.params, 1 do
-          params[i] = codes[index + 1 + i]
-        end
-
-        for attr, fn in pairs(generator.fn) do
-          style[attr] = fn(unpack(params))
-        end
-
-        -- current index + 1 flag + N parameters
-        index = index + 1 + generator.params
-      end
-    elseif ansi.modes[codes[index]] then
-      local mode = ansi.modes[codes[index]]
-      for name, attr in pairs(mode.definition) do
-        style.modes[name] = attr
-      end
-    end
-
-    index = index + 1
-  end
-
-  style.offset = #ansi_sequence
-  return style
-end
-
----@param prefix string
----@param style baleia.styles.Style
----@return string
-function M.name(prefix, style)
-  local modename = 0
-  for _, attr in pairs(style.modes) do
-    if attr.set then
-      modename = bit.bor(modename, attr.value.tag)
-    end
-  end
-
-  return prefix
-    .. "_"
-    .. modename
-    .. "_"
-    .. style.foreground.value.name
-    .. "_"
-    .. style.background.value.name
-    .. "_"
-    .. style.special.value.name
-end
-
-local tag_to_mode = {}
-for _, mode_def in pairs(ansi.modes) do
-  for attr_name, attr_val in pairs(mode_def.definition) do
-    tag_to_mode[attr_val.value.tag] = { name = attr_name, enabled = attr_val.value.enabled }
-  end
-end
-
-local function color_from_name(name)
-  if name == "none" then
-    return colors.none()
-  end
-  if name:match("^[0-9]+$") then
-    return colors.from_xterm(tonumber(name))
-  end
-  if name:match("^[0-9a-f]+$") and #name == 6 then
-    local r = tonumber(name:sub(1, 2), 16)
-    local g = tonumber(name:sub(3, 4), 16)
-    local b = tonumber(name:sub(5, 6), 16)
-    return colors.from_truecolor(r, g, b)
-  end
-  return colors.none()
-end
-
----@param name string
----@return baleia.styles.Style
-function M.from_name(name)
-  -- Regex explanation:
-  -- _          Separator
-  -- (%d+)      Capture 1: Mode Mask (Digits)
-  -- _          Separator
-  -- (%w+)      Capture 2: Foreground (Alphanumeric: "none", "red", "ff0000", "255")
-  -- _          Separator
-  -- (%w+)      Capture 3: Background
-  -- _          Separator
-  -- (%w+)      Capture 4: Special
-  -- $          Anchor to end of string
-  local modename, fg_name, bg_name, sp_name = name:match("_(%d+)_(%w+)_(%w+)_(%w+)$")
-
-  if not modename then
-    return M.none()
-  end
-
-  local style = {
-    foreground = color_from_name(fg_name),
-    background = color_from_name(bg_name),
-    special = color_from_name(sp_name),
-    modes = {},
-    offset = nil,
-  }
-
-  local mask = tonumber(modename)
-  if mask and mask > 0 then
-    for tag, mode in pairs(tag_to_mode) do
-      if bit.band(mask, tag) ~= 0 then
-        style.modes[mode.name] = {
-          set = true,
-          value = { enabled = mode.enabled, tag = tag },
-        }
-      end
-    end
-  end
-
-  return style
-end
-
----@param style baleia.styles.Style
----@param theme baleia.styles.Theme
----@return baleia.styles.Highlight
-function M.attributes(style, theme)
-  ---@type baleia.styles.Highlight
-  local attributes = {}
-
-  for name, attr in pairs(style.modes) do
-    if attr.set then
-      attributes[name] = attr.value.enabled
-    end
-  end
-
-  if style.foreground.set then
-    local color = style.foreground.value
-    attributes.ctermfg = colors.cterm(color)
-    attributes.foreground = colors.gui(color, theme)
-  end
-
-  if style.background.set then
-    local color = style.background.value
-    attributes.ctermbg = colors.cterm(color)
-    attributes.background = colors.gui(color, theme)
-  end
-
-  if style.special.set then
-    local color = style.special.value
-    attributes.special = colors.gui(color, theme)
-  end
-
-  return attributes
-end
-
-return M
+  
+  return M

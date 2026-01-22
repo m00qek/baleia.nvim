@@ -14,6 +14,7 @@ local function worker_entry_point(encoded_args)
   local decoded = vim.mpack.decode(encoded_args)
   local lines, strip, offset, seed, task_id = unpack(decoded)
 
+  -- Worker runs in a separate loop, need to require lexer again
   local lexer = require("baleia.lexer")
   local items, last_style = lexer.lex(lines, strip, offset, seed)
 
@@ -87,21 +88,25 @@ function M.once(options, buffer)
     total_lines - 1,
     options.chunk_size,
     options.async,
-    styles.none(),
+    {}, -- styles.none() replacement
     options.strip_ansi_codes,
     function(s, e)
       return vim.api.nvim_buf_get_lines(buffer, s, e + 1, false)
     end,
     function(s, items)
+      is_internal_update[buffer] = true
       renderer.render(buffer, options.namespace, s, items, options, options.strip_ansi_codes)
+      is_internal_update[buffer] = false
     end
   )
 end
 
 function M.buf_set_lines(options, buffer, start, end_, strict_indexing, replacement)
+  is_internal_update[buffer] = true
   vim.api.nvim_buf_set_lines(buffer, start, end_, strict_indexing, text.content(options, replacement))
+  is_internal_update[buffer] = false
 
-  local seed_style = styles.none()
+  local seed_style = {}
   if start > 0 then
     seed_style = inspector.style_at_end_of_line(buffer, options.namespace, start - 1)
   end
@@ -114,14 +119,18 @@ function M.buf_set_lines(options, buffer, start, end_, strict_indexing, replacem
     return chunk_lines
   end, function(s, items)
     local buffer_row = start + (s - 1)
+    is_internal_update[buffer] = true
     renderer.render(buffer, options.namespace, buffer_row, items, options, false)
+    is_internal_update[buffer] = false
   end)
 end
 
 function M.buf_set_text(options, buffer, start_row, start_col, end_row, end_col, replacement)
+  is_internal_update[buffer] = true
   vim.api.nvim_buf_set_text(buffer, start_row, start_col, end_row, end_col, text.content(options, replacement))
+  is_internal_update[buffer] = false
 
-  local seed_style = styles.none()
+  local seed_style = {}
   if start_col > 0 then
     seed_style = inspector.style_at(buffer, options.namespace, start_row, start_col - 1)
   elseif start_row > 0 then
@@ -129,7 +138,10 @@ function M.buf_set_text(options, buffer, start_row, start_col, end_row, end_col,
   end
 
   local first_line_items, last_style = lexer.lex({ replacement[1] }, options.strip_ansi_codes, start_col, seed_style)
+  
+  is_internal_update[buffer] = true
   renderer.render(buffer, options.namespace, start_row, first_line_items, options, false)
+  is_internal_update[buffer] = false
 
   if #replacement > 1 then
     run_in_chunks(
@@ -148,7 +160,9 @@ function M.buf_set_text(options, buffer, start_row, start_col, end_row, end_col,
       end,
       function(s, items)
         local buffer_row = start_row + (s - 1)
+        is_internal_update[buffer] = true
         renderer.render(buffer, options.namespace, buffer_row, items, options, false)
+        is_internal_update[buffer] = false
       end
     )
   end
@@ -179,7 +193,7 @@ function M.automatically(options, buffer)
         local raw_lines = vim.api.nvim_buf_get_lines(buffer, firstline, new_lastline, false)
         local has_ansi = false
         for _, line in ipairs(raw_lines) do
-          if line:find(styles.ANSI_CODES_PATTERN) then
+          if line and line:find(styles.PATTERN) then
             has_ansi = true
             break
           end
@@ -190,7 +204,7 @@ function M.automatically(options, buffer)
           M.buf_set_lines(options, buffer, firstline, new_lastline, false, raw_lines)
           is_internal_update[buffer] = false
         else
-          local seed = styles.none()
+          local seed = {}
           if firstline > 0 then
             seed = inspector.style_at_end_of_line(buffer, options.namespace, firstline - 1)
           end

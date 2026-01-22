@@ -9,24 +9,10 @@ local M = {}
 ---@class baleia.LexerHighlight
 ---@field from integer Start column (0-indexed)
 ---@field to integer End column (0-indexed, inclusive)
----@field style baleia.styles.Style The style to apply
+---@field style table The style to apply
 
 local function is_active(style)
-  if style.foreground.set and style.foreground.value.name ~= "none" then
-    return true
-  end
-  if style.background.set and style.background.value.name ~= "none" then
-    return true
-  end
-  if style.special.set and style.special.value.name ~= "none" then
-    return true
-  end
-  for _, attr in pairs(style.modes) do
-    if attr.set and attr.value.enabled then
-      return true
-    end
-  end
-  return false
+  return next(style) ~= nil
 end
 
 ---Lexes a list of lines.
@@ -34,14 +20,15 @@ end
 ---@param lines string[] The lines to process
 ---@param strip_ansi_codes boolean? If true, ANSI codes are removed. (Default: true)
 ---@param start_highlighting_at integer? Column offset applied to ALL lines. (Default: 0)
----@param seed_style baleia.styles.Style? Initial style state. (Default: styles.none())
----@return baleia.LexerItem[], baleia.styles.Style
+---@param seed_style table? Initial style state. (Default: {})
+---@return baleia.LexerItem[], table
 function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
   local output = {}
 
   -- State persists across lines.
   -- If Line 1 ends in "Red", Line 2 starts in "Red".
-  local state = seed_style or styles.none()
+  -- We must clone the seed because we mutate 'state' throughout the process.
+  local state = seed_style and styles.clone(seed_style) or {}
 
   local strip = strip_ansi_codes == nil and true or strip_ansi_codes
   local offset = start_highlighting_at or 0
@@ -55,11 +42,11 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
 
     -- "Snapshot" of the state at the start of the current span
     local span_start = current_col
-    local span_style = state
+    local span_style = styles.clone(state)
 
     local cursor = 1
     while cursor <= #line do
-      local start_seq, end_seq = string.find(line, styles.ANSI_CODES_PATTERN, cursor)
+      local start_seq, end_seq = string.find(line, styles.PATTERN, cursor)
 
       if not start_seq then
         -- No more codes, append remaining text
@@ -95,9 +82,11 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
 
       -- Update the state
       local code = string.sub(line, start_seq, end_seq)
-      local new_attributes = styles.to_style(code)
-      state = styles.merge(state, new_attributes)
-      span_style = state
+      -- 'styles.apply' mutates 'state' in place
+      styles.apply(code, state)
+      
+      -- We clone 'state' for the next span so that future mutations don't affect this reference
+      span_style = styles.clone(state)
 
       -- If NOT stripping, the code adds to the text length
       if not strip then
