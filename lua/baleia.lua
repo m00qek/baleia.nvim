@@ -1,4 +1,4 @@
-local new_api = require("baleia.new_api")
+local api = require("baleia.api")
 local options = require("baleia.options")
 
 local baleia = {}
@@ -24,10 +24,10 @@ function baleia.setup(user_options)
   local opts = options.with_defaults(user_options)
 
   return {
-    once = with_options(opts, new_api.once),
-    automatically = with_options(opts, new_api.automatically),
-    buf_set_lines = with_options(opts, new_api.buf_set_lines),
-    buf_set_text = with_options(opts, new_api.buf_set_text),
+    once = with_options(opts, api.once),
+    automatically = with_options(opts, api.automatically),
+    buf_set_lines = with_options(opts, api.buf_set_lines),
+    buf_set_text = with_options(opts, api.buf_set_text),
   }
 end
 
