@@ -45,11 +45,20 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
     local span_style = styles.clone(state)
 
     local cursor = 1
+    
+    -- Optimization: Track if state has changed but not yet committed to a span_style
+    local state_dirty = false
+    
     while cursor <= #line do
       local start_seq, end_seq = string.find(line, styles.PATTERN, cursor)
 
       if not start_seq then
         -- No more codes, append remaining text
+        if state_dirty then
+          span_style = styles.clone(state)
+          state_dirty = false
+        end
+        
         local text_part = string.sub(line, cursor)
         clean_line = clean_line .. text_part
         current_col = current_col + #text_part
@@ -58,6 +67,11 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
 
       -- 1. Handle Text before the code
       if start_seq > cursor then
+        if state_dirty then
+           span_style = styles.clone(state)
+           state_dirty = false
+        end
+        
         local text_part = string.sub(line, cursor, start_seq - 1)
         clean_line = clean_line .. text_part
         current_col = current_col + #text_part
@@ -84,12 +98,16 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
       local code = string.sub(line, start_seq, end_seq)
       -- 'styles.apply' mutates 'state' in place
       styles.apply(code, state)
+      state_dirty = true
       
-      -- We clone 'state' for the next span so that future mutations don't affect this reference
-      span_style = styles.clone(state)
-
       -- If NOT stripping, the code adds to the text length
       if not strip then
+        -- For non-stripped code, we treat the code itself as text that needs highlighting
+        -- We must commit the state immediately so the code is highlighted with the NEW style
+        -- (This matches previous behavior where code was appended after mutation)
+        span_style = styles.clone(state)
+        state_dirty = false
+        
         clean_line = clean_line .. code
         current_col = current_col + #code
         span_start = current_col
