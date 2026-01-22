@@ -18,8 +18,8 @@ end
 ---Lexes a list of lines.
 ---Highlights are broken at line boundaries (no multiline marks).
 ---@param lines string[] The lines to process
----@param strip_ansi_codes boolean? If true, ANSI codes are removed. (Default: true)
----@param start_highlighting_at integer? Column offset applied to ALL lines. (Default: 0)
+---@param strip_ansi_codes boolean If true, ANSI codes are removed.
+---@param start_highlighting_at integer Column offset applied to ALL lines.
 ---@param seed_style table? Initial style state. (Default: {})
 ---@return baleia.LexerItem[], table
 function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
@@ -29,9 +29,6 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
   -- If Line 1 ends in "Red", Line 2 starts in "Red".
   -- We must clone the seed because we mutate 'state' throughout the process.
   local state = seed_style and styles.clone(seed_style) or {}
-
-  local strip = strip_ansi_codes
-  local offset = start_highlighting_at
 
   for _, line in ipairs(lines) do
     local clean_line_buffer = {}
@@ -67,8 +64,8 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
       -- If we have advanced since the last start, we must "close" the current mark
       -- before the style changes.
       if current_col > span_start then
-        local from = math.max(offset, span_start)
-        local to = math.max(offset, current_col) - 1
+        local from = math.max(start_highlighting_at, span_start)
+        local to = math.max(start_highlighting_at, current_col) - 1
 
         if to >= from and is_active(state) then
           table.insert(line_highlights, {
@@ -86,7 +83,7 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
       styles.apply(code, state)
 
       -- If NOT stripping, the code adds to the text length
-      if not strip then
+      if not strip_ansi_codes then
         table.insert(clean_line_buffer, code)
         current_col = current_col + #code
         span_start = current_col
@@ -97,8 +94,8 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
 
     -- Close final span for this line
     if current_col > span_start then
-      local from = math.max(offset, span_start)
-      local to = math.max(offset, current_col) - 1
+      local from = math.max(start_highlighting_at, span_start)
+      local to = math.max(start_highlighting_at, current_col) - 1
 
       if to >= from and is_active(state) then
         table.insert(line_highlights, {

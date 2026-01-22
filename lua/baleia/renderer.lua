@@ -1,4 +1,4 @@
-local xterm = require("baleia.styles.xterm")
+local xterm = require("baleia.xterm")
 
 local M = {}
 

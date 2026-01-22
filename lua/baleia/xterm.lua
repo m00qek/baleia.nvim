@@ -4,7 +4,12 @@
 local M = {}
 
 local function distance(color1, color2)
-  return (color1.red - color2.red) ^ 2 + (color1.green - color2.green) ^ 2 + (color1.blue - color2.blue) ^ 2
+  local r_mean = (color1.red + color2.red) / 2
+  local r = color1.red - color2.red
+  local g = color1.green - color2.green
+  local b = color1.blue - color2.blue
+
+  return (((512 + r_mean) * r * r) / 256) + 4 * g * g + (((767 - r_mean) * b * b) / 256)
 end
 
 local function to_6cube(color)
