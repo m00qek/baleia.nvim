@@ -30,8 +30,8 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
   -- We must clone the seed because we mutate 'state' throughout the process.
   local state = seed_style and styles.clone(seed_style) or {}
 
-  local strip = strip_ansi_codes == nil and true or strip_ansi_codes
-  local offset = start_highlighting_at or 0
+  local strip = strip_ansi_codes
+  local offset = start_highlighting_at
 
   for _, line in ipairs(lines) do
     local clean_line_buffer = {}
@@ -42,23 +42,14 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
 
     -- "Snapshot" of the state at the start of the current span
     local span_start = current_col
-    local span_style = styles.clone(state)
 
     local cursor = 1
-    
-    -- Optimization: Track if state has changed but not yet committed to a span_style
-    local state_dirty = false
-    
+
     while cursor <= #line do
       local start_seq, end_seq = string.find(line, styles.PATTERN, cursor)
 
       if not start_seq then
         -- No more codes, append remaining text
-        if state_dirty then
-          span_style = styles.clone(state)
-          state_dirty = false
-        end
-        
         local text_part = string.sub(line, cursor)
         table.insert(clean_line_buffer, text_part)
         current_col = current_col + #text_part
@@ -67,11 +58,6 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
 
       -- 1. Handle Text before the code
       if start_seq > cursor then
-        if state_dirty then
-           span_style = styles.clone(state)
-           state_dirty = false
-        end
-        
         local text_part = string.sub(line, cursor, start_seq - 1)
         table.insert(clean_line_buffer, text_part)
         current_col = current_col + #text_part
@@ -84,11 +70,11 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
         local from = math.max(offset, span_start)
         local to = math.max(offset, current_col) - 1
 
-        if to >= from and is_active(span_style) then
+        if to >= from and is_active(state) then
           table.insert(line_highlights, {
             from = from,
             to = to,
-            style = span_style,
+            style = styles.clone(state),
           })
         end
         span_start = current_col
@@ -98,16 +84,9 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
       local code = string.sub(line, start_seq, end_seq)
       -- 'styles.apply' mutates 'state' in place
       styles.apply(code, state)
-      state_dirty = true
-      
+
       -- If NOT stripping, the code adds to the text length
       if not strip then
-        -- For non-stripped code, we treat the code itself as text that needs highlighting
-        -- We must commit the state immediately so the code is highlighted with the NEW style
-        -- (This matches previous behavior where code was appended after mutation)
-        span_style = styles.clone(state)
-        state_dirty = false
-        
         table.insert(clean_line_buffer, code)
         current_col = current_col + #code
         span_start = current_col
@@ -121,11 +100,11 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
       local from = math.max(offset, span_start)
       local to = math.max(offset, current_col) - 1
 
-      if to >= from and is_active(span_style) then
+      if to >= from and is_active(state) then
         table.insert(line_highlights, {
           from = from,
           to = to,
-          style = span_style,
+          style = styles.clone(state),
         })
       end
     end

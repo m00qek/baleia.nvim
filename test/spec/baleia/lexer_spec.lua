@@ -5,7 +5,7 @@ describe("baleia.lexer", function()
   describe("code discovery & positioning", function()
     it("handles plain text with no codes", function()
       local lines = { "hello world" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -17,7 +17,7 @@ describe("baleia.lexer", function()
 
     it("handles code at the beginning", function()
       local lines = { "\27[31mred" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -35,7 +35,7 @@ describe("baleia.lexer", function()
 
     it("handles code in the middle", function()
       local lines = { "prefix \27[31mred" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -53,7 +53,7 @@ describe("baleia.lexer", function()
 
     it("handles code at the end (changing state for nothing)", function()
       local lines = { "text\27[31m" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -65,7 +65,7 @@ describe("baleia.lexer", function()
 
     it("handles string with only codes", function()
       local lines = { "\27[31m\27[1m" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -77,7 +77,7 @@ describe("baleia.lexer", function()
 
     it("handles codes at the end of input with no following text", function()
       local lines = { "some text", "\27[31m\27[1m" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -94,7 +94,7 @@ describe("baleia.lexer", function()
     it("handles composite codes (semicolon separated)", function()
       -- \x1b[1;31m -> Bold + Red in one sequence
       local lines = { "\27[1;31mbold red" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -116,7 +116,7 @@ describe("baleia.lexer", function()
     it("handles complex codes (256 colors)", function()
       -- \x1b[38;5;208m -> Orange (256 color)
       local lines = { "\27[38;5;208mcolor 208" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -139,7 +139,7 @@ describe("baleia.lexer", function()
     it("merges consecutive codes into a single highlight", function()
       -- Red (31) + Bold (1)
       local lines = { "\27[31m\27[1mbold red" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -161,7 +161,7 @@ describe("baleia.lexer", function()
     it("handles redundant codes without creating breaks", function()
       -- Red + Red + Text
       local lines = { "\27[31m\27[31mred" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -181,7 +181,7 @@ describe("baleia.lexer", function()
   describe("state transition & resetting", function()
     it("stops highlight on reset", function()
       local lines = { "\27[31mred\27[0m plain" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -200,7 +200,7 @@ describe("baleia.lexer", function()
 
     it("switches styles correctly", function()
       local lines = { "\27[31mred\27[32mgreen" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -229,7 +229,7 @@ describe("baleia.lexer", function()
       -- " B " -> 2, 3, 4 (Red)
       -- " C" -> 5, 6 (Green)
       local lines = { "A \27[31m B \27[32m C" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -254,7 +254,7 @@ describe("baleia.lexer", function()
   describe("text adjustment", function()
     it("returns stripped text and indices by default", function()
       local lines = { "A\27[31mB" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -272,7 +272,7 @@ describe("baleia.lexer", function()
 
     it("returns raw text and adjusted indices when strip=false", function()
       local lines = { "A\27[31mB" }
-      local result = lexer.lex(lines, false)
+      local result = lexer.lex(lines, false, 0)
 
       assert.combinators.match({
         {
@@ -295,7 +295,7 @@ describe("baleia.lexer", function()
   describe("multi-line propagation", function()
     it("carries state to the next line", function()
       local lines = { "\27[31mred", "still red" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -321,7 +321,7 @@ describe("baleia.lexer", function()
 
     it("resets state at the end of line affecting next line", function()
       local lines = { "\27[31mred\27[0m", "plain" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -342,7 +342,7 @@ describe("baleia.lexer", function()
       -- Line 2 starts with Bold (1)
       -- Result: Line 2 text is Red + Bold
       local lines = { "line one\27[31m", "\27[1mline two" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
@@ -367,7 +367,7 @@ describe("baleia.lexer", function()
 
     it("persists state across empty lines", function()
       local lines = { "\27[31mred", "", "still red" }
-      local result = lexer.lex(lines)
+      local result = lexer.lex(lines, true, 0)
 
       assert.combinators.match({
         {
