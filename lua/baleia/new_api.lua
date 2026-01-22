@@ -79,6 +79,7 @@ end
 ---@param options baleia.options.Complete
 ---@param buffer integer
 function M.once(options, buffer)
+  vim.api.nvim_buf_clear_namespace(buffer, options.namespace, 0, -1)
   local total_lines = vim.api.nvim_buf_line_count(buffer)
 
   run_in_chunks(

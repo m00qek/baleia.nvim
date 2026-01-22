@@ -64,4 +64,48 @@ describe("baleia.renderer", function()
     local hl_def = vim.api.nvim_get_hl(0, { name = hl_group })
     assert.truthy(hl_def.fg) -- Should have foreground set
   end)
+
+  it("caches highlight definitions", function()
+    local items = {
+      {
+        text = "Hello",
+        highlights = {
+          {
+            from = 0,
+            to = 4,
+            style = styles.none(),
+          },
+        },
+      },
+    }
+    -- Setup a style
+    local style = styles.none()
+    style.foreground.set = true
+    style.foreground.value = { name = "blue", cterm = 4, inferred = "#0000ff" }
+    items[1].highlights[1].style = style
+
+    local options = {
+      name = "BaleiaCacheTest",
+      strip_ansi_codes = true,
+      colors = themes.NR_8,
+    }
+
+    local original_set_hl = vim.api.nvim_set_hl
+    local set_hl_count = 0
+    vim.api.nvim_set_hl = function(...)
+      set_hl_count = set_hl_count + 1
+      return original_set_hl(...)
+    end
+
+    -- First render: should call set_hl
+    renderer.render(buffer, namespace, 0, items, options, true)
+    assert.are.equal(1, set_hl_count)
+
+    -- Second render with SAME options: should NOT call set_hl
+    renderer.render(buffer, namespace, 1, items, options, true)
+    assert.are.equal(1, set_hl_count)
+
+    -- Restore spy
+    vim.api.nvim_set_hl = original_set_hl
+  end)
 end)
