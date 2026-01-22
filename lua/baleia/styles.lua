@@ -1,6 +1,6 @@
 M = {}
 
-M.PATTERN = "\x1b[[0-9]?[:;0-9]*m"
+M.PATTERN = "\x1b%[[:;0-9]*m"
 
 local function reset()
   return function(style)
