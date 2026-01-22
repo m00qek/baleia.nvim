@@ -209,25 +209,21 @@ end
 ---@param name string
 ---@return baleia.styles.Style
 function M.from_name(name)
-  local parts = {}
-  for part in name:gmatch("[^_]+") do
-    table.insert(parts, part)
+  -- Regex explanation:
+  -- _          Separator
+  -- (%d+)      Capture 1: Mode Mask (Digits)
+  -- _          Separator
+  -- (%w+)      Capture 2: Foreground (Alphanumeric: "none", "red", "ff0000", "255")
+  -- _          Separator
+  -- (%w+)      Capture 3: Background
+  -- _          Separator
+  -- (%w+)      Capture 4: Special
+  -- $          Anchor to end of string
+  local modename, fg_name, bg_name, sp_name = name:match("_(%d+)_(%w+)_(%w+)_(%w+)$")
+
+  if not modename then
+    return M.none()
   end
-
-  -- Format: prefix_modename_fg_bg_sp
-  -- We assume prefix is "BaleiaColors" or similar, but the split might handle it.
-  -- Actually, prefix can contain underscores? "Baleia_Colors"?
-  -- The function name(prefix, style) does: prefix .. "_" .. modename ...
-  -- So we should probably count from the END.
-  -- sp = parts[#parts]
-  -- bg = parts[#parts-1]
-  -- fg = parts[#parts-2]
-  -- modename = parts[#parts-3]
-
-  local sp_name = parts[#parts]
-  local bg_name = parts[#parts - 1]
-  local fg_name = parts[#parts - 2]
-  local modename = tonumber(parts[#parts - 3])
 
   local style = {
     foreground = color_from_name(fg_name),
@@ -237,10 +233,10 @@ function M.from_name(name)
     offset = nil,
   }
 
-  -- Reconstruct modes
-  if modename then
+  local mask = tonumber(modename)
+  if mask and mask > 0 then
     for tag, mode in pairs(tag_to_mode) do
-      if bit.band(modename, tag) ~= 0 then
+      if bit.band(mask, tag) ~= 0 then
         style.modes[mode.name] = {
           set = true,
           value = { enabled = mode.enabled, tag = tag },
