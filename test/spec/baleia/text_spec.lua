@@ -12,10 +12,3 @@ describe("[strip_color_codes]", function()
     assert.combinators.match({}, text.content({}, {}))
   end)
 end)
-
-describe("[lastcolumn]", function()
-  it("calculate last column", function()
-    local lines = { "first line", "second line" }
-    assert.combinators.match(11, text.lastcolumn(lines))
-  end)
-end)

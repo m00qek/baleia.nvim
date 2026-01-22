@@ -13,13 +13,6 @@ local function strip_color_codes(raw_lines)
   return lines
 end
 
----@param lines string[]
----@return integer
-function M.lastcolumn(lines)
-  local lastline = lines[#lines]
-  return #lastline
-end
-
 ---@param options baleia.options.Basic
 ---@param lines string[]
 ---@return string[]
