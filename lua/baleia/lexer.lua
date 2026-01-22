@@ -34,7 +34,7 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
   local offset = start_highlighting_at or 0
 
   for _, line in ipairs(lines) do
-    local clean_line = ""
+    local clean_line_buffer = {}
     local line_highlights = {}
 
     -- The current writing position for this specific line (0-indexed)
@@ -60,7 +60,7 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
         end
         
         local text_part = string.sub(line, cursor)
-        clean_line = clean_line .. text_part
+        table.insert(clean_line_buffer, text_part)
         current_col = current_col + #text_part
         break
       end
@@ -73,7 +73,7 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
         end
         
         local text_part = string.sub(line, cursor, start_seq - 1)
-        clean_line = clean_line .. text_part
+        table.insert(clean_line_buffer, text_part)
         current_col = current_col + #text_part
       end
 
@@ -108,7 +108,7 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
         span_style = styles.clone(state)
         state_dirty = false
         
-        clean_line = clean_line .. code
+        table.insert(clean_line_buffer, code)
         current_col = current_col + #code
         span_start = current_col
       end
@@ -131,7 +131,7 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
     end
 
     table.insert(output, {
-      text = clean_line,
+      text = table.concat(clean_line_buffer),
       highlights = line_highlights,
     })
   end
