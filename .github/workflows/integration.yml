@@ -56,15 +56,15 @@ jobs:
       - name: Setup LuaRocks
         uses: leafo/gh-actions-luarocks@v4
 
-          - name: Setup Stylua
-            uses: JohnnyMorganz/stylua-action@v4
-            with:
-              token: ${{ secrets.GITHUB_TOKEN }}
-              version: latest
-              args: --version # Just to verify install and add to PATH
-      
-          - name: Install Luacheck        run: luarocks install luacheck
+      - name: Setup Stylua
+        uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
+          args: --version
+
+      - name: Install Luacheck
+        run: luarocks install luacheck
 
       - name: Run Linters
         run: make lint
-
