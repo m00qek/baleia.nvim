@@ -1,21 +1,28 @@
 ---@meta _
---# selene: allow(unused_variable)
+-- luacheck: ignore 212
+
 error("Cannot require a meta file")
 
----@class baleia.Options
+---@class baleia.UserOptions
 ---@field strip_ansi_codes? boolean
 ---@field line_starts_at? integer
----@field colors? baleia.styles.Theme
+---@field chunk_size? integer
+---@field colors? baleia.ansi.Theme
 ---@field async? boolean
 ---@field name? string
----@field log? baleia.log.Levels
+
+---@class baleia.Options
+---@field strip_ansi_codes boolean
+---@field line_starts_at integer
+---@field highlight_cache { [string]: boolean }
+---@field chunk_size integer
+---@field namespace integer
+---@field colors baleia.ansi.Theme
+---@field async boolean
+---@field name string
 
 ---@class Baleia
 local baleia = {}
-
---- Logger for Baleia
----@type baleia.Logger
-baleia.logger = nil
 
 --- Parses the contents of {buffer} and colorizes them respecting any ANSI
 --- color codes present in the text.

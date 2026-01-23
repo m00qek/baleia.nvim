@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+# Get the absolute path of the project root
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Create a temporary directory to hold our init.lua
+# This ensures we can have a proper .lua extension which nvim requires for -u
+TMP_DIR=$(mktemp -d)
+INIT_LUA="$TMP_DIR/init.lua"
+
+cat <<LUA > "$INIT_LUA"
+vim.opt.termguicolors = true
+-- Prepend project root to runtimepath so we can require('baleia')
+vim.opt.runtimepath:prepend("$PROJECT_ROOT")
+
+local baleia = require("baleia").setup({
+  name = "BaleiaTest",
+  async = true,
+})
+-- Expose globally like repro.lua does, in case user wants to inspect it
+vim.g.baleia = baleia
+
+-- Manual colorization command
+vim.api.nvim_create_user_command("BaleiaColorize", function()
+  baleia.once(vim.api.nvim_get_current_buf())
+end, { bang = true })
+
+-- Automatic colorization for .ansi files
+vim.api.nvim_create_autocmd({ "BufWinEnter", "BufReadPost" }, {
+  pattern = { "*.ansi", "*.log" },
+  callback = function(args)
+    baleia.automatically(args.buf)
+  end,
+})
+
+-- Keymap for quick testing
+vim.keymap.set("n", "<leader>c", "<cmd>BaleiaColorize<cr>", { desc = "Baleia Colorize" })
+
+print("Baleia test environment loaded! Project root: $PROJECT_ROOT")
+LUA
+
+# Run nvim using the temporary init.lua
+nvim --noplugin -u "$INIT_LUA" "$@"
+
+# Clean up
+rm -rf "$TMP_DIR"

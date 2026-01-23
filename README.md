@@ -2,7 +2,12 @@
 
 [![Integration][integration-badge]][integration-runs]
 
-Colorize text with ANSI escape sequences (8, 16, 256 or TrueColor)
+Colorize text with ANSI escape sequences (8, 16, 256 or TrueColor).
+
+**Requirements**: Neovim 0.9.0 or higher.
+
+
+<img width="1213" height="745" alt="image" src="https://github.com/user-attachments/assets/3d581588-ecb0-48e4-b45c-533cfd06e3a9" />
 
 ## Install
 
@@ -21,34 +26,41 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
     end, { bang = true })
 
     -- Command to show logs 
-    vim.api.nvim_create_user_command("BaleiaLogs", vim.g.baleia.logger.show, { bang = true })
+    vim.api.nvim_create_user_command("BaleiaLogs", vim.cmd.messages, { bang = true })
   end,
 }
 ```
 
-## Automatically colorize when lines are added to the buffer
+## Usage & Configuration
 
-To automatically colorize when a new line is added use
+Baleia exposes functions to colorize buffers. You can use them manually (commands) or automatically (autocmds).
+
+### 1. Manual Colorization
+
+The setup above creates a `:BaleiaColorize` command. Use this when you open a file with ANSI codes (like a log file) and want to colorize it once.
 
 ```lua
-vim.g.baleia = require("baleia").setup({ })
+vim.g.baleia.once(vim.api.nvim_get_current_buf())
+```
+
+### 2. Automatic Colorization (Tailing Logs)
+
+To automatically colorize lines as they are appended to a buffer (e.g., when tailing a log file), use `baleia.automatically`.
+
+**Example: Colorize all `.log` files:**
+
+```lua
 vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
-  pattern = "*.txt",
+  pattern = "*.log",
   callback = function()
     vim.g.baleia.automatically(vim.api.nvim_get_current_buf())
   end,
 })
 ```
 
-This will register every buffer that matches `.txt` to be automatically
-colorized.
-
-## Automatically colorize text added to the quickfix window
-
-To automatically colorize text added to the quickfix use `BufReadPost`
+**Example: Colorize Quickfix Window:**
 
 ```lua
-vim.g.baleia = require("baleia").setup({ })
 vim.api.nvim_create_autocmd({ "BufReadPost" }, {
   pattern = "quickfix",
   callback = function()
@@ -60,18 +72,18 @@ vim.api.nvim_create_autocmd({ "BufReadPost" }, {
 })
 ```
 
-### Setup options
+### Setup Options
 
-When calling the `setup` function, the following options are available:
+Pass these options to `require("baleia").setup({...})`:
 
 |      option      |  default value  |                        description                        |
 | -----------------| --------------- | --------------------------------------------------------- |
 | name             | "BaleiaColors"  | prefix used to name highlight groups                      |
 | strip_ansi_codes | true            | remove ANSI color codes from text                         |
 | line_starts_at   | 1 (one-indexed) | at which column start colorizing                          |
-| colors           | [NR_8][nr_8]    | table mapping 256 color codes to vim colors               |
+| colors           | [NR_8](lua/baleia/ansi.lua#L262) | table mapping 256 color codes to vim colors               |
 | async            | true            | highlight asynchronously                                  |
-| log              | "ERROR"         | log level, possible values are ERROR, WARN, INFO or DEBUG |
+| chunk_size       | 500             | number of lines to process per loop iteration (async)     |
 
 ## With Conjure
 
@@ -91,7 +103,7 @@ tell conjure to not strip ANSI escape codes:
       vim.g.conjure_baleia.once(vim.api.nvim_get_current_buf())
     end, { bang = true })
 
-    vim.api.nvim_create_user_command("BaleiaLogs", vim.g.conjure_baleia.logger.show, { bang = true })
+    vim.api.nvim_create_user_command("BaleiaLogs", vim.cmd.messages, { bang = true })
   end,
 },
 {
@@ -121,25 +133,12 @@ tell conjure to not strip ANSI escape codes:
 },
 ```
 
-## What to do if something looks wrong
-
-Enable logs with
-
-```lua
-vim.g.baleia = require("baleia").setup({ log = 'DEBUG' })
-vim.api.nvim_create_user_command("BaleiaLogs", vim.g.conjure_baleia.logger.show, { bang = true })
-```
-
-You can set the log level to `ERROR`, `WARN`, `INFO` or `DEBUG`. You can see
-the logs using `BaleiaLogs`.
-
 ## Developer API
 
 `baleia` provides two functions, `buf_set_lines` and `buf_set_text`, that have
 the same interface as the default `vim.api.nvim_buf_set_lines` and
 `vim.api.nvim_but_set_text`. Using those is very efficient because they do all
 color detection and ANSI code stripping before writing anything to the buffer.
-Example:
 
 ```lua
 local new_lines = { '\x1b[32mHello \x1b[33mworld!' }
@@ -157,4 +156,6 @@ baleia.buf_set_lines(0, lastline, lastline, true, new_lines)
 [integration-badge]: https://github.com/m00qek/baleia.nvim/actions/workflows/integration.yml/badge.svg
 [integration-runs]: https://github.com/m00qek/baleia.nvim/actions/workflows/integration.yml
 [conjure]: https://github.com/Olical/conjure
-[nr_8]: ./lua/baleia/styles/themes.lua
+## License
+
+[MIT](./LICENSE)
