@@ -121,7 +121,10 @@ function M.render(buffer, namespace, start_row, items, options, update_text)
         cache[hl_name] = true
       end
 
-      vim.api.nvim_buf_add_highlight(buffer, namespace, hl_name, row, mark.from, mark.to + 1)
+      vim.api.nvim_buf_set_extmark(buffer, namespace, row, mark.from, {
+        end_col = mark.to + 1,
+        hl_group = hl_name,
+      })
     end
   end
 end

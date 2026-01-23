@@ -179,7 +179,7 @@ describe("baleia.renderer", function()
           highlights = {
             {
               from = 0,
-              to = 10,
+              to = 9,
               style = { bold = true, undercurl = true, italic = true },
             },
           },
