@@ -1,5 +1,21 @@
 local M = {}
 
+---@class baleia.Style
+---@field ctermfg integer
+---@field foreground string
+---@field ctermbg integer
+---@field background string
+---@field ctermsp integer
+---@field bold boolean
+---@field italic boolean
+---@field strikethrough boolean
+---@field reverse boolean
+---@field underline boolean
+---@field undercurl boolean
+---@field underdouble boolean
+---@field underdotted boolean
+---@field underdashed boolean
+
 local function scan(str, pos)
   local start_idx, end_idx = string.find(str, "[:0-9]+", pos)
   if not start_idx then
@@ -54,21 +70,24 @@ end
 
 local function rgb()
   return function(str, pos)
-    local r_val, pos = scan(str, pos)
-    local g_val, pos = scan(str, pos)
-    local b_val, pos = scan(str, pos)
+    local r_val, pos1 = scan(str, pos)
+    local g_val, pos2 = scan(str, pos1)
+    local b_val, pos3 = scan(str, pos2)
 
     local r, g, b = tonumber(r_val), tonumber(g_val), tonumber(b_val)
 
     if r and g and b then
-      return string.format("#%02x%02x%02x", r, g, b), pos
+      return string.format("#%02x%02x%02x", r, g, b), pos3
     end
-    return nil, pos
+    return nil, pos3
   end
 end
 
 M.PATTERN = "\x1b%[[:;0-9]*m"
 
+---Strips ANSI codes from a string or a list of strings
+---@param input string|string[]
+---@return string|string[]
 function M.strip(input)
   if type(input) == "string" then
     return (string.gsub(input, M.PATTERN, ""))
@@ -81,6 +100,10 @@ function M.strip(input)
   return stripped
 end
 
+---Applies an ANSI sequence to a style table
+---@param ansi_sequence string
+---@param base_style? baleia.Style
+---@return baleia.Style
 function M.apply(ansi_sequence, base_style)
   local style = base_style or {}
 
@@ -92,6 +115,7 @@ function M.apply(ansi_sequence, base_style)
   end
 
   local root = M.declarations
+  ---@type table|function
   local node = root
   local cursor = 1
 
@@ -123,6 +147,9 @@ function M.apply(ansi_sequence, base_style)
   return style
 end
 
+---Clones a style table
+---@param style baleia.Style
+---@return baleia.Style
 function M.clone(style)
   local style_clone = {}
   for attr, value in pairs(style) do
@@ -209,6 +236,9 @@ M.declarations = {
   ["4:5"] = set("underdashed"),
 }
 
+---@alias baleia.ansi.Theme { [integer]: string }
+
+---@type baleia.ansi.Theme
 M.NR_16 = {
   [00] = "Black",
   [01] = "DarkBlue",
@@ -228,6 +258,7 @@ M.NR_16 = {
   [15] = "White",
 }
 
+---@type baleia.ansi.Theme
 M.NR_8 = {
   [00] = "Black",
   [01] = "DarkRed",

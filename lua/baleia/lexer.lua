@@ -25,9 +25,9 @@ end
 function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
   local output = {}
 
-  -- State persists across lines.
-  -- If Line 1 ends in "Red", Line 2 starts in "Red".
-  -- We must clone the seed because we mutate 'state' throughout the process.
+  -- state persists across lines.
+  -- if Line 1 ends in "Red", Line 2 starts in "Red".
+  -- it must clone the seed because we mutate 'state' throughout the process.
   local state = seed_style and ansi.clone(seed_style) or {}
 
   for _, line in ipairs(lines) do
@@ -77,9 +77,7 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
         span_start = current_col
       end
 
-      -- Update the state
       local code = string.sub(line, start_seq, end_seq)
-      -- 'ansi.apply' mutates 'state' in place
       ansi.apply(code, state)
 
       -- If NOT stripping, the code adds to the text length
@@ -92,7 +90,7 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
       cursor = end_seq + 1
     end
 
-    -- Close final span for this line
+    -- close final span for this line
     if current_col > span_start then
       local from = math.max(start_highlighting_at, span_start)
       local to = math.max(start_highlighting_at, current_col) - 1
@@ -116,3 +114,4 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
 end
 
 return M
+

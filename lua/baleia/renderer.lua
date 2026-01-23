@@ -2,8 +2,6 @@ local xterm = require("baleia.xterm")
 
 local M = {}
 
----@param hex string
----@return integer
 local function hex_to_cterm(hex)
   if not hex then
     return nil
@@ -15,8 +13,6 @@ local function hex_to_cterm(hex)
   return xterm.from_rgb(r, g, b)
 end
 
----@param cterm integer
----@return string
 local function cterm_to_hex(cterm)
   if not cterm then
     return
@@ -26,7 +22,7 @@ end
 
 ---Generates a unique name for a style table
 ---@param prefix string
----@param style table
+---@param style baleia.Style
 ---@return string
 function M.name(prefix, style)
   -- We sort keys to ensure deterministic naming
@@ -46,8 +42,8 @@ function M.name(prefix, style)
 end
 
 ---Hydrates a style table with missing complementary colors
----@param style table
----@param theme table? Optional theme mapping for 16 colors
+---@param style baleia.Style
+---@param theme baleia.ansi.Theme? Optional theme mapping for 16 colors
 ---@return table
 function M.attributes(style, theme)
   local attrs = {}
@@ -97,7 +93,7 @@ end
 ---@param namespace integer
 ---@param start_row integer
 ---@param items baleia.LexerItem[]
----@param options baleia.options.Basic
+---@param options baleia.Options
 ---@param update_text boolean?
 function M.render(buffer, namespace, start_row, items, options, update_text)
   options.highlight_cache = options.highlight_cache or {}

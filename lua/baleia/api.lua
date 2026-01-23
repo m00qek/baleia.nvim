@@ -6,33 +6,28 @@ local scheduler = require("baleia.scheduler")
 
 local M = {}
 
--- Track cancel functions per buffer (for once())
+-- track cancel functions per buffer (for once())
 local active_cancels = {}
 
--- Track internal updates (to prevent automatically() from processing them)
+-- track internal updates (to prevent automatically() from processing them)
 local internal_updates = {}
 
----Mark buffer as being internally updated
----@param buffer integer
 local function begin_internal_update(buffer)
   internal_updates[buffer] = (internal_updates[buffer] or 0) + 1
 end
 
----Unmark buffer as being internally updated
----@param buffer integer
 local function end_internal_update(buffer)
   internal_updates[buffer] = math.max(0, (internal_updates[buffer] or 1) - 1)
 end
 
----Check if buffer is being internally updated
----@param buffer integer
----@return boolean
 local function is_internal_update(buffer)
   return internal_updates[buffer] and internal_updates[buffer] > 0
 end
 
----@param options baleia.options.Complete
----@param buffer integer
+---Parses the contents of {buffer} and colorizes them respecting any ANSI
+---color codes present in the text.
+---@param options baleia.Options
+---@param buffer integer Buffer handle
 function M.once(options, buffer)
   -- Cancel any existing processing for this buffer
   if active_cancels[buffer] then
@@ -40,16 +35,15 @@ function M.once(options, buffer)
     active_cancels[buffer] = nil
   end
 
-  -- Mark as internal update before clearing namespace
+  -- mark as internal update before clearing namespace
   begin_internal_update(buffer)
 
-  -- Process buffer lines (lazy fetch)
   local cancel = scheduler.process_buffer(
     buffer,
     options.namespace,
 
     -- process_fn: lex lines
-    function(lines, start_row, seed)
+    function(lines, _, seed)
       local items, last_style = lexer.lex(
         lines,
         options.strip_ansi_codes,
@@ -95,6 +89,10 @@ function M.once(options, buffer)
   active_cancels[buffer] = cancel
 end
 
+---Every time a new line is added to {buffer}, parses the new contents and
+---colorizes them respecting any ANSI color codes present in the text.
+---@param options baleia.Options
+---@param buffer integer Buffer handle
 function M.automatically(options, buffer)
   -- Check if already attached
   local status, active = pcall(vim.api.nvim_buf_get_var, buffer, "baleia_on_new_lines")
@@ -210,6 +208,14 @@ function M.automatically(options, buffer)
   })
 end
 
+---Sets (replaces) a line-range in the buffer, parses ANSI color codes and
+---colorizes the resulting text accordingly.
+---@param options baleia.Options
+---@param buffer integer Buffer handle, or 0 for current buffer
+---@param start integer First line index
+---@param end_ integer Last line index, exclusive
+---@param strict_indexing boolean Whether out-of-bounds should be an error
+---@param replacement string[] Array of lines to use as replacement
 function M.buf_set_lines(options, buffer, start, end_, strict_indexing, replacement)
   -- Mark as internal update
   begin_internal_update(buffer)
@@ -274,6 +280,15 @@ function M.buf_set_lines(options, buffer, start, end_, strict_indexing, replacem
   )
 end
 
+---Sets (replaces) a range in the buffer, parses ANSI color codes and colorizes
+---the resulting lines accordingly.
+---@param options baleia.Options
+---@param buffer integer Buffer handle, or 0 for current buffer
+---@param start_row integer First line index
+---@param start_col integer Starting column (byte offset) on first line
+---@param end_row integer Last line index, inclusive
+---@param end_col integer Ending column (byte offset) on last line, exclusive
+---@param replacement string[] Array of lines to use as replacement
 function M.buf_set_text(options, buffer, start_row, start_col, end_row, end_col, replacement)
   -- Mark as internal update
   begin_internal_update(buffer)

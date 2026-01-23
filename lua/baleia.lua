@@ -27,29 +27,22 @@ local function with_options(opts, fn)
   end
 end
 
--- Creates a Baleia colorizer.
---
--- Parameters: ~
---   • {user_options}  Optional parameters map, accepts the following keys:
---                     • strip_ansi_codes: Remove ANSI color codes from text [default: true]
---                     • line_starts_at: |1-indexed| At which column start colorizing [default: 1]
---                     • chunk_size: Size, in lines, of each async batch [default: 500]
---                     • colors: Custom theme
---                     • async: Highlight asynchronously [default: true]
---                     • name: Prefix used to name highlight groups [default: "BaleiaColors"]
----@param user_options? baleia.Options
+---Creates a Baleia colorizer.
+---@param user_options? baleia.UserOptions
 ---@return Baleia
 function baleia.setup(user_options)
-  local opts = user_options or {}
+  user_options = user_options or {}
+  local opts = {}
 
-  local name = either(opts.name, "BaleiaColors")
+  local name = either(user_options.name, "BaleiaColors")
 
-  opts.strip_ansi_codes = either(opts.strip_ansi_codes, true)
-  opts.line_starts_at = either(opts.line_starts_at, 1)
+  opts.strip_ansi_codes = either(user_options.strip_ansi_codes, true)
+  opts.line_starts_at = either(user_options.line_starts_at, 1)
   opts.namespace = vim.api.nvim_create_namespace(name)
-  opts.colors = with_colorscheme(either(opts.colors, ansi.NR_8))
-  opts.async = either(opts.async, true)
-  opts.chunk_size = either(opts.chunk_size, 500)
+  opts.colors = with_colorscheme(either(user_options.colors, ansi.NR_8))
+  opts.async = either(user_options.async, true)
+  opts.chunk_size = either(user_options.chunk_size, 500)
+  opts.highlight_cache = {}
   opts.name = name
 
   return {

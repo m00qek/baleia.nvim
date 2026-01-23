@@ -48,34 +48,26 @@ end
 
 local within_levels = { [0] = 0x00, [1] = 0x5f, [2] = 0x87, [3] = 0xaf, [4] = 0xd7, [5] = 0xff }
 
--- Completes {theme} with current colorscheme
---
--- Parameters: ~
---   • {code}  ANSI color code (between 0 and 255)
----@param code integer
+---Completes {theme} with current colorscheme
+---@param code integer ANSI color code (between 0 and 255)
 ---@return string
 function M.to_truecolor(code)
   return "#" .. M.colors[code]
 end
 
--- Convert an RGB triplet to the xterm 256 colour palette.
---
--- xterm provides a 6x6x6 colour cube (16 - 231) and 24 greys (232 - 255). We
--- map our RGB colour to the closest in the cube, also work out the closest
--- grey, and use the nearest of the two.
---
--- Note that the xterm has much lower resolution for darker colours (they are
--- not evenly spread out), so our 6 levels are not evenly spread: 0x0, 0x5f
--- (95), 0x87 (135), 0xaf (175), 0xd7 (215) and 0xff (255). Greys are more
--- evenly spread (8, 18, 28 ... 238).
---
--- Parameters: ~
---   • {red}    Red color component (between 0 and 255)
---   • {green}  Red color component (between 0 and 255)
---   • {blue}   Red color component (between 0 and 255)
----@param red integer
----@param green integer
----@param blue integer
+---Convert an RGB triplet to the xterm 256 colour palette.
+---
+---xterm provides a 6x6x6 colour cube (16 - 231) and 24 greys (232 - 255). We
+---map our RGB colour to the closest in the cube, also work out the closest
+---grey, and use the nearest of the two.
+---
+---Note that the xterm has much lower resolution for darker colours (they are
+---not evenly spread out), so our 6 levels are not evenly spread: 0x0, 0x5f
+---(95), 0x87 (135), 0xaf (175), 0xd7 (215) and 0xff (255). Greys are more
+---evenly spread (8, 18, 28 ... 238).
+---@param red integer Red color component (between 0 and 255)
+---@param green integer Red color component (between 0 and 255)
+---@param blue integer Red color component (between 0 and 255)
 ---@return integer
 function M.from_rgb(red, green, blue)
   local original = { red = red, green = green, blue = blue }
