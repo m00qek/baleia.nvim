@@ -1,5 +1,5 @@
-local baleia = require("baleia")
 require("matcher_combinators.luassert")
+local baleia = require("baleia")
 
 describe("baleia async", function()
   local buffer
@@ -14,12 +14,7 @@ describe("baleia async", function()
 
     b.once(buffer)
 
-    -- Immediately check text (should be stripped by renderer if using update_text=true in once)
-    -- Wait, once calls renderer with strip_ansi_codes=true (default).
-    -- But since it's async, it might not have happened yet if run via new_work.
-    -- However, once reads lines from buffer.
-    
-    -- We need to wait for the highlight to appear.
+    -- waits for the highlight to appear.
     vim.wait(1000, function()
       local extmarks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, {})
       return #extmarks > 0
@@ -30,7 +25,7 @@ describe("baleia async", function()
 
     local extmarks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, { details = true })
     assert.truthy(#extmarks > 0)
-    
+
     local mark = extmarks[1]
     local hl_group = mark[4].hl_group
     local hl_def = vim.api.nvim_get_hl(0, { name = hl_group })

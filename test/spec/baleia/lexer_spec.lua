@@ -1,5 +1,4 @@
 local lexer = require("baleia.lexer")
-local styles = require("baleia.styles")
 
 describe("baleia.lexer", function()
   describe("code discovery & positioning", function()

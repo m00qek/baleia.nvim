@@ -1,4 +1,4 @@
-local themes = require("baleia.styles")
+local ansi = require("baleia.ansi")
 
 ---@class baleia.options.UI
 ---@field chunk_size integer
@@ -8,7 +8,7 @@ local themes = require("baleia.styles")
 ---@class baleia.options.Basic
 ---@field strip_ansi_codes boolean
 ---@field line_starts_at integer
----@field colors baleia.styles.Theme
+---@field colors baleia.ansi.Theme
 ---@field name string
 
 ---@alias baleia.options.Complete baleia.options.Basic | baleia.options.UI
@@ -38,7 +38,7 @@ end
 function M.with_defaults(user_options)
   local options = user_options or {}
 
-  local theme = either(options.colors, themes.NR_8)
+  local theme = either(options.colors, ansi.NR_8)
   local name = either(options.name, "BaleiaColors")
 
   ---@type baleia.options.Complete
@@ -50,17 +50,6 @@ function M.with_defaults(user_options)
     async = either(options.async, true),
     chunk_size = either(options.chunk_size, 500),
     name = name,
-  }
-end
-
----@param options baleia.options.Complete
----@return baleia.options.Basic
-function M.basic(options)
-  return {
-    strip_ansi_codes = options.strip_ansi_codes,
-    line_starts_at = options.line_starts_at,
-    colors = options.colors,
-    name = options.name,
   }
 end
 

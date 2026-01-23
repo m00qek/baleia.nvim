@@ -5,7 +5,7 @@ error("Cannot require a meta file")
 ---@class baleia.Options
 ---@field strip_ansi_codes? boolean
 ---@field line_starts_at? integer
----@field colors? baleia.styles.Theme
+---@field colors? baleia.ansi.Theme
 ---@field async? boolean
 ---@field name? string
 ---@field chunk_size? integer

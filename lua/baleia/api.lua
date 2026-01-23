@@ -1,183 +1,115 @@
+local ansi = require("baleia.ansi")
 local inspector = require("baleia.inspector")
 local lexer = require("baleia.lexer")
 local renderer = require("baleia.renderer")
-local styles = require("baleia.styles")
-local text = require("baleia.text")
+local scheduler = require("baleia.scheduler")
 
 local M = {}
 
-local tasks = {}
-local next_task_id = 0
-local is_internal_update = {}
+-- Track cancel functions per buffer (for once())
+local active_cancels = {}
 
-local function worker_entry_point(encoded_args)
-  local decoded = vim.mpack.decode(encoded_args)
-  local lines, strip, offset, seed, task_id = unpack(decoded)
+-- Track internal updates (to prevent automatically() from processing them)
+local internal_updates = {}
 
-  -- Worker runs in a separate loop, need to require lexer again
-  local lexer = require("baleia.lexer")
-  local items, last_style = lexer.lex(lines, strip, offset, seed)
-
-  return vim.mpack.encode({ items, last_style, task_id })
+---Mark buffer as being internally updated
+---@param buffer integer
+local function begin_internal_update(buffer)
+  internal_updates[buffer] = (internal_updates[buffer] or 0) + 1
 end
 
-local function on_work_done(encoded_result)
-  local decoded = vim.mpack.decode(encoded_result)
-  local items, last_style, task_id = unpack(decoded)
-
-  vim.schedule(function()
-    local callback = tasks[task_id]
-    if callback then
-      tasks[task_id] = nil
-      callback(items, last_style)
-    end
-  end)
+---Unmark buffer as being internally updated
+---@param buffer integer
+local function end_internal_update(buffer)
+  internal_updates[buffer] = math.max(0, (internal_updates[buffer] or 1) - 1)
 end
 
-local work_handle = vim.loop.new_work(worker_entry_point, on_work_done)
-
----@param start_idx integer
----@param end_idx integer
----@param chunk_size integer
----@param async boolean
----@param seed_style baleia.styles.Style
----@param strip_ansi boolean
----@param fetch_lines_fn fun(s: integer, e: integer): string[]
----@param render_fn fun(s: integer, items: baleia.LexerItem[])
-local function run_in_chunks(start_idx, end_idx, chunk_size, async, seed_style, strip_ansi, fetch_lines_fn, render_fn)
-  local function process_chunk(current_start, current_seed)
-    if current_start > end_idx then
-      return
-    end
-
-    local current_end = math.min(current_start + chunk_size - 1, end_idx)
-    local lines = fetch_lines_fn(current_start, current_end)
-
-    if async then
-      local task_id = next_task_id
-      next_task_id = next_task_id + 1
-
-      tasks[task_id] = function(items, last_style)
-        render_fn(current_start, items)
-        process_chunk(current_end + 1, last_style)
-      end
-
-      local queued = work_handle:queue(vim.mpack.encode({ lines, strip_ansi, 0, current_seed, task_id }))
-      if not queued then
-        tasks[task_id] = nil
-        vim.notify("Baleia: Failed to queue async task", vim.log.levels.ERROR)
-      end
-    else
-      local items, last_style = lexer.lex(lines, strip_ansi, 0, current_seed)
-      render_fn(current_start, items)
-      process_chunk(current_end + 1, last_style)
-    end
-  end
-
-  process_chunk(start_idx, seed_style)
+---Check if buffer is being internally updated
+---@param buffer integer
+---@return boolean
+local function is_internal_update(buffer)
+  return internal_updates[buffer] and internal_updates[buffer] > 0
 end
 
 ---@param options baleia.options.Complete
 ---@param buffer integer
 function M.once(options, buffer)
-  vim.api.nvim_buf_clear_namespace(buffer, options.namespace, 0, -1)
-  local total_lines = vim.api.nvim_buf_line_count(buffer)
+  -- Cancel any existing processing for this buffer
+  if active_cancels[buffer] then
+    active_cancels[buffer]()
+    active_cancels[buffer] = nil
+  end
 
-  run_in_chunks(
-    0,
-    total_lines - 1,
-    options.chunk_size,
-    options.async,
-    {}, -- styles.none() replacement
-    options.strip_ansi_codes,
-    function(s, e)
-      return vim.api.nvim_buf_get_lines(buffer, s, e + 1, false)
+  -- Mark as internal update before clearing namespace
+  begin_internal_update(buffer)
+
+  -- Process buffer lines (lazy fetch)
+  local cancel = scheduler.process_buffer(
+    buffer,
+    options.namespace,
+
+    -- process_fn: lex lines
+    function(lines, start_row, seed)
+      local items, last_style = lexer.lex(
+        lines,
+        options.strip_ansi_codes,
+        0, -- offset
+        seed
+      )
+      return items, last_style
     end,
-    function(s, items)
-      is_internal_update[buffer] = true
-      renderer.render(buffer, options.namespace, s, items, options, options.strip_ansi_codes)
-      is_internal_update[buffer] = false
-    end
-  )
-end
 
-function M.buf_set_lines(options, buffer, start, end_, strict_indexing, replacement)
-  is_internal_update[buffer] = true
-  vim.api.nvim_buf_set_lines(buffer, start, end_, strict_indexing, text.content(options, replacement))
-  is_internal_update[buffer] = false
+    -- render_fn: apply highlights (wrapped to track internal updates)
+    function(start_row, items)
+      begin_internal_update(buffer)
 
-  local seed_style = {}
-  if start > 0 then
-    seed_style = inspector.style_at_end_of_line(buffer, options.namespace, start - 1)
-  end
+      renderer.render(
+        buffer,
+        options.namespace,
+        start_row - 1, -- Convert to 0-indexed
+        items,
+        options,
+        options.strip_ansi_codes -- Update text if stripping
+      )
 
-  run_in_chunks(1, #replacement, options.chunk_size, options.async, seed_style, options.strip_ansi_codes, function(s, e)
-    local chunk_lines = {}
-    for i = s, e do
-      table.insert(chunk_lines, replacement[i])
-    end
-    return chunk_lines
-  end, function(s, items)
-    local buffer_row = start + (s - 1)
-    is_internal_update[buffer] = true
-    renderer.render(buffer, options.namespace, buffer_row, items, options, false)
-    is_internal_update[buffer] = false
-  end)
-end
+      end_internal_update(buffer)
+    end,
 
-function M.buf_set_text(options, buffer, start_row, start_col, end_row, end_col, replacement)
-  is_internal_update[buffer] = true
-  vim.api.nvim_buf_set_text(buffer, start_row, start_col, end_row, end_col, text.content(options, replacement))
-  is_internal_update[buffer] = false
-
-  local seed_style = {}
-  if start_col > 0 then
-    seed_style = inspector.style_at(buffer, options.namespace, start_row, start_col - 1)
-  elseif start_row > 0 then
-    seed_style = inspector.style_at_end_of_line(buffer, options.namespace, start_row - 1)
-  end
-
-  local first_line_items, last_style = lexer.lex({ replacement[1] }, options.strip_ansi_codes, start_col, seed_style)
-  
-  is_internal_update[buffer] = true
-  renderer.render(buffer, options.namespace, start_row, first_line_items, options, false)
-  is_internal_update[buffer] = false
-
-  if #replacement > 1 then
-    run_in_chunks(
-      2,
-      #replacement,
-      options.chunk_size,
-      options.async,
-      last_style, -- seed from first line
-      options.strip_ansi_codes,
-      function(s, e)
-        local chunk_lines = {}
-        for i = s, e do
-          table.insert(chunk_lines, replacement[i])
-        end
-        return chunk_lines
+    -- Options
+    {
+      chunk_size = options.chunk_size,
+      async = options.async,
+      initial_seed = {},
+      on_complete = function()
+        active_cancels[buffer] = nil
+        end_internal_update(buffer) -- End the initial internal update
       end,
-      function(s, items)
-        local buffer_row = start_row + (s - 1)
-        is_internal_update[buffer] = true
-        renderer.render(buffer, options.namespace, buffer_row, items, options, false)
-        is_internal_update[buffer] = false
-      end
-    )
-  end
+      on_error = function(err)
+        vim.notify("Baleia: " .. err, vim.log.levels.WARN)
+        active_cancels[buffer] = nil
+        end_internal_update(buffer) -- End even on error
+      end,
+    }
+  )
+
+  active_cancels[buffer] = cancel
 end
 
 function M.automatically(options, buffer)
+  -- Check if already attached
   local status, active = pcall(vim.api.nvim_buf_get_var, buffer, "baleia_on_new_lines")
   if status and active then
     return
   end
   vim.api.nvim_buf_set_var(buffer, "baleia_on_new_lines", true)
 
+  -- Track current processing to allow cancellation
+  local current_cancel = nil
+
   vim.api.nvim_buf_attach(buffer, false, {
     on_lines = function(_, _, _, firstline, _, new_lastline)
-      if is_internal_update[buffer] then
+      -- ✅ CRITICAL: Ignore internal updates (from once(), buf_set_lines, etc.)
+      if is_internal_update(buffer) then
         return
       end
 
@@ -185,51 +117,232 @@ function M.automatically(options, buffer)
         return
       end
 
+      -- Cancel previous processing for this region
+      if current_cancel then
+        current_cancel()
+        current_cancel = nil
+      end
+
       vim.schedule(function()
         if not vim.api.nvim_buf_is_valid(buffer) then
           return
         end
 
+        -- Get raw lines
         local raw_lines = vim.api.nvim_buf_get_lines(buffer, firstline, new_lastline, false)
+
+        -- Check if any line has ANSI codes
         local has_ansi = false
         for _, line in ipairs(raw_lines) do
-          if line and line:find(styles.PATTERN) then
+          if line and line:find(ansi.PATTERN) then
             has_ansi = true
             break
           end
         end
 
-        if options.strip_ansi_codes and has_ansi then
-          is_internal_update[buffer] = true
-          M.buf_set_lines(options, buffer, firstline, new_lastline, false, raw_lines)
-          is_internal_update[buffer] = false
-        else
-          local seed = {}
-          if firstline > 0 then
-            seed = inspector.style_at_end_of_line(buffer, options.namespace, firstline - 1)
-          end
-
-          run_in_chunks(
-            firstline,
-            new_lastline - 1,
-            options.chunk_size,
-            options.async,
-            seed,
-            options.strip_ansi_codes,
-            function(s, e)
-              return vim.api.nvim_buf_get_lines(buffer, s, e + 1, false)
-            end,
-            function(s, items)
-              renderer.render(buffer, options.namespace, s, items, options, false)
-            end
-          )
+        -- Get seed style from previous line
+        local seed = {}
+        if firstline > 0 then
+          seed = inspector.style_at_end_of_line(buffer, options.namespace, firstline - 1)
         end
+
+        -- If stripping is enabled and ANSI codes exist, strip them from buffer first
+        if options.strip_ansi_codes and has_ansi then
+          begin_internal_update(buffer)
+          local stripped_lines = ansi.strip(raw_lines)
+          vim.api.nvim_buf_set_lines(buffer, firstline, new_lastline, false, stripped_lines)
+          end_internal_update(buffer)
+        end
+
+        -- Then process and highlight
+        current_cancel = scheduler.process_array(
+          raw_lines,
+
+          -- process_fn: lex lines
+          function(lines, start_idx, seed_style)
+            local items, last_style = lexer.lex(
+              lines,
+              options.strip_ansi_codes,
+              0, -- offset
+              seed_style
+            )
+            return items, last_style
+          end,
+
+          -- render_fn: apply highlights (wrapped to track internal updates)
+          function(start_idx, items)
+            if not vim.api.nvim_buf_is_valid(buffer) then
+              return
+            end
+
+            begin_internal_update(buffer)
+
+            renderer.render(
+              buffer,
+              options.namespace,
+              firstline + start_idx - 1,
+              items,
+              options,
+              false -- Don't update text (already stripped above)
+            )
+
+            end_internal_update(buffer)
+          end,
+
+          {
+            chunk_size = options.chunk_size,
+            async = options.async,
+            initial_seed = seed,
+            on_complete = function()
+              current_cancel = nil
+            end,
+          }
+        )
       end)
     end,
+
     on_detach = function()
+      if current_cancel then
+        current_cancel()
+      end
       pcall(vim.api.nvim_buf_del_var, buffer, "baleia_on_new_lines")
     end,
   })
+end
+
+function M.buf_set_lines(options, buffer, start, end_, strict_indexing, replacement)
+  -- Mark as internal update
+  begin_internal_update(buffer)
+
+  -- Strip ANSI codes from buffer text FIRST
+  vim.api.nvim_buf_set_lines(
+    buffer,
+    start,
+    end_,
+    strict_indexing,
+    options.strip_ansi_codes and ansi.strip(replacement) or replacement
+  )
+
+  end_internal_update(buffer)
+
+  -- Get seed style from previous line
+  local seed = {}
+  if start > 0 then
+    seed = inspector.style_at_end_of_line(buffer, options.namespace, start - 1)
+  end
+
+  -- Process and highlight the replacement lines
+  scheduler.process_array(
+    replacement,
+
+    -- process_fn: lex lines
+    function(lines, start_idx, seed_style)
+      local items, last_style = lexer.lex(
+        lines,
+        options.strip_ansi_codes,
+        0, -- offset
+        seed_style
+      )
+      return items, last_style
+    end,
+
+    -- render_fn: apply highlights (wrapped to track internal updates)
+    function(start_idx, items)
+      if not vim.api.nvim_buf_is_valid(buffer) then
+        return
+      end
+
+      begin_internal_update(buffer)
+
+      renderer.render(
+        buffer,
+        options.namespace,
+        start + start_idx - 1,
+        items,
+        options,
+        false -- Don't update text (already stripped above)
+      )
+
+      end_internal_update(buffer)
+    end,
+
+    {
+      chunk_size = options.chunk_size,
+      async = options.async,
+      initial_seed = seed,
+    }
+  )
+end
+
+function M.buf_set_text(options, buffer, start_row, start_col, end_row, end_col, replacement)
+  -- Mark as internal update
+  begin_internal_update(buffer)
+
+  -- Strip ANSI codes from buffer text FIRST
+  vim.api.nvim_buf_set_text(
+    buffer,
+    start_row,
+    start_col,
+    end_row,
+    end_col,
+    options.strip_ansi_codes and ansi.strip(replacement) or replacement
+  )
+
+  end_internal_update(buffer)
+
+  -- Get seed style
+  local seed = {}
+  if start_col > 0 then
+    seed = inspector.style_at(buffer, options.namespace, start_row, start_col - 1)
+  elseif start_row > 0 then
+    seed = inspector.style_at_end_of_line(buffer, options.namespace, start_row - 1)
+  end
+
+  if #replacement == 0 then
+    return
+  end
+
+  -- First line has column offset (process synchronously, outside async processor)
+  begin_internal_update(buffer)
+  local first_items, last_style = lexer.lex({ replacement[1] }, options.strip_ansi_codes, start_col, seed)
+  renderer.render(buffer, options.namespace, start_row, first_items, options, false)
+  end_internal_update(buffer)
+
+  -- Remaining lines (if any) have no column offset
+  if #replacement > 1 then
+    local remaining = {}
+    for i = 2, #replacement do
+      table.insert(remaining, replacement[i])
+    end
+
+    scheduler.process_array(
+      remaining,
+
+      -- process_fn: lex lines
+      function(lines, _, seed_style)
+        return lexer.lex(lines, options.strip_ansi_codes, 0, seed_style)
+      end,
+
+      -- render_fn: apply highlights (wrapped to track internal updates)
+      function(start_idx, items)
+        if not vim.api.nvim_buf_is_valid(buffer) then
+          return
+        end
+
+        begin_internal_update(buffer)
+
+        renderer.render(buffer, options.namespace, start_row + start_idx, items, options, false)
+
+        end_internal_update(buffer)
+      end,
+
+      {
+        chunk_size = options.chunk_size,
+        async = options.async,
+        initial_seed = last_style, -- Seed from first line
+      }
+    )
+  end
 end
 
 return M

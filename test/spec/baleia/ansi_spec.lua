@@ -1,9 +1,9 @@
-local new_styles = require("baleia.styles")
+local ansi = require("baleia.ansi")
 
-describe("new_styles", function()
+describe("baleia.ansi", function()
   local function apply(sequence, base)
     local style = base or {}
-    new_styles.apply(sequence, style)
+    ansi.apply(sequence, style)
     return style
   end
 
@@ -174,7 +174,7 @@ describe("new_styles", function()
 
     it("clones correctly", function()
       local s1 = { bold = true, ctermfg = 1 }
-      local s2 = new_styles.clone(s1)
+      local s2 = ansi.clone(s1)
       assert.combinators.match(s1, s2)
 
       s1.italic = true

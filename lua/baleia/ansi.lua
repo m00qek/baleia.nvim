@@ -1,6 +1,4 @@
-M = {}
-
-M.PATTERN = "\x1b%[[:;0-9]*m"
+local M = {}
 
 local function reset()
   return function(style)
@@ -44,7 +42,10 @@ end
 local function rgb()
   return function(iterator)
     local r, g, b = tonumber(iterator()), tonumber(iterator()), tonumber(iterator())
-    return string.format("#%02x%02x%02x", r, g, b)
+
+    if r and g and b then
+      return string.format("#%02x%02x%02x", r, g, b)
+    end
   end
 end
 
@@ -60,6 +61,20 @@ local function iter(ansi_sequence)
     end
   end
   return ansi_sequence:gmatch("[:0-9]+")
+end
+
+M.PATTERN = "\x1b%[[:;0-9]*m"
+
+function M.strip(input)
+  if type(input) == "string" then
+    return (string.gsub(input, M.PATTERN, ""))
+  end
+
+  local stripped = {}
+  for _, line in ipairs(input) do
+    table.insert(stripped, (string.gsub(line, M.PATTERN, "")))
+  end
+  return stripped
 end
 
 function M.apply(ansi_sequence, base_style)
@@ -95,7 +110,6 @@ function M.clone(style)
   for attr, value in pairs(style) do
     style_clone[attr] = value
   end
-
   return style_clone
 end
 
@@ -115,7 +129,7 @@ M.declarations = {
   [27] = unset("reverse"),
 
   [04] = set("underline"),
-  [24] = unset("underline", "undercurl", "underdouble", "underdotted", "underdashed"), -- Clears ALL underlines
+  [24] = unset("underline", "undercurl", "underdouble", "underdotted", "underdashed"), -- clears ALL underlines
 
   [30] = set("ctermfg", xterm(0)),
   [31] = set("ctermfg", xterm(1)),
@@ -181,9 +195,9 @@ M.declarations = {
   ["4:5"] = set("underdashed"),
 }
 
----@alias baleia.styles.Theme { [integer]: string }
+---@alias baleia.ansi.Theme { [integer]: string }
 
----@type baleia.styles.Theme
+---@type baleia.ansi.Theme
 M.NR_16 = {
   [00] = "Black",
   [01] = "DarkBlue",
@@ -203,7 +217,7 @@ M.NR_16 = {
   [15] = "White",
 }
 
----@type baleia.styles.Theme
+---@type baleia.ansi.Theme
 M.NR_8 = {
   [00] = "Black",
   [01] = "DarkRed",

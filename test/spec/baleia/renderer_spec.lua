@@ -1,6 +1,5 @@
 local renderer = require("baleia.renderer")
-local themes = require("baleia.styles")
-local styles = require("baleia.styles")
+local ansi = require("baleia.ansi")
 
 describe("baleia.renderer", function()
   local buffer
@@ -28,7 +27,7 @@ describe("baleia.renderer", function()
     local options = {
       name = "BaleiaColors",
       strip_ansi_codes = true,
-      colors = themes.NR_8,
+      colors = ansi.NR_8,
     }
 
     renderer.render(buffer, namespace, 0, items, options, true)
@@ -74,7 +73,7 @@ describe("baleia.renderer", function()
     local options = {
       name = "BaleiaCacheTest",
       strip_ansi_codes = true,
-      colors = themes.NR_8,
+      colors = ansi.NR_8,
     }
 
     local original_set_hl = vim.api.nvim_set_hl

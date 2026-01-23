@@ -1,12 +1,12 @@
 local lexer = require("baleia.lexer")
-local styles = require("baleia.styles")
+local ansi = require("baleia.ansi")
 local spy = require("luassert.spy")
 
 describe("baleia.lexer performance (cloning)", function()
   local snapshot
 
   before_each(function()
-    snapshot = spy.on(styles, "clone")
+    snapshot = spy.on(ansi, "clone")
   end)
 
   after_each(function()

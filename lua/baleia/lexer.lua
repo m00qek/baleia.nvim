@@ -1,4 +1,4 @@
-local styles = require("baleia.styles")
+local ansi = require("baleia.ansi")
 
 local M = {}
 
@@ -28,7 +28,7 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
   -- State persists across lines.
   -- If Line 1 ends in "Red", Line 2 starts in "Red".
   -- We must clone the seed because we mutate 'state' throughout the process.
-  local state = seed_style and styles.clone(seed_style) or {}
+  local state = seed_style and ansi.clone(seed_style) or {}
 
   for _, line in ipairs(lines) do
     local clean_line_buffer = {}
@@ -43,7 +43,7 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
     local cursor = 1
 
     while cursor <= #line do
-      local start_seq, end_seq = string.find(line, styles.PATTERN, cursor)
+      local start_seq, end_seq = string.find(line, ansi.PATTERN, cursor)
 
       if not start_seq then
         -- No more codes, append remaining text
@@ -71,7 +71,7 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
           table.insert(line_highlights, {
             from = from,
             to = to,
-            style = styles.clone(state),
+            style = ansi.clone(state),
           })
         end
         span_start = current_col
@@ -79,8 +79,8 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
 
       -- Update the state
       local code = string.sub(line, start_seq, end_seq)
-      -- 'styles.apply' mutates 'state' in place
-      styles.apply(code, state)
+      -- 'ansi.apply' mutates 'state' in place
+      ansi.apply(code, state)
 
       -- If NOT stripping, the code adds to the text length
       if not strip_ansi_codes then
@@ -101,7 +101,7 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
         table.insert(line_highlights, {
           from = from,
           to = to,
-          style = styles.clone(state),
+          style = ansi.clone(state),
         })
       end
     end
