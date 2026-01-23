@@ -79,11 +79,17 @@ function M.attributes(style, theme)
 
   -- 3. Handle Special (Underline color)
   if attrs.special and not attrs.ctermsp then
-    -- xterm.lua doesn't explicitly support converting special to ctermsp in `from_rgb` context easily
-    -- but ctermsp is usually just a color index.
-    attrs.ctermsp = hex_to_cterm(attrs.special)
+    -- Neovim doesn't use ctermsp, so we don't need to generate it from special
+    attrs.ctermsp = nil
   elseif attrs.ctermsp and not attrs.special then
-    attrs.special = cterm_to_hex(attrs.ctermsp)
+    if theme and theme[attrs.ctermsp] then
+      attrs.special = theme[attrs.ctermsp]
+    else
+      attrs.special = cterm_to_hex(attrs.ctermsp)
+    end
+    attrs.ctermsp = nil
+  else
+    attrs.ctermsp = nil
   end
 
   return attrs

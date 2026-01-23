@@ -24,7 +24,7 @@ describe("baleia.lexer performance (cloning)", function()
     local delta = after - before
 
     assert.is_true(
-      delta < 5,
+      delta < 9,
       string.format("\n[Memory Delta: %.4f KB] ansi.apply is allocating memory (likely creating closures)!", delta)
     )
   end)

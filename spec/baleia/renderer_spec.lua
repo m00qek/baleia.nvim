@@ -149,16 +149,16 @@ describe("baleia.renderer", function()
     end)
 
     it("hydrates special color (ctermsp <-> special)", function()
-      -- special -> ctermsp
+      -- special -> ctermsp is removed
       local s1 = { special = "#ff0000" }
       local h1 = renderer.attributes(s1)
-      assert.are.equal(196, h1.ctermsp)
+      assert.is_nil(h1.ctermsp)
       assert.are.equal("#ff0000", h1.special)
 
-      -- ctermsp -> special
+      -- ctermsp -> special, then ctermsp is removed
       local s2 = { ctermsp = 9 }
       local h2 = renderer.attributes(s2)
-      assert.are.equal(9, h2.ctermsp)
+      assert.is_nil(h2.ctermsp)
       assert.are.equal("#ff0000", h2.special)
     end)
 
