@@ -50,6 +50,12 @@ function baleia.setup(user_options)
     automatically = with_options(opts, api.automatically),
     buf_set_lines = with_options(opts, api.buf_set_lines),
     buf_set_text = with_options(opts, api.buf_set_text),
+    -- just for retro compatibility:
+    logger = {
+      show = function()
+        vim.notify("Please use :messages to check logs", vim.log.levels.WARN)
+      end,
+    },
   }
 end
 
