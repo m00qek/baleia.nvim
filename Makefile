@@ -20,5 +20,11 @@ watch:
 	$(SETUP_ENV) && find lua spec -name "*.lua" | entr -c sh -c "vusted $(SPEC) || true"
 
 deps:
-	$(LUAROCKS) install vusted matcher_combinators
-	$(LUAROCKS) install --only-deps baleia-scm-1.rockspec
+	$(LUAROCKS) install vusted 
+	$(LUAROCKS) install matcher_combinators
+	$(LUAROCKS) install luacheck
+	cargo install stylua
+
+lint:
+	$(SETUP_ENV) && luacheck .
+	$(SETUP_ENV) && stylua --check .

@@ -157,7 +157,7 @@ function M.automatically(options, buffer)
           raw_lines,
 
           -- process_fn: lex lines
-          function(lines, start_idx, seed_style)
+          function(lines, _, seed_style)
             local items, last_style = lexer.lex(
               lines,
               options.strip_ansi_codes,
@@ -242,7 +242,7 @@ function M.buf_set_lines(options, buffer, start, end_, strict_indexing, replacem
     replacement,
 
     -- process_fn: lex lines
-    function(lines, start_idx, seed_style)
+    function(lines, _, seed_style)
       local items, last_style = lexer.lex(
         lines,
         options.strip_ansi_codes,

@@ -1,5 +1,5 @@
-local lexer = require("baleia.lexer")
 local ansi = require("baleia.ansi")
+local lexer = require("baleia.lexer")
 local spy = require("luassert.spy")
 
 describe("baleia.lexer performance (cloning)", function()
@@ -55,18 +55,18 @@ describe("baleia.lexer performance (cloning)", function()
     -- 0 clones for highlights (since text just continues the seed state, but we only clone ON highlight insertion)
     -- Wait, if we have a seed, "plain text" IS a highlight because `is_active(state)` is true.
     -- So it should be 1 (seed) + 1 (highlight) = 2.
-    
+
     assert.spy(snapshot).was_called(2)
   end)
-  
+
   it("clones for text following a code, even if not changing visual state (edge case)", function()
-     -- \27[31mRed\27[31mRed again
-     -- Red -> "Red" (Clone 1)
-     -- Red -> "Red again" (Clone 2) - we don't optimize out redundant codes that split text
-     local lines = { "\27[31mRed\27[31mRed again" }
-     lexer.lex(lines, true, 0)
-     
-     assert.spy(snapshot).was_called(2)
+    -- \27[31mRed\27[31mRed again
+    -- Red -> "Red" (Clone 1)
+    -- Red -> "Red again" (Clone 2) - we don't optimize out redundant codes that split text
+    local lines = { "\27[31mRed\27[31mRed again" }
+    lexer.lex(lines, true, 0)
+
+    assert.spy(snapshot).was_called(2)
   end)
 
   it("merges codes across lines with a single clone", function()

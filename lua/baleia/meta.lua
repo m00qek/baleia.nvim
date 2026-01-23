@@ -1,4 +1,6 @@
 ---@meta _
+-- luacheck: ignore 212
+
 error("Cannot require a meta file")
 
 ---@class baleia.UserOptions

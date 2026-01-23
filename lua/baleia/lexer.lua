@@ -114,4 +114,3 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
 end
 
 return M
-
