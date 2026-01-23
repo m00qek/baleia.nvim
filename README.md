@@ -1,12 +1,13 @@
 # baleia.nvim
 
-![Screenshot](https://via.placeholder.com/800x400?text=Reviewer+Please+Insert+Screenshot+Here)
-
 [![Integration][integration-badge]][integration-runs]
 
 Colorize text with ANSI escape sequences (8, 16, 256 or TrueColor).
 
 **Requirements**: Neovim 0.9.0 or higher.
+
+
+<img width="1213" height="745" alt="image" src="https://github.com/user-attachments/assets/3d581588-ecb0-48e4-b45c-533cfd06e3a9" />
 
 ## Install
 
@@ -80,7 +81,7 @@ Pass these options to `require("baleia").setup({...})`:
 | name             | "BaleiaColors"  | prefix used to name highlight groups                      |
 | strip_ansi_codes | true            | remove ANSI color codes from text                         |
 | line_starts_at   | 1 (one-indexed) | at which column start colorizing                          |
-| colors           | [NR_8][nr_8]    | table mapping 256 color codes to vim colors               |
+| colors           | [NR_8](lua/baleia/ansi.lua#L262) | table mapping 256 color codes to vim colors               |
 | async            | true            | highlight asynchronously                                  |
 | chunk_size       | 500             | number of lines to process per loop iteration (async)     |
 
