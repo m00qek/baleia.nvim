@@ -1,66 +1,70 @@
 local M = {}
 
+local function scan(str, pos)
+  local start_idx, end_idx = string.find(str, "[:0-9]+", pos)
+  if not start_idx then
+    return nil, pos
+  end
+  return string.sub(str, start_idx, end_idx), end_idx + 1
+end
+
 local function reset()
-  return function(style)
+  return function(style, _, pos)
     for attr in pairs(style) do
       style[attr] = nil
     end
+    return pos
   end
 end
 
 local function unset(...)
   local attrs = { ... }
-  return function(style)
+  return function(style, _, pos)
     for _, attr in ipairs(attrs) do
       style[attr] = nil
     end
+    return pos
   end
 end
 
 local function set(attr, fn)
   if not fn then
-    return function(style)
+    return function(style, _, pos)
       style[attr] = true
+      return pos
     end
   end
 
-  return function(style, iterator)
-    style[attr] = fn(iterator)
+  return function(style, str, pos)
+    local val, new_pos = fn(str, pos)
+    style[attr] = val
+    return new_pos
   end
 end
 
 local function xterm(code)
-  return function(iterator)
+  return function(str, pos)
     if code then
-      return code
+      return code, pos
     end
-    local val = iterator()
-    return tonumber(val)
+    local val, new_pos = scan(str, pos)
+    return tonumber(val), new_pos
   end
 end
 
 local function rgb()
-  return function(iterator)
-    local r, g, b = tonumber(iterator()), tonumber(iterator()), tonumber(iterator())
+  return function(str, pos)
+    local r_val, pos = scan(str, pos)
+    local g_val, pos = scan(str, pos)
+    local b_val, pos = scan(str, pos)
+
+    local r, g, b = tonumber(r_val), tonumber(g_val), tonumber(b_val)
 
     if r and g and b then
-      return string.format("#%02x%02x%02x", r, g, b)
+      return string.format("#%02x%02x%02x", r, g, b), pos
     end
+    return nil, pos
   end
-end
-
-local function iter(ansi_sequence)
-  if not ansi_sequence:find("[0-9]") then
-    local done = false
-    return function()
-      if not done then
-        done = true
-        return "0"
-      end
-      return nil
-    end
-  end
-  return ansi_sequence:gmatch("[:0-9]+")
 end
 
 M.PATTERN = "\x1b%[[:;0-9]*m"
@@ -79,27 +83,41 @@ end
 
 function M.apply(ansi_sequence, base_style)
   local style = base_style or {}
+
+  -- Optimization: If no digits, it's a clear/reset sequence (e.g. \x1b[m)
+  if not string.find(ansi_sequence, "[0-9]") then
+    -- 0 is the reset code
+    M.declarations[0](style, ansi_sequence, 1)
+    return style
+  end
+
   local root = M.declarations
   local node = root
+  local cursor = 1
 
-  local iterator = iter(ansi_sequence)
-  local token = iterator()
+  while true do
+    local token, next_cursor = scan(ansi_sequence, cursor)
+    if not token then
+      break
+    end
 
-  while token do
+    -- Advance cursor past this token
+    cursor = next_cursor
+
     local code = tonumber(token) or token
     local next_node = node[code]
 
     if next_node then
       node = next_node
       if type(node) == "function" then
-        node(style, iterator)
+        -- Execute node. It may consume more tokens from the string.
+        -- We pass the CURRENT cursor. The node returns the NEW cursor.
+        cursor = node(style, ansi_sequence, cursor)
         node = root
       end
     else
       node = root
     end
-
-    token = iterator()
   end
 
   return style
@@ -129,7 +147,7 @@ M.declarations = {
   [27] = unset("reverse"),
 
   [04] = set("underline"),
-  [24] = unset("underline", "undercurl", "underdouble", "underdotted", "underdashed"), -- clears ALL underlines
+  [24] = unset("underline", "undercurl", "underdouble", "underdotted", "underdashed"),
 
   [30] = set("ctermfg", xterm(0)),
   [31] = set("ctermfg", xterm(1)),
@@ -159,8 +177,6 @@ M.declarations = {
   },
   [49] = unset("ctermbg", "background"),
 
-  -- bright colors below (not ANSI but implemented by aixterm)
-  -- see https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
   [90] = set("ctermfg", xterm(8)),
   [91] = set("ctermfg", xterm(9)),
   [92] = set("ctermfg", xterm(10)),
@@ -179,8 +195,6 @@ M.declarations = {
   [106] = set("ctermbg", xterm(14)),
   [107] = set("ctermbg", xterm(15)),
 
-  -- these are not ANSI but part of a common kitty extension for underlines
-  -- see https://sw.kovidgoyal.net/kitty/underlines/
   [58] = {
     [2] = set("special", rgb()),
     [5] = set("ctermsp", xterm()),
@@ -195,9 +209,6 @@ M.declarations = {
   ["4:5"] = set("underdashed"),
 }
 
----@alias baleia.ansi.Theme { [integer]: string }
-
----@type baleia.ansi.Theme
 M.NR_16 = {
   [00] = "Black",
   [01] = "DarkBlue",
@@ -217,7 +228,6 @@ M.NR_16 = {
   [15] = "White",
 }
 
----@type baleia.ansi.Theme
 M.NR_8 = {
   [00] = "Black",
   [01] = "DarkRed",
