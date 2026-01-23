@@ -2,9 +2,9 @@ name: Integration
 
 on:
   push:
-    branches: [ main, alpha ]
+    branches: [main, alpha]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -13,54 +13,58 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        nvim_version: [v0.9.0, v0.10.0, v0.10.1, v0.10.2, v0.10.3]
+        nvim_version: [v0.9.0, v0.9.5, v0.10.0, v0.10.4, v0.11.0, v0.11.5]
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup Neovim
-      uses: rhysd/action-setup-vim@v1
-      with:
-        neovim: true
-        version: ${{ matrix.nvim_version }}
+      - name: Setup Neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: ${{ matrix.nvim_version }}
 
-    - name: Setup Lua
-      uses: leafo/gh-actions-lua@v10
-      with:
-        luaVersion: "5.1.5"
+      - name: Setup Lua
+        uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "5.1.5"
 
-    - name: Setup LuaRocks
-      uses: leafo/gh-actions-luarocks@v4
+      - name: Setup LuaRocks
+        uses: leafo/gh-actions-luarocks@v4
 
-    - name: Install dependencies
-      run: |
-        luarocks install vusted
-        luarocks install matcher_combinators
+      - name: Install dependencies
+        run: |
+          luarocks install vusted
+          luarocks install matcher_combinators
 
-    - name: Run tests
-      run: make test
+      - name: Run tests
+        run: make test
 
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup Lua
-      uses: leafo/gh-actions-lua@v10
-      with:
-        luaVersion: "5.1.5"
+      - name: Setup Lua
+        uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "5.1.5"
 
-    - name: Setup LuaRocks
-      uses: leafo/gh-actions-luarocks@v4
+      - name: Setup LuaRocks
+        uses: leafo/gh-actions-luarocks@v4
 
-    - name: Setup Stylua
-      uses: mvdan/github-actions-stylua@v3
+      - name: Setup Stylua
+        uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
 
-    - name: Install Luacheck
-      run: luarocks install luacheck
+      - name: Install Luacheck
+        run: luarocks install luacheck
 
-    - name: Run Linters
-      run: make lint
+      - name: Run Linters
+        run: make lint
+
