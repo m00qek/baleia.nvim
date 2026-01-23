@@ -30,26 +30,21 @@ describe("baleia.scheduler", function()
       local processed = {}
       local rendered = {}
 
-      scheduler.process_array(
-        items,
-        function(chunk, start_idx, seed)
-          -- seed acts as accumulator
-          local sum = seed or 0
-          for _, v in ipairs(chunk) do
-            table.insert(processed, v)
-            sum = sum + v
-          end
-          return sum, sum
-        end,
-        function(start_idx, result)
-          table.insert(rendered, { idx = start_idx, res = result })
-        end,
-        {
-          async = false,
-          chunk_size = 2,
-          initial_seed = 0,
-        }
-      )
+      scheduler.process_array(items, function(chunk, start_idx, seed)
+        -- seed acts as accumulator
+        local sum = seed or 0
+        for _, v in ipairs(chunk) do
+          table.insert(processed, v)
+          sum = sum + v
+        end
+        return sum, sum
+      end, function(start_idx, result)
+        table.insert(rendered, { idx = start_idx, res = result })
+      end, {
+        async = false,
+        chunk_size = 2,
+        initial_seed = 0,
+      })
 
       -- Since async=false, everything should happen immediately without flushing schedule
       assert.combinators.match({ 1, 2, 3, 4, 5 }, processed)
@@ -64,20 +59,15 @@ describe("baleia.scheduler", function()
       local items = { 1, 2, 3, 4, 5 }
       local processed = {}
 
-      scheduler.process_array(
-        items,
-        function(chunk)
-          for _, v in ipairs(chunk) do
-            table.insert(processed, v)
-          end
-          return true
-        end,
-        function() end,
-        {
-          async = true,
-          chunk_size = 2,
-        }
-      )
+      scheduler.process_array(items, function(chunk)
+        for _, v in ipairs(chunk) do
+          table.insert(processed, v)
+        end
+        return true
+      end, function() end, {
+        async = true,
+        chunk_size = 2,
+      })
 
       -- First chunk runs synchronously
       assert.combinators.match({ 1, 2 }, processed)
@@ -102,20 +92,15 @@ describe("baleia.scheduler", function()
       local items = { 1, 2, 3, 4, 5, 6 }
       local processed = {}
 
-      local cancel = scheduler.process_array(
-        items,
-        function(chunk)
-          for _, v in ipairs(chunk) do
-            table.insert(processed, v)
-          end
-          return true
-        end,
-        function() end,
-        {
-          async = true,
-          chunk_size = 2,
-        }
-      )
+      local cancel = scheduler.process_array(items, function(chunk)
+        for _, v in ipairs(chunk) do
+          table.insert(processed, v)
+        end
+        return true
+      end, function() end, {
+        async = true,
+        chunk_size = 2,
+      })
 
       -- Chunk 1 runs immediately
       assert.combinators.match({ 1, 2 }, processed)
@@ -133,18 +118,15 @@ describe("baleia.scheduler", function()
       local items = { 1 }
       local completed = false
 
-      scheduler.process_array(
-        items,
-        function() return true end,
-        function() end,
-        {
-          async = true,
-          chunk_size = 1,
-          on_complete = function()
-            completed = true
-          end,
-        }
-      )
+      scheduler.process_array(items, function()
+        return true
+      end, function() end, {
+        async = true,
+        chunk_size = 1,
+        on_complete = function()
+          completed = true
+        end,
+      })
 
       assert.is_false(completed)
       run_next_callback() -- Schedule the on_complete call (chunk processing)
@@ -156,20 +138,15 @@ describe("baleia.scheduler", function()
       local items = { 1 }
       local error_msg = nil
 
-      scheduler.process_array(
-        items,
-        function()
-          error("Boom")
+      scheduler.process_array(items, function()
+        error("Boom")
+      end, function() end, {
+        async = false,
+        chunk_size = 1,
+        on_error = function(err)
+          error_msg = err
         end,
-        function() end,
-        {
-          async = false,
-          chunk_size = 1,
-          on_error = function(err)
-            error_msg = err
-          end,
-        }
-      )
+      })
 
       assert.truthy(string.match(error_msg, "Processing failed.*Boom"))
     end)
