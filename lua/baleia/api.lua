@@ -148,7 +148,15 @@ function M.automatically(options, buffer)
         if options.strip_ansi_codes and has_ansi then
           begin_internal_update(buffer)
           local stripped_lines = ansi.strip(raw_lines)
+
+          local modifiable = vim.api.nvim_get_option_value('modifiable', { buf = buffer })
+          if not modifiable then
+            vim.api.nvim_set_option_value('modifiable', true, { buf = buffer })
+          end
           vim.api.nvim_buf_set_lines(buffer, firstline, new_lastline, false, stripped_lines)
+          if not modifiable then
+            vim.api.nvim_set_option_value('modifiable', false, { buf = buffer })
+          end
           end_internal_update(buffer)
         end
 

@@ -64,10 +64,7 @@ vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
 vim.api.nvim_create_autocmd({ "BufReadPost" }, {
   pattern = "quickfix",
   callback = function()
-    vim.api.nvim_set_option_value("modifiable", true, { buf = buffer })
     vim.g.baleia.automatically(vim.api.nvim_get_current_buf())
-    vim.api.nvim_set_option_value("modified", false, { buf = buffer })
-    vim.api.nvim_set_option_value("modifiable", false, { buf = buffer })
   end,
 })
 ```
