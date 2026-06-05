@@ -2,6 +2,7 @@ local ansi = require("baleia.ansi")
 local inspector = require("baleia.inspector")
 local lexer = require("baleia.lexer")
 local renderer = require("baleia.renderer")
+local scanner = require("baleia.scanner")
 local scheduler = require("baleia.scheduler")
 
 local M = {}
@@ -25,68 +26,99 @@ local function is_internal_update(buffer)
 end
 
 ---Parses the contents of {buffer} and colorizes them respecting any ANSI
----color codes present in the text.
+---color codes present in the text. Prioritizes the visible window by
+---processing the block containing the viewport first.
 ---@param options baleia.Options
 ---@param buffer integer Buffer handle
 function M.once(options, buffer)
-  -- Cancel any existing processing for this buffer
   if active_cancels[buffer] then
     active_cancels[buffer]()
     active_cancels[buffer] = nil
   end
 
-  -- mark as internal update before clearing namespace
   begin_internal_update(buffer)
+  vim.api.nvim_buf_clear_namespace(buffer, options.namespace, 0, -1)
 
-  local cancel = scheduler.process_buffer(
-    buffer,
-    options.namespace,
+  local total = vim.api.nvim_buf_line_count(buffer)
+  local w0 = math.max(0, vim.fn.line("w0") - 1) -- first visible line, 0-indexed
+  local split = scanner.find_split(buffer, w0)
 
-    -- process_fn: lex lines
-    function(lines, _, seed)
-      local items, last_style = lexer.lex(
-        lines,
-        options.strip_ansi_codes,
-        options.line_starts_at - 1,
-        seed
-      )
-      return items, last_style
-    end,
+  local all_cancels = {}
+  local pending = 0
 
-    -- render_fn: apply highlights (wrapped to track internal updates)
-    function(start_row, items)
+  local function check_complete()
+    if pending == 0 then
+      active_cancels[buffer] = nil
+      end_internal_update(buffer)
+    end
+  end
+
+  local function make_process_fn()
+    return function(lines, _, seed)
+      return lexer.lex(lines, options.strip_ansi_codes, options.line_starts_at - 1, seed)
+    end
+  end
+
+  local function make_render_fn(start_row)
+    return function(start_idx, items)
       begin_internal_update(buffer)
-
       renderer.render(
         buffer,
         options.namespace,
-        start_row - 1, -- Convert to 0-indexed
+        start_row + start_idx - 1,
         items,
         options,
-        options.strip_ansi_codes -- Update text if stripping
+        options.strip_ansi_codes
       )
-
       end_internal_update(buffer)
+    end
+  end
+
+  local function submit_block(start_row, end_row)
+    if start_row >= end_row then
+      return
+    end
+    pending = pending + 1
+    local cancel = scheduler.process_buffer_range(
+      buffer,
+      start_row,
+      end_row,
+      make_process_fn(),
+      make_render_fn(start_row),
+      {
+        chunk_size = options.chunk_size,
+        async = options.async,
+        initial_seed = {},
+        on_complete = function()
+          pending = pending - 1
+          check_complete()
+        end,
+        on_error = function(err)
+          vim.notify("Baleia: " .. err, vim.log.levels.WARN)
+          pending = pending - 1
+          check_complete()
+        end,
+      }
+    )
+    table.insert(all_cancels, cancel)
+  end
+
+  submit_block(split, total) -- Block A: viewport region + below, first
+  submit_block(0, split) -- Block B: above viewport, second
+
+  active_cancels[buffer] = function()
+    for _, cancel in ipairs(all_cancels) do
+      cancel()
+    end
+  end
+
+  vim.api.nvim_buf_attach(buffer, false, {
+    on_detach = function()
+      if active_cancels[buffer] then
+        active_cancels[buffer]()
+      end
     end,
-
-    -- Options
-    {
-      chunk_size = options.chunk_size,
-      async = options.async,
-      initial_seed = {},
-      on_complete = function()
-        active_cancels[buffer] = nil
-        end_internal_update(buffer) -- End the initial internal update
-      end,
-      on_error = function(err)
-        vim.notify("Baleia: " .. err, vim.log.levels.WARN)
-        active_cancels[buffer] = nil
-        end_internal_update(buffer) -- End even on error
-      end,
-    }
-  )
-
-  active_cancels[buffer] = cancel
+  })
 end
 
 ---Every time a new line is added to {buffer}, parses the new contents and

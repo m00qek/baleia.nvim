@@ -29,6 +29,49 @@ describe("baleia", function()
       assert.combinators.match({ "Line 1", "Line 2" }, lines)
     end)
 
+    it("produces correct highlights across a reset boundary split", function()
+      local b = baleia.setup({ async = false })
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, {
+        "\x1b[31mred\x1b[0m",  -- split boundary: last escape is reset
+        "\x1b[32mgreen",
+      })
+
+      b.once(buffer)
+
+      local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+      assert.combinators.match({ "red", "green" }, lines)
+      local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, { details = true })
+      assert.truthy(#marks >= 2)
+    end)
+
+    it("works correctly when no reset exists (single block, same as before)", function()
+      local b = baleia.setup({ async = false })
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, {
+        "\x1b[31mred",
+        "still red",
+      })
+
+      b.once(buffer)
+
+      local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+      assert.combinators.match({ "red", "still red" }, lines)
+      local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, { details = true })
+      assert.truthy(#marks >= 2)
+    end)
+
+    it("strips all lines across both blocks when strip_ansi_codes is true", function()
+      local b = baleia.setup({ async = false, strip_ansi_codes = true })
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, {
+        "above\x1b[31mred\x1b[0m",  -- split boundary
+        "\x1b[32mbelow",
+      })
+
+      b.once(buffer)
+
+      local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+      assert.combinators.match({ "abovered", "below" }, lines)
+    end)
+
     it("respects line_starts_at: highlights begin at the configured column", function()
       -- line_starts_at = 3 means skip the first 2 bytes (e.g. Conjure's "; " prefix)
       local b = baleia.setup({ async = false, line_starts_at = 3 })

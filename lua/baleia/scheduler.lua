@@ -164,6 +164,34 @@ function M.process_buffer(buffer, namespace, process_fn, render_fn, opts)
   return cancel
 end
 
+---Process a specific line range of a buffer (does not clear namespace)
+---@param buffer integer
+---@param start_row integer First line, 0-indexed inclusive
+---@param end_row integer Last line, 0-indexed exclusive
+---@param process_fn fun(lines: string[], start_row: integer, seed: any): result: any, next_seed: any
+---@param render_fn fun(start_row: integer, result: any)
+---@param opts table
+---@return fun() cancel_fn
+function M.process_buffer_range(buffer, start_row, end_row, process_fn, render_fn, opts)
+  if not vim.api.nvim_buf_is_valid(buffer) then
+    if opts.on_error then
+      opts.on_error("Buffer not valid")
+    end
+    return function() end
+  end
+
+  local total_lines = end_row - start_row
+
+  local function fetch_fn(start_idx, end_idx)
+    if not vim.api.nvim_buf_is_valid(buffer) then
+      error("Buffer no longer valid")
+    end
+    return vim.api.nvim_buf_get_lines(buffer, start_row + start_idx - 1, start_row + end_idx, false)
+  end
+
+  return M.process(total_lines, fetch_fn, process_fn, render_fn, opts)
+end
+
 ---Process in-memory array (convenience wrapper)
 ---@param items any[]
 ---@param process_fn fun(chunk: any[], start_idx: integer, seed: any): result: any, next_seed: any
