@@ -41,6 +41,7 @@ local function closest_grey(original_color)
   if average > 238 then
     code = 23
   end
+  code = math.max(0, code)
 
   local grey = 8 + 10 * code
   return code + 232, { red = grey, green = grey, blue = grey }
