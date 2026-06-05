@@ -28,6 +28,20 @@ describe("baleia", function()
       local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
       assert.combinators.match({ "Line 1", "Line 2" }, lines)
     end)
+
+    it("respects line_starts_at: highlights begin at the configured column", function()
+      -- line_starts_at = 3 means skip the first 2 bytes (e.g. Conjure's "; " prefix)
+      local b = baleia.setup({ async = false, line_starts_at = 3 })
+      -- "xx" is the 2-byte prefix that should not be highlighted
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "xx\x1b[31mHello" })
+
+      b.once(buffer)
+
+      local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, { details = true })
+      assert.truthy(#marks > 0)
+      -- The highlight must start at column 2 (0-indexed), not 0
+      assert.equals(2, marks[1][3])
+    end)
   end)
 
   describe("buf_set_lines", function()

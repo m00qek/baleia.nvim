@@ -47,7 +47,7 @@ function M.once(options, buffer)
       local items, last_style = lexer.lex(
         lines,
         options.strip_ansi_codes,
-        0, -- offset
+        options.line_starts_at - 1,
         seed
       )
       return items, last_style
@@ -169,7 +169,7 @@ function M.automatically(options, buffer)
             local items, last_style = lexer.lex(
               lines,
               options.strip_ansi_codes,
-              0, -- offset
+              options.line_starts_at - 1,
               seed_style
             )
             return items, last_style
@@ -254,7 +254,7 @@ function M.buf_set_lines(options, buffer, start, end_, strict_indexing, replacem
       local items, last_style = lexer.lex(
         lines,
         options.strip_ansi_codes,
-        0, -- offset
+        options.line_starts_at - 1,
         seed_style
       )
       return items, last_style
