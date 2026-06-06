@@ -15,6 +15,11 @@ local SENTINEL = {
 }
 
 local function is_reset_sequence(seq)
+  -- A full reset is \x1b[m or \x1b[0...0m. Any non-zero digit means at least
+  -- one attribute is being set, so skip the expensive clone+apply path.
+  if seq:find("[1-9]") then
+    return false
+  end
   local style = ansi.clone(SENTINEL)
   ansi.apply(seq, style)
   return next(style) == nil
