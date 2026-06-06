@@ -205,5 +205,44 @@ describe("baleia.scheduler", function()
 
       assert.truthy(string.match(error_msg, "Processing failed.*Boom"))
     end)
+
+    it("calls on_error when render_fn throws", function()
+      local items = { 1 }
+      local error_msg = nil
+
+      scheduler.process_array(items, function()
+        return true
+      end, function()
+        error("RenderBoom")
+      end, {
+        async = false,
+        chunk_size = 1,
+        on_error = function(err)
+          error_msg = err
+        end,
+      })
+
+      assert.truthy(string.match(error_msg, "Render failed.*RenderBoom"))
+    end)
+
+    it("does not call on_complete when render_fn throws", function()
+      local items = { 1 }
+      local completed = false
+
+      scheduler.process_array(items, function()
+        return true
+      end, function()
+        error("RenderBoom")
+      end, {
+        async = false,
+        chunk_size = 1,
+        on_complete = function()
+          completed = true
+        end,
+        on_error = function() end,
+      })
+
+      assert.is_false(completed)
+    end)
   end)
 end)
