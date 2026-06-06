@@ -216,15 +216,18 @@ describe("baleia", function()
   end)
 
   describe("two-block split", function()
+    -- _w0 injects a fake first-visible-line so tests can exercise split>0
+    -- without needing a real Neovim window. In production this is always derived
+    -- from vim.fn.line("w0") - 1.
+
     it("highlights lines in both Block A and Block B when split > 0", function()
-      -- Simulate w0=2: the first visible line is index 2.
-      -- find_split scans backward from 2 and finds the reset at line 1.
+      -- w0=2: find_split scans backward from line 2 and finds the reset at line 1.
       -- Block A = [1, 3), Block B = [0, 1).
       local b = baleia.setup({ async = false, strip_ansi_codes = true, _w0 = 2 })
       vim.api.nvim_buf_set_lines(buffer, 0, -1, false, {
-        "\x1b[34mblue", -- line 0: in Block B
-        "\x1b[31mred\x1b[0m", -- line 1: reset boundary → split point
-        "\x1b[32mgreen", -- line 2: in Block A (viewport)
+        "\x1b[34mblue", -- line 0: Block B
+        "\x1b[31mred\x1b[0m", -- line 1: reset boundary (split point)
+        "\x1b[32mgreen", -- line 2: Block A (viewport)
       })
 
       b.once(buffer)
@@ -232,26 +235,26 @@ describe("baleia", function()
       local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
       assert.combinators.match({ "blue", "red", "green" }, lines)
 
-      -- All three lines should have extmarks
+      -- All three lines must have extmarks: Block A (lines 1-2) and Block B (line 0)
       local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, { details = true })
       assert.truthy(#marks >= 3, "expected highlights on all three lines, got " .. #marks)
     end)
 
-    it("Block A initial seed is empty (reset boundary guarantees no carry-in)", function()
-      -- Line 0 sets bold+red with no reset. Line 1 resets at end (split point).
-      -- Block A starts at line 1 with seed={}; it should NOT carry bold from line 0.
+    it("Block A seed is empty at a reset boundary so no style leaks from Block B", function()
+      -- Line 0 sets bold+red with no reset. Line 1 resets at end → split point (w0=2).
+      -- Block A starts at line 1 with seed={}; line 2 should NOT inherit bold from line 0.
       local b = baleia.setup({ async = false, strip_ansi_codes = false, _w0 = 2 })
       vim.api.nvim_buf_set_lines(buffer, 0, -1, false, {
-        "\x1b[1;31mbold-red", -- line 0: bold+red, no reset
-        "\x1b[0m", -- line 1: reset (split boundary)
-        "plain", -- line 2: no ANSI; Block A seed={}, so no inherited bold
+        "\x1b[1;31mbold-red", -- line 0: bold+red, no reset (Block B)
+        "\x1b[0m", -- line 1: reset (split point, Block A starts here with seed={})
+        "plain", -- line 2: no ANSI codes; receives no seed from Block B
       })
 
       b.once(buffer)
 
-      -- Row 2 should have no extmarks because Block A seed is {} and "plain" has no codes
+      -- Row 2 has no ANSI codes and Block A seed is {}, so no extmarks expected
       local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, { 2, 0 }, { 2, -1 }, { details = true })
-      assert.equals(0, #marks, "line 2 should have no inherited style from Block B")
+      assert.equals(0, #marks, "line 2 must not inherit bold+red from Block B")
     end)
   end)
 

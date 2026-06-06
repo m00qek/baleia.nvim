@@ -44,6 +44,7 @@ function baleia.setup(user_options)
   opts.chunk_size = either(user_options.chunk_size, 500)
   opts.highlight_cache = {}
   opts.name = name
+  opts._w0 = user_options._w0 -- for tests only; nil in production
 
   return {
     once = with_options(opts, api.once),
