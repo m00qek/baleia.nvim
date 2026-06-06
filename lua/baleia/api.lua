@@ -41,6 +41,9 @@ function M.once(options, buffer)
   if active_cancels[buffer] then
     active_cancels[buffer]()
     active_cancels[buffer] = nil
+    -- Balance the begin_internal_update that the cancelled once() opened but
+    -- whose on_complete (and therefore end_internal_update) will never fire.
+    end_internal_update(buffer)
   end
 
   begin_internal_update(buffer)
@@ -107,11 +110,18 @@ function M.once(options, buffer)
 
   submit_block(split, total) -- Block A: viewport region + below, first
   submit_block(0, split) -- Block B: above viewport, second
-  check_complete() -- handles empty buffer or split == total (no blocks submitted)
+  -- Fallback: if no blocks were submitted (empty buffer or split==total), this
+  -- is the only place end_internal_update fires for the outer begin above.
+  check_complete()
 
-  active_cancels[buffer] = function()
-    for _, cancel in ipairs(all_cancels) do
-      cancel()
+  -- Only register a cancel function while async work is genuinely in-flight.
+  -- For synchronous runs (pending==0 here), check_complete already closed the
+  -- outer begin_internal_update and there is nothing left to cancel.
+  if pending > 0 then
+    active_cancels[buffer] = function()
+      for _, cancel in ipairs(all_cancels) do
+        cancel()
+      end
     end
   end
 

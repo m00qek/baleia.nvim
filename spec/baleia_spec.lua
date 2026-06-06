@@ -342,5 +342,32 @@ describe("baleia", function()
       local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
       assert.combinators.match({ "Only" }, lines)
     end)
+
+    it("automatically() still fires after cancelling an in-flight async once()", function()
+      -- Before the fix, the begin_internal_update from the cancelled first
+      -- once() was never balanced, leaving the counter permanently > 0 and
+      -- silently suppressing all future automatically() callbacks.
+      local b = baleia.setup({ async = true, chunk_size = 1 })
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "\x1b[31mFirst" })
+
+      b.once(buffer)  -- counter 0→1, queues async chunks
+      b.once(buffer)  -- cancels first; counter must be rebalanced to 1, not 2
+
+      -- Wait for the second run to complete.
+      vim.wait(300, function()
+        return #vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, {}) > 0
+      end)
+
+      b.automatically(buffer)
+      vim.api.nvim_buf_clear_namespace(buffer, -1, 0, -1)  -- clear once() marks
+
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "\x1b[32mGreen" })
+      vim.wait(300, function()
+        return #vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, {}) > 0
+      end)
+
+      local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, {})
+      assert.truthy(#marks > 0, "automatically() must still fire after once() cancellation")
+    end)
   end)
 end)
