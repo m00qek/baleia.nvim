@@ -24,6 +24,61 @@ describe("baleia.scheduler", function()
     end
   end
 
+  describe("process_buffer_range", function()
+    local buffer
+
+    before_each(function()
+      buffer = vim.api.nvim_create_buf(false, true)
+    end)
+
+    it("processes only the specified line range", function()
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "line0", "line1", "line2", "line3" })
+      local processed = {}
+
+      scheduler.process_buffer_range(buffer, 1, 3, function(lines, _, seed)
+        for _, l in ipairs(lines) do
+          table.insert(processed, l)
+        end
+        return {}, {}
+      end, function() end, { async = false, chunk_size = 10 })
+
+      assert.combinators.match({ "line1", "line2" }, processed)
+    end)
+
+    it("calls on_error when buffer is invalid", function()
+      local err = nil
+      scheduler.process_buffer_range(9999, 0, 1, function() end, function() end, {
+        async = false,
+        chunk_size = 10,
+        on_error = function(e) err = e end,
+      })
+      assert.truthy(err)
+    end)
+
+    it("calls on_complete for an empty range", function()
+      local completed = false
+      scheduler.process_buffer_range(buffer, 0, 0, function() end, function() end, {
+        async = false,
+        chunk_size = 10,
+        on_complete = function() completed = true end,
+      })
+      -- async=false: on_complete is called synchronously, no schedule needed
+      assert.is_true(completed)
+    end)
+
+    it("passes seed between chunks", function()
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "a", "b", "c", "d" })
+      local seeds = {}
+
+      scheduler.process_buffer_range(buffer, 0, 4, function(lines, _, seed)
+        table.insert(seeds, seed)
+        return {}, seed + 1
+      end, function() end, { async = false, chunk_size = 2, initial_seed = 0 })
+
+      assert.combinators.match({ 0, 1 }, seeds)
+    end)
+  end)
+
   describe("process_array", function()
     it("processes all items synchronously when async=false", function()
       local items = { 1, 2, 3, 4, 5 }

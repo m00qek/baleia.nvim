@@ -12,7 +12,11 @@ function M.process(total_items, fetch_fn, process_fn, render_fn, opts)
 
   if total_items == 0 then
     if opts.on_complete then
-      vim.schedule(opts.on_complete)
+      if opts.async then
+        vim.schedule(opts.on_complete)
+      else
+        opts.on_complete()
+      end
     end
     return function() end
   end
@@ -108,7 +112,11 @@ function M.process(total_items, fetch_fn, process_fn, render_fn, opts)
     else
       -- Last chunk, we're done
       if opts.on_complete then
-        vim.schedule(opts.on_complete)
+        if opts.async then
+          vim.schedule(opts.on_complete)
+        else
+          opts.on_complete()
+        end
       end
     end
   end
