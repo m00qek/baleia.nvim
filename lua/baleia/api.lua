@@ -7,13 +7,15 @@ local scheduler = require("baleia.scheduler")
 
 local M = {}
 
--- track cancel functions per buffer (for once())
+-- These three tables are keyed by buffer handle and shared across ALL
+-- baleia.setup() instances (Lua modules are singletons).  The design relies
+-- on a last-writer-wins invariant for once(): every once() call for a buffer
+-- cancels whatever the previous call registered (active_cancels), so at most
+-- one render is ever in-flight per buffer regardless of how many setup()
+-- instances exist.  detach_listeners prevents duplicate on_detach callbacks;
+-- the single listener always cancels the current active_cancels entry.
 local active_cancels = {}
-
--- track internal updates (to prevent automatically() from processing them)
 local internal_updates = {}
-
--- track which buffers already have an on_detach listener from once()
 local detach_listeners = {}
 
 local function begin_internal_update(buffer)
