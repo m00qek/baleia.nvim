@@ -128,15 +128,22 @@ function M.once(options, buffer)
   end
 
   if not detach_listeners[buffer] then
-    detach_listeners[buffer] = true
-    vim.api.nvim_buf_attach(buffer, false, {
+    local ok = vim.api.nvim_buf_attach(buffer, false, {
       on_detach = function()
         detach_listeners[buffer] = nil
         if active_cancels[buffer] then
           active_cancels[buffer]()
+          active_cancels[buffer] = nil
+          -- Balance the begin_internal_update opened by the cancelled once().
+          -- (Mirrors the cancel path in once() itself.)
+          end_internal_update(buffer)
         end
       end,
     })
+    -- Only mark the listener as registered when the attach actually succeeded.
+    if ok then
+      detach_listeners[buffer] = true
+    end
   end
 end
 

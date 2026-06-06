@@ -369,5 +369,36 @@ describe("baleia", function()
       local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, {})
       assert.truthy(#marks > 0, "automatically() must still fire after once() cancellation")
     end)
+
+    it("on_detach balances internal_updates so a recycled handle is not poisoned", function()
+      -- When a buffer is wiped during an async once(), on_detach must call
+      -- end_internal_update. Without this, internal_updates[handle] stays at 1
+      -- and if Neovim reuses the handle for a new buffer, automatically() on
+      -- that new buffer would be permanently suppressed.
+      local b = baleia.setup({ async = true, chunk_size = 1 })
+      local scratch = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_buf_set_lines(scratch, 0, -1, false, { "\x1b[31mFirst" })
+
+      b.once(scratch)  -- queues async work; internal_updates[scratch] = 1
+
+      -- Wipe the buffer while once() is in-flight.
+      vim.api.nvim_buf_delete(scratch, { force = true })
+      -- on_detach fires synchronously during delete, so internal_updates[scratch]
+      -- should be back at 0 now.
+
+      -- Create a new buffer. Neovim often reuses handles in ascending order, so
+      -- new_buf commonly gets the same integer as scratch. If on_detach failed to
+      -- decrement, automatically() below would silently skip all on_lines events.
+      local new_buf = vim.api.nvim_create_buf(false, true)
+
+      b.automatically(new_buf)
+      vim.api.nvim_buf_set_lines(new_buf, 0, -1, false, { "\x1b[33mYellow" })
+      vim.wait(300, function()
+        return #vim.api.nvim_buf_get_extmarks(new_buf, -1, 0, -1, {}) > 0
+      end)
+
+      local marks = vim.api.nvim_buf_get_extmarks(new_buf, -1, 0, -1, {})
+      assert.truthy(#marks > 0, "automatically() must work after on_detach teardown")
+    end)
   end)
 end)
