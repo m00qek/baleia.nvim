@@ -31,6 +31,10 @@ end
 ---@param options baleia.Options
 ---@param buffer integer Buffer handle
 function M.once(options, buffer)
+  if not vim.api.nvim_buf_is_valid(buffer) then
+    return
+  end
+
   if active_cancels[buffer] then
     active_cancels[buffer]()
     active_cancels[buffer] = nil
@@ -40,7 +44,8 @@ function M.once(options, buffer)
   vim.api.nvim_buf_clear_namespace(buffer, options.namespace, 0, -1)
 
   local total = vim.api.nvim_buf_line_count(buffer)
-  local w0 = math.max(0, vim.fn.line("w0") - 1) -- first visible line, 0-indexed
+  -- options._w0 allows tests to inject a fake first-visible-line without a real window
+  local w0 = options._w0 ~= nil and options._w0 or math.max(0, vim.fn.line("w0") - 1)
   local split = scanner.find_split(buffer, w0)
 
   local all_cancels = {}
@@ -53,25 +58,8 @@ function M.once(options, buffer)
     end
   end
 
-  local function make_process_fn()
-    return function(lines, _, seed)
-      return lexer.lex(lines, options.strip_ansi_codes, options.line_starts_at - 1, seed)
-    end
-  end
-
-  local function make_render_fn(start_row)
-    return function(start_idx, items)
-      begin_internal_update(buffer)
-      renderer.render(
-        buffer,
-        options.namespace,
-        start_row + start_idx - 1,
-        items,
-        options,
-        options.strip_ansi_codes
-      )
-      end_internal_update(buffer)
-    end
+  local function process_fn(lines, _, seed)
+    return lexer.lex(lines, options.strip_ansi_codes, options.line_starts_at - 1, seed)
   end
 
   local function submit_block(start_row, end_row)
@@ -83,8 +71,19 @@ function M.once(options, buffer)
       buffer,
       start_row,
       end_row,
-      make_process_fn(),
-      make_render_fn(start_row),
+      process_fn,
+      function(start_idx, items)
+        begin_internal_update(buffer)
+        renderer.render(
+          buffer,
+          options.namespace,
+          start_row + start_idx - 1,
+          items,
+          options,
+          options.strip_ansi_codes
+        )
+        end_internal_update(buffer)
+      end,
       {
         chunk_size = options.chunk_size,
         async = options.async,
@@ -105,6 +104,7 @@ function M.once(options, buffer)
 
   submit_block(split, total) -- Block A: viewport region + below, first
   submit_block(0, split) -- Block B: above viewport, second
+  check_complete() -- handles empty buffer or split == total (no blocks submitted)
 
   active_cancels[buffer] = function()
     for _, cancel in ipairs(all_cancels) do

@@ -44,6 +44,37 @@ describe("baleia", function()
       assert.truthy(#marks >= 2)
     end)
 
+    it("handles an empty buffer without hanging the internal-update counter", function()
+      local b = baleia.setup({ async = false })
+      b.once(buffer) -- empty buffer: both blocks are skipped
+
+      -- If the counter is stuck, automatically() ignores all future edits.
+      b.automatically(buffer)
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "\x1b[31mHello" })
+
+      vim.wait(300, function()
+        return #vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, {}) > 0
+      end)
+
+      local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, {})
+      assert.truthy(#marks > 0)
+    end)
+
+    it("can be called twice on the same buffer", function()
+      local b = baleia.setup({ async = false })
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "\x1b[31mFirst" })
+      b.once(buffer)
+
+      -- Change content and call again
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "\x1b[32mSecond" })
+      b.once(buffer)
+
+      local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+      assert.combinators.match({ "Second" }, lines)
+      local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, { details = true })
+      assert.truthy(#marks > 0)
+    end)
+
     it("works correctly when no reset exists (single block, same as before)", function()
       local b = baleia.setup({ async = false })
       vim.api.nvim_buf_set_lines(buffer, 0, -1, false, {
@@ -96,6 +127,18 @@ describe("baleia", function()
       local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
       assert.combinators.match({ "Blue" }, lines)
     end)
+
+    it("seeds style from the previous line when inserting at row > 0", function()
+      -- Establish a red style on row 0 (no reset at end so seed carries forward).
+      local b = baleia.setup({ async = false, strip_ansi_codes = false })
+      b.buf_set_lines(buffer, 0, -1, false, { "\x1b[31mred" })
+
+      -- Insert a plain line at row 1; the lexer should seed red from row 0.
+      b.buf_set_lines(buffer, 1, 2, false, { "plain" })
+
+      local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, { 1, 0 }, { 1, -1 }, { details = true })
+      assert.truthy(#marks > 0, "row 1 should inherit the red style seed")
+    end)
   end)
 
   describe("buf_set_text", function()
@@ -129,6 +172,108 @@ describe("baleia", function()
 
       local extmarks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, {})
       assert.truthy(#extmarks > 0)
+    end)
+
+    it("calling automatically() twice does not double-process changes", function()
+      local b = baleia.setup({ async = false })
+      b.automatically(buffer)
+      b.automatically(buffer) -- should no-op; buffer already attached
+
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "\x1b[31mHi" })
+
+      vim.wait(200, function()
+        return #vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, {}) > 0
+      end)
+
+      local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, {})
+      -- With two attachments we'd get double extmarks at col 0; with one, just one.
+      assert.equals(1, #marks)
+    end)
+
+    it("propagates style seed from the previous line", function()
+      -- Line 0 sets bold+red, with no reset at end.
+      -- Line 1 is plain text; it should inherit the bold+red style as a seed.
+      local b = baleia.setup({ async = false, strip_ansi_codes = false })
+      b.automatically(buffer)
+
+      -- Write line 0 (already has red style active, no reset)
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "\x1b[31mred" })
+      vim.wait(200, function()
+        return #vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, {}) > 0
+      end)
+
+      -- Append line 1 — no escape codes; style should carry over
+      vim.api.nvim_buf_set_lines(buffer, 1, 2, false, { "also red" })
+      vim.wait(200, function()
+        -- Wait for the second line's extmarks to appear
+        local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, { 1, 0 }, { 1, -1 }, { details = true })
+        return #marks > 0
+      end)
+
+      local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, { 1, 0 }, { 1, -1 }, { details = true })
+      assert.truthy(#marks > 0, "line 1 should inherit the red style from line 0")
+    end)
+  end)
+
+  describe("two-block split", function()
+    it("highlights lines in both Block A and Block B when split > 0", function()
+      -- Simulate w0=2: the first visible line is index 2.
+      -- find_split scans backward from 2 and finds the reset at line 1.
+      -- Block A = [1, 3), Block B = [0, 1).
+      local b = baleia.setup({ async = false, strip_ansi_codes = true, _w0 = 2 })
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, {
+        "\x1b[34mblue", -- line 0: in Block B
+        "\x1b[31mred\x1b[0m", -- line 1: reset boundary → split point
+        "\x1b[32mgreen", -- line 2: in Block A (viewport)
+      })
+
+      b.once(buffer)
+
+      local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+      assert.combinators.match({ "blue", "red", "green" }, lines)
+
+      -- All three lines should have extmarks
+      local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, { details = true })
+      assert.truthy(#marks >= 3, "expected highlights on all three lines, got " .. #marks)
+    end)
+
+    it("Block A initial seed is empty (reset boundary guarantees no carry-in)", function()
+      -- Line 0 sets bold+red with no reset. Line 1 resets at end (split point).
+      -- Block A starts at line 1 with seed={}; it should NOT carry bold from line 0.
+      local b = baleia.setup({ async = false, strip_ansi_codes = false, _w0 = 2 })
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, {
+        "\x1b[1;31mbold-red", -- line 0: bold+red, no reset
+        "\x1b[0m", -- line 1: reset (split boundary)
+        "plain", -- line 2: no ANSI; Block A seed={}, so no inherited bold
+      })
+
+      b.once(buffer)
+
+      -- Row 2 should have no extmarks because Block A seed is {} and "plain" has no codes
+      local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, { 2, 0 }, { 2, -1 }, { details = true })
+      assert.equals(0, #marks, "line 2 should have no inherited style from Block B")
+    end)
+  end)
+
+  describe("once cancellation", function()
+    it("calling once() twice cancels the first in-flight run", function()
+      -- Use async=true so the first once() schedules work that hasn't run yet.
+      local b = baleia.setup({ async = true, chunk_size = 1 })
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "\x1b[31mFirst", "\x1b[32mSecond" })
+
+      b.once(buffer) -- schedules async chunks
+
+      -- Immediately replace content and call once() again before chunks run.
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "\x1b[33mOnly" })
+      b.once(buffer) -- should cancel the first run
+
+      vim.wait(300, function()
+        return #vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, {}) > 0
+      end)
+
+      -- Buffer should reflect the second once() result, not a mix of both.
+      local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+      assert.combinators.match({ "Only" }, lines)
     end)
   end)
 end)
