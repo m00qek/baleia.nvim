@@ -1,6 +1,24 @@
 local xterm = require("baleia.xterm")
 
 describe("baleia.xterm", function()
+  describe("to_truecolor", function()
+    it("returns a '#RRGGBB' string for colour 0 (black)", function()
+      assert.equals("#000000", xterm.to_truecolor(0))
+    end)
+
+    it("returns correct hex for colour 9 (bright red)", function()
+      assert.equals("#ff0000", xterm.to_truecolor(9))
+    end)
+
+    it("returns correct hex for colour 231 (white in 6x6x6 cube)", function()
+      assert.equals("#ffffff", xterm.to_truecolor(231))
+    end)
+
+    it("returns correct hex for a grey ramp entry (colour 244)", function()
+      assert.equals("#808080", xterm.to_truecolor(244))
+    end)
+  end)
+
   describe("from_rgb", function()
     it("maps pure black to colour 16 (not 231)", function()
       -- colour 16 is #000000 in the 6x6x6 cube; 231 is #ffffff.
