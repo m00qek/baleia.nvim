@@ -150,6 +150,48 @@ describe("baleia", function()
 
       local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
       assert.combinators.match({ "Prefix Suffix" }, lines)
+
+      -- "Suffix" (cols 7-12) must have an extmark; before the fix this was always empty
+      local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, { 0, 7 }, { 0, -1 }, { details = true })
+      assert.truthy(#marks > 0, "expected extmarks on inserted text at col 7+")
+    end)
+
+    it("empty replacement deletes text without leaving stale extmarks in the deleted range", function()
+      -- Write "\x1b[31mHello World" → stripped to "Hello World" with a red extmark cols 0-10
+      local b = baleia.setup({ async = false, strip_ansi_codes = true })
+      b.buf_set_lines(buffer, 0, -1, false, { "\x1b[31mHello World" })
+
+      local before = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, { details = true })
+      assert.truthy(#before > 0, "setup: expected extmarks before deletion")
+
+      -- Delete " World" (cols 5-10) using empty replacement
+      b.buf_set_text(buffer, 0, 5, 0, 11, {})
+
+      local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+      assert.combinators.match({ "Hello" }, lines)
+
+      -- Any surviving extmark must not extend past the new line end (col 5)
+      local after = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, { details = true })
+      for _, mark in ipairs(after) do
+        local end_col = mark[4].end_col
+        assert.truthy(end_col <= 5, "stale extmark past col 5: end_col=" .. tostring(end_col))
+      end
+    end)
+
+    it("seeds highlight from previous column when start_col > 0", function()
+      -- strip_ansi_codes=true: buf_set_lines writes "abc" (stripped) with red extmark.
+      -- Inserting "XYZ" at col 3 seeds from the style at col 2 (red), so XYZ inherits red.
+      local b = baleia.setup({ async = false, strip_ansi_codes = true })
+      b.buf_set_lines(buffer, 0, -1, false, { "\x1b[31mabc" })
+
+      b.buf_set_text(buffer, 0, 3, 0, 3, { "XYZ" })
+
+      local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+      assert.combinators.match({ "abcXYZ" }, lines)
+
+      -- cols 3-5 should have an inherited red extmark
+      local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, { 0, 3 }, { 0, -1 }, { details = true })
+      assert.truthy(#marks > 0, "expected extmarks on inserted text (inherited red from seed)")
     end)
   end)
 

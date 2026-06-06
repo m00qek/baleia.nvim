@@ -364,9 +364,18 @@ function M.buf_set_text(options, buffer, start_row, start_col, end_row, end_col,
     return
   end
 
-  -- First line has column offset (process synchronously, outside async processor)
+  -- First line has a column offset: lex at position 0, then shift every highlight
+  -- position by start_col so extmarks land at the correct buffer column.
+  -- (Passing start_col as start_highlighting_at would clip spans whose local
+  -- current_col <= start_col, producing to < from and no highlight at all.)
   begin_internal_update(buffer)
-  local first_items, last_style = lexer.lex({ replacement[1] }, options.strip_ansi_codes, start_col, seed)
+  local first_items, last_style = lexer.lex({ replacement[1] }, options.strip_ansi_codes, 0, seed)
+  for _, item in ipairs(first_items) do
+    for _, mark in ipairs(item.highlights) do
+      mark.from = mark.from + start_col
+      mark.to = mark.to + start_col
+    end
+  end
   renderer.render(buffer, options.namespace, start_row, first_items, options, false)
   end_internal_update(buffer)
 
