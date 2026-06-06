@@ -59,7 +59,11 @@ function M.process(total_items, fetch_fn, process_fn, render_fn, opts)
     if chunk_idx > total_chunks then
       -- All done
       if opts.on_complete then
-        vim.schedule(opts.on_complete)
+        if opts.async then
+          vim.schedule(opts.on_complete)
+        else
+          opts.on_complete()
+        end
       end
       return
     end
