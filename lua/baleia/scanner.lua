@@ -2,9 +2,17 @@ local ansi = require("baleia.ansi")
 
 local M = {}
 
--- A style with every common attribute set. After a true reset sequence is
--- applied, all keys are cleared and next(style) == nil.
-local SENTINEL = { ctermfg = 1, ctermbg = 1, bold = true, italic = true, underline = true }
+-- A style with every possible attribute set. After a true reset sequence is
+-- applied, all keys are cleared and next(style) == nil. A partial unset
+-- (e.g. \x1b[22m, \x1b[39;49m) cannot clear all fields, so next(style)
+-- remains non-nil and the line is not treated as a reset boundary.
+local SENTINEL = {
+  ctermfg = 1, ctermbg = 1, ctermsp = 1,
+  foreground = "#000000", background = "#000000", special = "#000000",
+  bold = true, italic = true, underline = true,
+  strikethrough = true, reverse = true,
+  undercurl = true, underdouble = true, underdotted = true, underdashed = true,
+}
 
 local function is_reset_sequence(seq)
   local style = ansi.clone(SENTINEL)
@@ -34,18 +42,30 @@ function M.is_reset_boundary(line)
   return is_reset_sequence(string.sub(line, last_s, last_e))
 end
 
+local SCAN_CHUNK = 200
+
 ---Scans backward from line w0 (0-indexed) to find the nearest reset boundary.
 ---Returns the 0-indexed line number of that boundary, or 0 if none is found.
+---Reads lines in chunks to avoid one API call per line.
 ---@param buffer integer
 ---@param w0 integer First visible line, 0-indexed
 ---@return integer
 function M.find_split(buffer, w0)
-  for line_nr = w0, 0, -1 do
-    local lines = vim.api.nvim_buf_get_lines(buffer, line_nr, line_nr + 1, false)
-    if lines[1] and M.is_reset_boundary(lines[1]) then
-      return line_nr
+  local scan_end = w0 + 1 -- nvim_buf_get_lines end is exclusive
+
+  while scan_end > 0 do
+    local scan_start = math.max(0, scan_end - SCAN_CHUNK)
+    local lines = vim.api.nvim_buf_get_lines(buffer, scan_start, scan_end, false)
+
+    for i = #lines, 1, -1 do
+      if M.is_reset_boundary(lines[i]) then
+        return scan_start + i - 1
+      end
     end
+
+    scan_end = scan_start
   end
+
   return 0
 end
 

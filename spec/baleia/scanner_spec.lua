@@ -29,6 +29,29 @@ describe("baleia.scanner", function()
     it("returns false for an empty line", function()
       assert.is_false(scanner.is_reset_boundary(""))
     end)
+
+    it("returns true for \\x1b[00m (double-zero reset)", function()
+      assert.is_true(scanner.is_reset_boundary("text\x1b[00m"))
+    end)
+
+    it("returns false for a partial unset like \\x1b[22m (only clears bold)", function()
+      assert.is_false(scanner.is_reset_boundary("text\x1b[22m"))
+    end)
+
+    it("returns false for a compound partial unset that clears only the basic SENTINEL fields", function()
+      -- \x1b[39;49;22;23;24m clears fg, bg, bold, italic, underline — but NOT
+      -- strikethrough, reverse, undercurl, etc. A SENTINEL that omits those
+      -- extra fields would incorrectly report this as a full reset.
+      assert.is_false(scanner.is_reset_boundary("text\x1b[39;49;22;23;24m"))
+    end)
+
+    it("returns false for a line ending with \\x1b[9m (sets strikethrough, not a reset)", function()
+      assert.is_false(scanner.is_reset_boundary("text\x1b[9m"))
+    end)
+
+    it("returns false for \\x1b[7m (sets reverse video)", function()
+      assert.is_false(scanner.is_reset_boundary("text\x1b[7m"))
+    end)
   end)
 
   describe("find_split", function()
@@ -75,6 +98,24 @@ describe("baleia.scanner", function()
       })
       -- scanning from line 4 should find line 2, not line 0
       assert.equals(2, scanner.find_split(buffer, 4))
+    end)
+
+    it("handles an empty buffer without error", function()
+      -- empty buffer: nvim_buf_get_lines returns {} for any range
+      assert.equals(0, scanner.find_split(buffer, 0))
+    end)
+
+    it("scans across chunk boundaries to find a distant reset", function()
+      -- Build a buffer where the reset is more than SCAN_CHUNK (200) lines above w0
+      local lines = {}
+      for i = 1, 250 do
+        lines[i] = "plain line " .. i
+      end
+      lines[1] = "\x1b[31mred\x1b[0m" -- reset only at line 0 (1-indexed here)
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, lines)
+
+      -- w0 = 249 (last line, 0-indexed); the only reset is at line 0
+      assert.equals(0, scanner.find_split(buffer, 249))
     end)
   end)
 end)
