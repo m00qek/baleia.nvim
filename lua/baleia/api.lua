@@ -13,6 +13,9 @@ local active_cancels = {}
 -- track internal updates (to prevent automatically() from processing them)
 local internal_updates = {}
 
+-- track which buffers already have an on_detach listener from once()
+local detach_listeners = {}
+
 local function begin_internal_update(buffer)
   internal_updates[buffer] = (internal_updates[buffer] or 0) + 1
 end
@@ -112,13 +115,17 @@ function M.once(options, buffer)
     end
   end
 
-  vim.api.nvim_buf_attach(buffer, false, {
-    on_detach = function()
-      if active_cancels[buffer] then
-        active_cancels[buffer]()
-      end
-    end,
-  })
+  if not detach_listeners[buffer] then
+    detach_listeners[buffer] = true
+    vim.api.nvim_buf_attach(buffer, false, {
+      on_detach = function()
+        detach_listeners[buffer] = nil
+        if active_cancels[buffer] then
+          active_cancels[buffer]()
+        end
+      end,
+    })
+  end
 end
 
 ---Every time a new line is added to {buffer}, parses the new contents and

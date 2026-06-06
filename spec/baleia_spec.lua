@@ -258,6 +258,28 @@ describe("baleia", function()
     end)
   end)
 
+  describe("once() nvim_buf_attach accumulation", function()
+    it("attaches the on_detach listener only once no matter how many times once() is called", function()
+      local b = baleia.setup({ async = false })
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "\x1b[31mHello" })
+
+      local attach_count = 0
+      local orig = vim.api.nvim_buf_attach
+      vim.api.nvim_buf_attach = function(...)
+        attach_count = attach_count + 1
+        return orig(...)
+      end
+
+      b.once(buffer)
+      b.once(buffer)
+      b.once(buffer)
+
+      vim.api.nvim_buf_attach = orig
+
+      assert.equals(1, attach_count)
+    end)
+  end)
+
   describe("once cancellation", function()
     it("calling once() twice cancels the first in-flight run", function()
       -- Use async=true so the first once() schedules work that hasn't run yet.
