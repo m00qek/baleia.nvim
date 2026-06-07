@@ -109,7 +109,10 @@ function M.render(buffer, namespace, start_row, items, options, update_text)
     local row = start_row + i - 1
 
     if update_text then
+      local ul = vim.api.nvim_get_option_value('undolevels', { buf = buffer })
+      vim.api.nvim_set_option_value('undolevels', -1, { buf = buffer })
       vim.api.nvim_buf_set_lines(buffer, row, row + 1, false, { item.text })
+      vim.api.nvim_set_option_value('undolevels', ul, { buf = buffer })
     end
 
     for _, mark in ipairs(item.highlights) do

@@ -211,7 +211,10 @@ function M.automatically(options, buffer)
           if not modifiable then
             vim.api.nvim_set_option_value('modifiable', true, { buf = buffer })
           end
+          local ul = vim.api.nvim_get_option_value('undolevels', { buf = buffer })
+          vim.api.nvim_set_option_value('undolevels', -1, { buf = buffer })
           vim.api.nvim_buf_set_lines(buffer, firstline, new_lastline, false, stripped_lines)
+          vim.api.nvim_set_option_value('undolevels', ul, { buf = buffer })
           if not modifiable then
             vim.api.nvim_set_option_value('modifiable', false, { buf = buffer })
           end
