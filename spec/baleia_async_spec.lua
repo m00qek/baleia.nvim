@@ -31,4 +31,21 @@ describe("baleia async", function()
     local hl_def = vim.api.nvim_get_hl(0, { name = hl_group })
     assert.truthy(hl_def.fg)
   end)
+
+  it("automatically keeps working after once is cancelled", function()
+    local b = baleia.setup({ async = true, chunk_size = 1 })
+    vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "a", "b", "c" })
+    b.automatically(buffer)
+
+    b.once(buffer)
+    b.once(buffer)
+    vim.wait(100)
+
+    vim.api.nvim_buf_set_lines(buffer, -1, -1, false, { "\x1b[32mgreen" })
+
+    local stripped = vim.wait(1000, function()
+      return vim.api.nvim_buf_get_lines(buffer, -2, -1, false)[1] == "green"
+    end)
+    assert.truthy(stripped)
+  end)
 end)
