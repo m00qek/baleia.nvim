@@ -29,6 +29,17 @@ describe("baleia", function()
       assert.combinators.match({ "Line 1", "Line 2" }, lines)
     end)
 
+    it("strips non-modifiable buffers and keeps them non-modifiable", function()
+      local b = baleia.setup({ async = false })
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "\x1b[31mred" })
+      vim.bo[buffer].modifiable = false
+
+      b.once(buffer)
+
+      assert.combinators.match({ "red" }, vim.api.nvim_buf_get_lines(buffer, 0, -1, false))
+      assert.is_false(vim.bo[buffer].modifiable)
+    end)
+
     it("starts highlighting at line_starts_at", function()
       local b = baleia.setup({ async = false, line_starts_at = 3 })
       vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "\x1b[31m; red" })
