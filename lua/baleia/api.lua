@@ -35,9 +35,6 @@ function M.once(options, buffer)
     active_cancels[buffer] = nil
   end
 
-  -- mark as internal update before clearing namespace
-  begin_internal_update(buffer)
-
   local cancel = scheduler.process_buffer(
     buffer,
     options.namespace,
@@ -71,12 +68,10 @@ function M.once(options, buffer)
       initial_seed = {},
       on_complete = function()
         active_cancels[buffer] = nil
-        end_internal_update(buffer) -- End the initial internal update
       end,
       on_error = function(err)
         vim.notify("Baleia: " .. err, vim.log.levels.WARN)
         active_cancels[buffer] = nil
-        end_internal_update(buffer) -- End even on error
       end,
     }
   )
