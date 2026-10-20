@@ -28,6 +28,18 @@ describe("baleia", function()
       local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
       assert.combinators.match({ "Line 1", "Line 2" }, lines)
     end)
+
+    it("starts highlighting at line_starts_at", function()
+      local b = baleia.setup({ async = false, line_starts_at = 3 })
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "\x1b[31m; red" })
+
+      b.once(buffer)
+
+      local extmarks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, { details = true })
+      assert.equals(1, #extmarks)
+      assert.equals(2, extmarks[1][3])
+      assert.equals(5, extmarks[1][4].end_col)
+    end)
   end)
 
   describe("buf_set_lines", function()

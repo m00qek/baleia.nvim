@@ -44,12 +44,7 @@ function M.once(options, buffer)
 
     -- process_fn: lex lines
     function(lines, _, seed)
-      local items, last_style = lexer.lex(
-        lines,
-        options.strip_ansi_codes,
-        0, -- offset
-        seed
-      )
+      local items, last_style = lexer.lex(lines, options.strip_ansi_codes, options.line_starts_at - 1, seed)
       return items, last_style
     end,
 
@@ -166,12 +161,7 @@ function M.automatically(options, buffer)
 
           -- process_fn: lex lines
           function(lines, _, seed_style)
-            local items, last_style = lexer.lex(
-              lines,
-              options.strip_ansi_codes,
-              0, -- offset
-              seed_style
-            )
+            local items, last_style = lexer.lex(lines, options.strip_ansi_codes, options.line_starts_at - 1, seed_style)
             return items, last_style
           end,
 
@@ -251,12 +241,7 @@ function M.buf_set_lines(options, buffer, start, end_, strict_indexing, replacem
 
     -- process_fn: lex lines
     function(lines, _, seed_style)
-      local items, last_style = lexer.lex(
-        lines,
-        options.strip_ansi_codes,
-        0, -- offset
-        seed_style
-      )
+      local items, last_style = lexer.lex(lines, options.strip_ansi_codes, options.line_starts_at - 1, seed_style)
       return items, last_style
     end,
 
@@ -343,7 +328,7 @@ function M.buf_set_text(options, buffer, start_row, start_col, end_row, end_col,
 
       -- process_fn: lex lines
       function(lines, _, seed_style)
-        return lexer.lex(lines, options.strip_ansi_codes, 0, seed_style)
+        return lexer.lex(lines, options.strip_ansi_codes, options.line_starts_at - 1, seed_style)
       end,
 
       -- render_fn: apply highlights (wrapped to track internal updates)
