@@ -102,8 +102,8 @@ function M.process(total_items, fetch_fn, process_fn, render_fn, opts)
         -- ASYNC MODE: Schedule next chunk (non-blocking)
         vim.schedule(process_next_chunk)
       else
-        -- SYNC MODE: Process next chunk immediately (blocking loop)
-        process_next_chunk()
+        -- SYNC MODE: tail call, so the stack doesn't grow
+        return process_next_chunk()
       end
     else
       -- Last chunk, we're done

@@ -55,6 +55,22 @@ describe("baleia.scheduler", function()
       }, rendered)
     end)
 
+    it("runs many synchronous chunks without growing the stack", function()
+      local items = {}
+      for i = 1, 200000 do
+        items[i] = i
+      end
+      local rendered = 0
+
+      scheduler.process_array(items, function(chunk)
+        return chunk, nil
+      end, function()
+        rendered = rendered + 1
+      end, { chunk_size = 1, async = false })
+
+      assert.equals(200000, rendered)
+    end)
+
     it("processes items in chunks when async=true", function()
       local items = { 1, 2, 3, 4, 5 }
       local processed = {}
