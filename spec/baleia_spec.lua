@@ -52,6 +52,26 @@ describe("baleia", function()
       assert.combinators.match({ "Blue" }, lines)
     end)
 
+    it("accepts negative indices", function()
+      local b = baleia.setup({ async = false })
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "x" })
+
+      b.buf_set_lines(buffer, -1, -1, true, { "\x1b[31mappended" })
+
+      local extmarks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, { details = true })
+      assert.equals(1, #extmarks)
+      assert.equals(1, extmarks[1][2])
+      assert.equals(8, extmarks[1][4].end_col)
+    end)
+
+    it("still errors on out-of-bounds indices when strict", function()
+      local b = baleia.setup({ async = false })
+
+      assert.has_error(function()
+        b.buf_set_lines(buffer, -100, -1, true, { "x" })
+      end)
+    end)
+
     it("treats buffer 0 as the current buffer", function()
       local b = baleia.setup({ async = false })
       vim.api.nvim_set_current_buf(buffer)

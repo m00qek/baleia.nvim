@@ -28,6 +28,18 @@ local function resolve(buffer)
   return buffer == 0 and vim.api.nvim_get_current_buf() or buffer
 end
 
+-- same rules as nvim_buf_set_lines: negative counts from the end, then clamp
+local function normalize(index, count)
+  if index < 0 then
+    index = count + 1 + index
+  end
+  return math.max(0, math.min(index, count))
+end
+
+local function notify_error(err)
+  vim.notify("Baleia: " .. err, vim.log.levels.WARN)
+end
+
 ---Parses the contents of {buffer} and colorizes them respecting any ANSI
 ---color codes present in the text.
 ---@param options baleia.Options
@@ -76,7 +88,7 @@ function M.once(options, buffer)
         active_cancels[buffer] = nil
       end,
       on_error = function(err)
-        vim.notify("Baleia: " .. err, vim.log.levels.WARN)
+        notify_error(err)
         active_cancels[buffer] = nil
       end,
     }
@@ -195,6 +207,7 @@ function M.automatically(options, buffer)
             on_complete = function()
               current_cancel = nil
             end,
+            on_error = notify_error,
           }
         )
       end)
@@ -219,6 +232,7 @@ end
 ---@param replacement string[] Array of lines to use as replacement
 function M.buf_set_lines(options, buffer, start, end_, strict_indexing, replacement)
   buffer = resolve(buffer)
+  local row = normalize(start, vim.api.nvim_buf_line_count(buffer))
 
   -- Mark as internal update
   begin_internal_update(buffer)
@@ -236,8 +250,8 @@ function M.buf_set_lines(options, buffer, start, end_, strict_indexing, replacem
 
   -- Get seed style from previous line
   local seed = {}
-  if start > 0 then
-    seed = inspector.style_at_end_of_line(buffer, options.namespace, start - 1)
+  if row > 0 then
+    seed = inspector.style_at_end_of_line(buffer, options.namespace, row - 1)
   end
 
   -- Process and highlight the replacement lines
@@ -261,7 +275,7 @@ function M.buf_set_lines(options, buffer, start, end_, strict_indexing, replacem
       renderer.render(
         buffer,
         options.namespace,
-        start + start_idx - 1,
+        row + start_idx - 1,
         items,
         options,
         false -- Don't update text (already stripped above)
@@ -274,6 +288,7 @@ function M.buf_set_lines(options, buffer, start, end_, strict_indexing, replacem
       chunk_size = options.chunk_size,
       async = options.async,
       initial_seed = seed,
+      on_error = notify_error,
     }
   )
 end
@@ -361,6 +376,7 @@ function M.buf_set_text(options, buffer, start_row, start_col, end_row, end_col,
         chunk_size = options.chunk_size,
         async = options.async,
         initial_seed = last_style, -- Seed from first line
+        on_error = notify_error,
       }
     )
   end
