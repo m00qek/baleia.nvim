@@ -14,7 +14,7 @@ error("Cannot require a meta file")
 ---@class baleia.Options
 ---@field strip_ansi_codes boolean
 ---@field line_starts_at integer
----@field highlight_cache { [string]: boolean }
+---@field highlight_cache { [string]: table }
 ---@field chunk_size integer
 ---@field namespace integer
 ---@field colors baleia.ansi.Theme
