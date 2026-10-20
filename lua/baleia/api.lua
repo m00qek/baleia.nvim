@@ -9,6 +9,29 @@ local M = {}
 -- track cancel functions per buffer (for once())
 local active_cancels = {}
 
+-- buffers with an on_detach that cancels once()
+local detach_watched = {}
+
+local function cancel_once(buffer)
+  if active_cancels[buffer] then
+    active_cancels[buffer]()
+    active_cancels[buffer] = nil
+  end
+end
+
+local function watch_detach(buffer)
+  if detach_watched[buffer] then
+    return
+  end
+  detach_watched[buffer] = true
+  vim.api.nvim_buf_attach(buffer, false, {
+    on_detach = function()
+      cancel_once(buffer)
+      detach_watched[buffer] = nil
+    end,
+  })
+end
+
 -- track internal updates (to prevent automatically() from processing them)
 local internal_updates = {}
 
@@ -59,11 +82,7 @@ end
 function M.once(options, buffer)
   buffer = resolve(buffer)
 
-  -- Cancel any existing processing for this buffer
-  if active_cancels[buffer] then
-    active_cancels[buffer]()
-    active_cancels[buffer] = nil
-  end
+  cancel_once(buffer)
 
   local cancel = scheduler.process_buffer(
     buffer,
@@ -109,6 +128,7 @@ function M.once(options, buffer)
   )
 
   active_cancels[buffer] = cancel
+  watch_detach(buffer)
 end
 
 ---Every time a new line is added to {buffer}, parses the new contents and

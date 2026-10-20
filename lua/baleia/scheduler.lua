@@ -152,16 +152,7 @@ function M.process_buffer(buffer, namespace, process_fn, render_fn, opts)
   end
 
   -- Delegate to process() with lazy fetch
-  local cancel = M.process(total_lines, fetch_fn, process_fn, render_fn, opts)
-
-  -- Auto-cancel on buffer delete
-  vim.api.nvim_buf_attach(buffer, true, {
-    on_detach = function()
-      cancel()
-    end,
-  })
-
-  return cancel
+  return M.process(total_lines, fetch_fn, process_fn, render_fn, opts)
 end
 
 ---Process in-memory array (convenience wrapper)
