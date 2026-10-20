@@ -29,6 +29,25 @@ describe("baleia", function()
       assert.combinators.match({ "Line 1", "Line 2" }, lines)
     end)
 
+    it("attaches to the buffer only once", function()
+      local b = baleia.setup({ async = false })
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "\x1b[31mred" })
+
+      local original_attach = vim.api.nvim_buf_attach
+      local attaches = 0
+      vim.api.nvim_buf_attach = function(...)
+        attaches = attaches + 1
+        return original_attach(...)
+      end
+
+      b.once(buffer)
+      b.once(buffer)
+      b.once(buffer)
+      vim.api.nvim_buf_attach = original_attach
+
+      assert.equals(1, attaches)
+    end)
+
     it("strips non-modifiable buffers and keeps them non-modifiable", function()
       local b = baleia.setup({ async = false })
       vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "\x1b[31mred" })
