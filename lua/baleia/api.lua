@@ -40,6 +40,18 @@ local function notify_error(err)
   vim.notify("Baleia: " .. err, vim.log.levels.WARN)
 end
 
+local function with_modifiable(buffer, fn)
+  if vim.api.nvim_get_option_value("modifiable", { buf = buffer }) then
+    return fn()
+  end
+  vim.api.nvim_set_option_value("modifiable", true, { buf = buffer })
+  local ok, err = pcall(fn)
+  vim.api.nvim_set_option_value("modifiable", false, { buf = buffer })
+  if not ok then
+    error(err, 0)
+  end
+end
+
 ---Parses the contents of {buffer} and colorizes them respecting any ANSI
 ---color codes present in the text.
 ---@param options baleia.Options
@@ -67,14 +79,16 @@ function M.once(options, buffer)
     function(start_row, items)
       begin_internal_update(buffer)
 
-      renderer.render(
-        buffer,
-        options.namespace,
-        start_row - 1, -- Convert to 0-indexed
-        items,
-        options,
-        options.strip_ansi_codes -- Update text if stripping
-      )
+      with_modifiable(buffer, function()
+        renderer.render(
+          buffer,
+          options.namespace,
+          start_row - 1, -- Convert to 0-indexed
+          items,
+          options,
+          options.strip_ansi_codes -- Update text if stripping
+        )
+      end)
 
       end_internal_update(buffer)
     end,
@@ -158,15 +172,9 @@ function M.automatically(options, buffer)
         if options.strip_ansi_codes and has_ansi then
           begin_internal_update(buffer)
           local stripped_lines = ansi.strip(raw_lines)
-
-          local modifiable = vim.api.nvim_get_option_value("modifiable", { buf = buffer })
-          if not modifiable then
-            vim.api.nvim_set_option_value("modifiable", true, { buf = buffer })
-          end
-          vim.api.nvim_buf_set_lines(buffer, firstline, new_lastline, false, stripped_lines)
-          if not modifiable then
-            vim.api.nvim_set_option_value("modifiable", false, { buf = buffer })
-          end
+          with_modifiable(buffer, function()
+            vim.api.nvim_buf_set_lines(buffer, firstline, new_lastline, false, stripped_lines)
+          end)
           end_internal_update(buffer)
         end
 
