@@ -307,7 +307,13 @@ function M.buf_set_text(options, buffer, start_row, start_col, end_row, end_col,
 
   -- First line has column offset (process synchronously, outside async processor)
   begin_internal_update(buffer)
-  local first_items, last_style = lexer.lex({ replacement[1] }, options.strip_ansi_codes, start_col, seed)
+  local offset = math.max(0, options.line_starts_at - 1 - start_col)
+  local first_items, last_style = lexer.lex({ replacement[1] }, options.strip_ansi_codes, offset, seed)
+  -- lexer columns are relative to the inserted text
+  for _, mark in ipairs(first_items[1].highlights) do
+    mark.from = mark.from + start_col
+    mark.to = mark.to + start_col
+  end
   renderer.render(buffer, options.namespace, start_row, first_items, options, false)
   end_internal_update(buffer)
 

@@ -63,6 +63,18 @@ describe("baleia", function()
       local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
       assert.combinators.match({ "Prefix Suffix" }, lines)
     end)
+
+    it("colors text inserted mid-line", function()
+      local b = baleia.setup({ async = false })
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "Prefix " })
+
+      b.buf_set_text(buffer, 0, 7, 0, 7, { "\x1b[33mSuffix" })
+
+      local extmarks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, { details = true })
+      assert.equals(1, #extmarks)
+      assert.equals(7, extmarks[1][3])
+      assert.equals(13, extmarks[1][4].end_col)
+    end)
   end)
 
   describe("automatically", function()
