@@ -24,11 +24,17 @@ local function is_internal_update(buffer)
   return internal_updates[buffer] and internal_updates[buffer] > 0
 end
 
+local function resolve(buffer)
+  return buffer == 0 and vim.api.nvim_get_current_buf() or buffer
+end
+
 ---Parses the contents of {buffer} and colorizes them respecting any ANSI
 ---color codes present in the text.
 ---@param options baleia.Options
 ---@param buffer integer Buffer handle
 function M.once(options, buffer)
+  buffer = resolve(buffer)
+
   -- Cancel any existing processing for this buffer
   if active_cancels[buffer] then
     active_cancels[buffer]()
@@ -84,6 +90,8 @@ end
 ---@param options baleia.Options
 ---@param buffer integer Buffer handle
 function M.automatically(options, buffer)
+  buffer = resolve(buffer)
+
   -- Check if already attached
   local status, active = pcall(vim.api.nvim_buf_get_var, buffer, "baleia_on_new_lines")
   if status and active then
@@ -210,6 +218,8 @@ end
 ---@param strict_indexing boolean Whether out-of-bounds should be an error
 ---@param replacement string[] Array of lines to use as replacement
 function M.buf_set_lines(options, buffer, start, end_, strict_indexing, replacement)
+  buffer = resolve(buffer)
+
   -- Mark as internal update
   begin_internal_update(buffer)
 
@@ -278,6 +288,8 @@ end
 ---@param end_col integer Ending column (byte offset) on last line, exclusive
 ---@param replacement string[] Array of lines to use as replacement
 function M.buf_set_text(options, buffer, start_row, start_col, end_row, end_col, replacement)
+  buffer = resolve(buffer)
+
   -- Mark as internal update
   begin_internal_update(buffer)
 

@@ -51,6 +51,19 @@ describe("baleia", function()
       local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
       assert.combinators.match({ "Blue" }, lines)
     end)
+
+    it("treats buffer 0 as the current buffer", function()
+      local b = baleia.setup({ async = false })
+      vim.api.nvim_set_current_buf(buffer)
+      b.buf_set_lines(buffer, 0, -1, false, { "\x1b[31mred" })
+      b.automatically(buffer)
+
+      b.buf_set_lines(0, 1, 1, false, { "\x1b[0mplain" })
+      vim.wait(100)
+
+      local extmarks = vim.api.nvim_buf_get_extmarks(buffer, -1, { 1, 0 }, { 1, -1 }, {})
+      assert.equals(0, #extmarks)
+    end)
   end)
 
   describe("buf_set_text", function()
