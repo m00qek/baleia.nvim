@@ -113,12 +113,16 @@ function M.render(buffer, namespace, start_row, items, options, update_text)
   options.highlight_cache = options.highlight_cache or {}
   local cache = options.highlight_cache
 
+  if update_text then
+    local texts = {}
+    for i, item in ipairs(items) do
+      texts[i] = item.text
+    end
+    vim.api.nvim_buf_set_lines(buffer, start_row, start_row + #items, false, texts)
+  end
+
   for i, item in ipairs(items) do
     local row = start_row + i - 1
-
-    if update_text then
-      vim.api.nvim_buf_set_lines(buffer, row, row + 1, false, { item.text })
-    end
 
     for _, mark in ipairs(item.highlights) do
       -- The style from lexer is the "raw" style.

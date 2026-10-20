@@ -56,6 +56,28 @@ describe("baleia.renderer", function()
     assert.truthy(hl_def.fg)
   end)
 
+  it("writes all lines with a single set_lines call", function()
+    vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "a", "b", "c" })
+    local items = {
+      { text = "A", highlights = {} },
+      { text = "B", highlights = {} },
+    }
+    local options = { name = "BaleiaColors", strip_ansi_codes = true, colors = ansi.NR_8 }
+
+    local original_set_lines = vim.api.nvim_buf_set_lines
+    local calls = 0
+    vim.api.nvim_buf_set_lines = function(...)
+      calls = calls + 1
+      return original_set_lines(...)
+    end
+
+    renderer.render(buffer, namespace, 1, items, options, true)
+    vim.api.nvim_buf_set_lines = original_set_lines
+
+    assert.are.equal(1, calls)
+    assert.combinators.match({ "a", "A", "B" }, vim.api.nvim_buf_get_lines(buffer, 0, -1, false))
+  end)
+
   it("caches highlight definitions", function()
     local items = {
       {
