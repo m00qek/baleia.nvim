@@ -95,6 +95,14 @@ function M.attributes(style, theme)
   return attrs
 end
 
+---Redefines cached highlight groups, e.g. after `:hi clear`
+---@param cache { [string]: table }
+function M.restore(cache)
+  for hl_name, attrs in pairs(cache) do
+    vim.api.nvim_set_hl(0, hl_name, attrs)
+  end
+end
+
 ---@param buffer integer
 ---@param namespace integer
 ---@param start_row integer
@@ -120,7 +128,7 @@ function M.render(buffer, namespace, start_row, items, options, update_text)
       if not cache[hl_name] then
         local attrs = M.attributes(mark.style, options.colors)
         vim.api.nvim_set_hl(0, hl_name, attrs)
-        cache[hl_name] = true
+        cache[hl_name] = attrs
       end
 
       vim.api.nvim_buf_set_extmark(buffer, namespace, row, mark.from, {

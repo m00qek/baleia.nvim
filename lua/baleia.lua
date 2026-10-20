@@ -1,5 +1,6 @@
 local ansi = require("baleia.ansi")
 local api = require("baleia.api")
+local renderer = require("baleia.renderer")
 
 local baleia = {}
 
@@ -44,6 +45,12 @@ function baleia.setup(user_options)
   opts.chunk_size = either(user_options.chunk_size, 500)
   opts.highlight_cache = {}
   opts.name = name
+
+  vim.api.nvim_create_autocmd("ColorScheme", {
+    callback = function()
+      renderer.restore(opts.highlight_cache)
+    end,
+  })
 
   return {
     once = with_options(opts, api.once),

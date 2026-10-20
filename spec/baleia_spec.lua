@@ -97,6 +97,17 @@ describe("baleia", function()
     end)
   end)
 
+  it("restores highlight groups after a colorscheme change", function()
+    local b = baleia.setup({ async = false, name = "BaleiaColorSchemeTest" })
+    b.buf_set_lines(buffer, 0, -1, false, { "\x1b[31mred" })
+    local hl_group = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, { details = true })[1][4].hl_group
+
+    vim.cmd("hi clear")
+    vim.api.nvim_exec_autocmds("ColorScheme", {})
+
+    assert.truthy(vim.api.nvim_get_hl(0, { name = hl_group }).fg)
+  end)
+
   describe("buf_set_text", function()
     it("sets text and colors them", function()
       local b = baleia.setup({ async = false })
