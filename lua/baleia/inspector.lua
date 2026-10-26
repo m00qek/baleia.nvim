@@ -50,27 +50,53 @@ local function to_style(hl)
   return style
 end
 
+local function style_from_mark(mark)
+  local hl_group = mark[4].hl_group
+  if not hl_group then
+    return {}
+  end
+  return to_style(vim.api.nvim_get_hl(0, { name = hl_group, link = false }))
+end
+
 ---@param buffer integer
 ---@param namespace integer
 ---@param row integer
 ---@return baleia.Style
 function M.style_at_end_of_line(buffer, namespace, row)
-  -- We want the LAST mark on the line
   local extmarks = vim.api.nvim_buf_get_extmarks(buffer, namespace, { row, 0 }, { row, -1 }, { details = true })
 
   if #extmarks == 0 then
     return {} -- styles.none() equivalent
   end
 
-  local last_mark = extmarks[#extmarks]
-  local hl_group = last_mark[4].hl_group
+  local line = vim.api.nvim_buf_get_lines(buffer, row, row + 1, false)[1] or ""
+  local eol = #line
 
-  if not hl_group then
-    return {}
+  -- A point mark on the column after the last character records the style
+  -- carried past the line. A trailing reset has no highlight group.
+  for index = #extmarks, 1, -1 do
+    local mark = extmarks[index]
+    local details = mark[4]
+    if not details.end_col and mark[3] >= eol then
+      return style_from_mark(mark)
+    end
   end
 
-  local hl_def = vim.api.nvim_get_hl(0, { name = hl_group, link = false })
-  return to_style(hl_def)
+  -- A highlight carries only when it still covers the last column. A reset
+  -- followed by plain text leaves that column uncovered.
+  local last_col = eol - 1
+  if last_col >= 0 then
+    for index = #extmarks, 1, -1 do
+      local mark = extmarks[index]
+      local details = mark[4]
+      local end_col = details.end_col
+      if end_col and last_col >= mark[3] and last_col < end_col then
+        return style_from_mark(mark)
+      end
+    end
+  end
+
+  return {}
 end
 
 ---@param buffer integer

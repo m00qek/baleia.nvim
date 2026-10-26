@@ -5,6 +5,7 @@ local M = {}
 ---@class baleia.LexerItem
 ---@field text string The processed text content (stripped or raw)
 ---@field highlights baleia.LexerHighlight[] List of highlights strictly within this line
+---@field continued boolean True when the style at the end of this line is still active
 
 ---@class baleia.LexerHighlight
 ---@field from integer Start column (0-indexed)
@@ -107,6 +108,7 @@ function M.lex(lines, strip_ansi_codes, start_highlighting_at, seed_style)
     table.insert(output, {
       text = table.concat(clean_line_buffer),
       highlights = line_highlights,
+      continued = is_active(state),
     })
   end
 

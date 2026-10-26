@@ -171,5 +171,79 @@ describe("baleia", function()
       local extmarks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, {})
       assert.truthy(#extmarks > 0)
     end)
+
+    -- on_lines colors on the next schedule tick, even when async is false
+    local function settle()
+      local done = false
+      vim.schedule(function()
+        done = true
+      end)
+      assert.is_true(vim.wait(1000, function()
+        return done
+      end))
+    end
+
+    local function highlight_spans(row)
+      local spans = {}
+      local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, { row, 0 }, { row, -1 }, { details = true })
+      for _, mark in ipairs(marks) do
+        if mark[4].hl_group and mark[4].end_col then
+          table.insert(spans, { mark[3], mark[4].end_col })
+        end
+      end
+      return spans
+    end
+
+    it("does not color lines appended after a trailing reset", function()
+      local b = baleia.setup({ async = false })
+      b.automatically(buffer)
+
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "prefix \x1b[31mred\x1b[0m normal" })
+      settle()
+      assert.combinators.match({ "prefix red normal" }, vim.api.nvim_buf_get_lines(buffer, 0, 1, false))
+
+      vim.api.nvim_buf_set_lines(buffer, -1, -1, false, {
+        "This line has no ANSI codes and should use the default color.",
+      })
+      settle()
+      assert.combinators.match({
+        "This line has no ANSI codes and should use the default color.",
+      }, vim.api.nvim_buf_get_lines(buffer, 1, 2, false))
+
+      assert.combinators.match({ { 7, 10 } }, highlight_spans(0))
+      assert.combinators.match({}, highlight_spans(1))
+    end)
+
+    it("does not color lines appended after a reset at the end of the line", function()
+      local b = baleia.setup({ async = false })
+      b.automatically(buffer)
+
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "prefix \x1b[31mred\x1b[0m" })
+      settle()
+      assert.combinators.match({ "prefix red" }, vim.api.nvim_buf_get_lines(buffer, 0, 1, false))
+
+      vim.api.nvim_buf_set_lines(buffer, -1, -1, false, { "plain" })
+      settle()
+      assert.combinators.match({ "plain" }, vim.api.nvim_buf_get_lines(buffer, 1, 2, false))
+
+      assert.combinators.match({ { 7, 10 } }, highlight_spans(0))
+      assert.combinators.match({}, highlight_spans(1))
+    end)
+
+    it("colors lines appended after an open color", function()
+      local b = baleia.setup({ async = false })
+      b.automatically(buffer)
+
+      vim.api.nvim_buf_set_lines(buffer, 0, -1, false, { "prefix \x1b[31mred" })
+      settle()
+      assert.combinators.match({ "prefix red" }, vim.api.nvim_buf_get_lines(buffer, 0, 1, false))
+
+      vim.api.nvim_buf_set_lines(buffer, -1, -1, false, { "carried" })
+      settle()
+      assert.combinators.match({ "carried" }, vim.api.nvim_buf_get_lines(buffer, 1, 2, false))
+
+      assert.combinators.match({ { 7, 10 } }, highlight_spans(0))
+      assert.combinators.match({ { 0, 7 } }, highlight_spans(1))
+    end)
   end)
 end)

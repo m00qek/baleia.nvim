@@ -103,6 +103,46 @@ function M.restore(cache)
   end
 end
 
+---True when a highlight paints the last column of a full line.
+---Marks shifted past `text` belong to a partial edit, not the line end.
+---@param item baleia.LexerItem
+---@return boolean
+local function highlight_covers_end(item)
+  local last = #item.text - 1
+  if last < 0 then
+    return false
+  end
+
+  local covered = false
+  for _, mark in ipairs(item.highlights) do
+    if mark.from > last or mark.to > last then
+      return false
+    end
+    if mark.from <= last and mark.to >= last then
+      covered = true
+    end
+  end
+  return covered
+end
+
+-- A reset after the last character leaves a highlight covering the end of the
+-- line, which would otherwise be read back as the carried style. Park an
+-- unhighlighted mark on the following column so that read returns no style.
+local function mark_trailing_reset(buffer, namespace, row, item)
+  if item.continued ~= false or not highlight_covers_end(item) then
+    return
+  end
+
+  local current = vim.api.nvim_buf_get_lines(buffer, row, row + 1, false)[1] or ""
+  if #current ~= #item.text then
+    return
+  end
+
+  vim.api.nvim_buf_set_extmark(buffer, namespace, row, #current, {
+    right_gravity = false,
+  })
+end
+
 ---@param buffer integer
 ---@param namespace integer
 ---@param start_row integer
@@ -140,6 +180,8 @@ function M.render(buffer, namespace, start_row, items, options, update_text)
         hl_group = hl_name,
       })
     end
+
+    mark_trailing_reset(buffer, namespace, row, item)
   end
 end
 

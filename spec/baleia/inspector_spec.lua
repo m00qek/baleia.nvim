@@ -24,9 +24,9 @@ describe("baleia.inspector", function()
     end)
 
     it("returns style of the last mark", function()
-      -- Add a mark
+      -- Add a mark that reaches the end of the line
       vim.api.nvim_buf_set_extmark(buffer, namespace, 0, 0, {
-        end_col = 5,
+        end_col = 15,
         hl_group = "TestHL_Red",
       })
 
@@ -45,9 +45,9 @@ describe("baleia.inspector", function()
         end_col = 5,
         hl_group = "TestHL_Red",
       })
-      -- Second mark (later in line)
+      -- Second mark (later in line, through the end)
       vim.api.nvim_buf_set_extmark(buffer, namespace, 0, 6, {
-        end_col = 10,
+        end_col = 15,
         hl_group = "TestHL_Blue",
       })
 
@@ -58,6 +58,17 @@ describe("baleia.inspector", function()
         ctermfg = 21,
         italic = true,
       }, style)
+    end)
+
+    it("does not carry a highlight that stops before the end of the line", function()
+      -- "red" in the middle, then plain text, as after a trailing reset
+      vim.api.nvim_buf_set_extmark(buffer, namespace, 0, 0, {
+        end_col = 5,
+        hl_group = "TestHL_Red",
+      })
+
+      local style = inspector.style_at_end_of_line(buffer, namespace, 0)
+      assert.combinators.match({}, style)
     end)
   end)
 
@@ -102,7 +113,7 @@ describe("baleia.inspector", function()
       })
 
       vim.api.nvim_buf_set_extmark(buffer, namespace, 0, 0, {
-        end_col = 10,
+        end_col = 15,
         hl_group = "TestHL_Standard",
       })
 
@@ -124,7 +135,7 @@ describe("baleia.inspector", function()
 
     it("recovers undercurl", function()
       vim.api.nvim_set_hl(0, "TestHL_Curl", { undercurl = true, sp = "#ff0000" })
-      vim.api.nvim_buf_set_extmark(buffer, namespace, 0, 0, { end_col = 5, hl_group = "TestHL_Curl" })
+      vim.api.nvim_buf_set_extmark(buffer, namespace, 0, 0, { end_col = 15, hl_group = "TestHL_Curl" })
       local style = inspector.style_at_end_of_line(buffer, namespace, 0)
       assert.combinators.match({ undercurl = true, special = "#ff0000" }, style)
     end)
